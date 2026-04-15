@@ -1,0 +1,92 @@
+[
+  {
+    "name": "iPhone 15 Pro",
+    "brand": "Apple",
+    "model": "A3095",
+    "buyPrice": 9000000,
+    "askingPrice": 12000000,
+    "fixedPrice": 12500000,
+    "stock": 10
+  },
+  {
+    "name": "Samsung Galaxy S24",
+    "brand": "Samsung",
+    "model": "SM-S921B",
+    "buyPrice": 7500000,
+    "askingPrice": 10000000,
+    "fixedPrice": 10500000,
+    "stock": 15
+  },
+  {
+    "name": "MacBook Pro 14",
+    "brand": "Apple",
+    "model": "MK183",
+    "buyPrice": 18000000,
+    "askingPrice": 22000000,
+    "fixedPrice": 22500000,
+    "stock": 5
+  },
+  {
+    "name": "Dell XPS 13",
+    "brand": "Dell",
+    "model": "9340",
+    "buyPrice": 14000000,
+    "askingPrice": 17000000,
+    "fixedPrice": 17500000,
+    "stock": 8
+  },
+  {
+    "name": "AirPods Pro 2",
+    "brand": "Apple",
+    "model": "A2931",
+    "buyPrice": 2800000,
+    "askingPrice": 3500000,
+    "fixedPrice": 3800000,
+    "stock": 25
+  },
+  {
+    "name": "Sony WH-1000XM5",
+    "brand": "Sony",
+    "model": "WH1000XM5",
+    "buyPrice": 3500000,
+    "askingPrice": 4500000,
+    "fixedPrice": 4800000,
+    "stock": 12
+  },
+  {
+    "name": "iPad Pro 11",
+    "brand": "Apple",
+    "model": "M4",
+    "buyPrice": 12000000,
+    "askingPrice": 14500000,
+    "fixedPrice": 15000000,
+    "stock": 8
+  },
+  {
+    "name": "Samsung Galaxy Tab S10",
+    "brand": "Samsung",
+    "model": "SM-X720",
+    "buyPrice": 9000000,
+    "askingPrice": 11000000,
+    "fixedPrice": 11500000,
+    "stock": 6
+  },
+  {
+    "name": "GoPro Hero 12",
+    "brand": "GoPro",
+    "model": "CHDHX-121",
+    "buyPrice": 4000000,
+    "askingPrice": 5200000,
+    "fixedPrice": 5500000,
+    "stock": 10
+  },
+  {
+    "name": "DJI Mini 4 Pro",
+    "brand": "DJI",
+    "model": "Mini 4 Pro",
+    "buyPrice": 5000000,
+    "askingPrice": 6500000,
+    "fixedPrice": 7000000,
+    "stock": 5
+  }
+]
