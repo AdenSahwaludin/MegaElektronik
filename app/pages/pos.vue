@@ -1,21 +1,30 @@
 <template>
-  <div class="h-screen w-screen bg-slate-50 flex flex-col overflow-hidden">
+  <div class="h-screen w-screen bg-orange-50 flex flex-col overflow-hidden">
     <!-- Header -->
     <header
-      class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 shadow-lg"
+      class="bg-orange-600 text-white px-4 lg:px-6 py-4 shadow-lg fixed w-full top-0 z-50"
     >
-      <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold">Mega Elektronik - POS</h1>
-        <div class="flex items-center gap-4">
-          <span class="text-lg font-semibold">{{
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2 lg:gap-3">
+          <img
+            src="/Logo Mega Elektronik Bongas Merah no-bg.png"
+            alt="Mega Elektronik"
+            class="h-8 lg:h-10 w-auto"
+          />
+          <h1 class="text-lg lg:text-2xl font-bold hidden sm:block">
+            Mega Elektronik POS
+          </h1>
+        </div>
+        <div class="flex items-center gap-2 lg:gap-4">
+          <span class="text-sm lg:text-base font-semibold">{{
             new Date().toLocaleDateString("id-ID")
           }}</span>
         </div>
       </div>
     </header>
 
-    <!-- Main Content - Split Layout (iPad Optimized) -->
-    <div class="flex flex-1 gap-4 p-4 overflow-hidden">
+    <!-- Main Content - Split Layout (iPad Optimized, Responsive) -->
+    <div class="flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden mt-16">
       <!-- Left Panel: Products Grid -->
       <div class="flex-1 flex flex-col bg-white rounded-lg shadow">
         <div class="px-4 pt-4 pb-2">
@@ -27,11 +36,11 @@
               v-model="searchQuery"
               type="text"
               placeholder="Search product..."
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <button
               @click="refreshProducts"
-              class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition"
+              class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
             >
               ↻
             </button>
@@ -40,9 +49,10 @@
           <!-- Stock Status -->
           <div
             v-if="lowStockProducts.length > 0"
-            class="bg-yellow-50 border border-yellow-200 rounded p-2 mb-3 text-sm text-yellow-800"
+            class="bg-yellow-50 border border-yellow-200 rounded p-2 mb-3 text-sm text-yellow-800 flex items-center gap-2"
           >
-            ⚠️ {{ lowStockProducts.length }} product(s) low on stock
+            <Icon name="lucide:alert-triangle" class="w-5 h-5 flex-shrink-0" />
+            {{ lowStockProducts.length }} product(s) low on stock
           </div>
         </div>
 
@@ -69,7 +79,7 @@
                 'p-4 rounded-lg border-2 transition-all transform active:scale-95',
                 product.stock === 0
                   ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed opacity-50'
-                  : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 hover:border-blue-500 hover:shadow-md cursor-pointer',
+                  : 'bg-white border-orange-300 hover:border-orange-500 hover:shadow-md cursor-pointer',
               ]"
             >
               <div class="text-left">
@@ -101,10 +111,10 @@
 
       <!-- Right Panel: Cart -->
       <div
-        class="w-96 flex flex-col bg-white rounded-lg shadow-lg overflow-hidden"
+        class="w-72 lg:w-96 flex flex-col bg-white rounded-lg shadow-lg overflow-hidden hidden md:flex"
       >
         <!-- Cart Header -->
-        <div class="bg-blue-600 text-white px-4 py-3">
+        <div class="bg-orange-600 text-white px-4 py-3">
           <h2 class="text-xl font-bold">Shopping Cart</h2>
           <p class="text-sm opacity-90">Items: {{ cartStore.totalItems }}</p>
         </div>
@@ -113,7 +123,7 @@
         <div class="border-b px-4 py-3">
           <button
             @click="showCustomerModal = true"
-            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-blue-500 text-left font-semibold text-sm transition"
+            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-orange-500 text-left font-semibold text-sm transition"
           >
             {{
               cartStore.selectedCustomer?.name || "+ Select Customer (Optional)"
@@ -189,14 +199,15 @@
                   :value="formatCurrency(item.soldPrice)"
                   @input="handlePriceInput(item.id, $event)"
                   type="text"
-                  class="w-full pl-8 pr-3 py-2 border border-blue-300 rounded font-semibold text-right focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50"
+                  class="w-full pl-8 pr-3 py-2 border border-orange-300 rounded font-semibold text-right focus:outline-none focus:ring-2 focus:ring-orange-500 bg-orange-50"
                 />
               </div>
               <p
                 v-if="item.soldPrice < item.buyPrice"
-                class="text-xs text-red-600 mt-1"
+                class="text-xs text-red-600 mt-1 flex items-center gap-1"
               >
-                ⚠️ Below cost price!
+                <Icon name="lucide:alert-circle" class="w-4 h-4" />
+                Below cost price!
               </p>
             </div>
 
@@ -273,7 +284,7 @@
           <button
             @click="handleClearCart"
             :disabled="cartStore.items.length === 0"
-            class="w-full px-4 py-3 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-gray-800 font-bold rounded-lg transition"
+            class="w-full px-4 py-3 bg-orange-400 hover:bg-orange-500 disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
           >
             Clear Cart
           </button>
@@ -306,7 +317,7 @@
             v-for="customer in filteredCustomers"
             :key="customer.id"
             @click="selectCustomer(customer)"
-            class="w-full text-left px-4 py-2 hover:bg-blue-50 border-b last:border-b-0 transition"
+            class="w-full text-left px-4 py-2 hover:bg-orange-50 border-b last:border-b-0 transition"
           >
             <p class="font-semibold">{{ customer.name }}</p>
             <p class="text-xs text-gray-600">
@@ -323,24 +334,24 @@
               v-model="newCustomer.name"
               type="text"
               placeholder="Name *"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <input
               v-model="newCustomer.phone"
               type="tel"
               placeholder="Phone (optional)"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <input
               v-model="newCustomer.address"
               type="text"
               placeholder="Address (optional)"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <button
               @click="createNewCustomer"
               :disabled="!newCustomer.name"
-              class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition"
+              class="w-full px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition"
             >
               Create & Select
             </button>
@@ -350,7 +361,7 @@
         <!-- No customer (anonymous) -->
         <button
           @click="selectCustomer(null)"
-          class="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition"
+          class="w-full px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 font-semibold rounded-lg transition"
         >
           Continue as Anonymous
         </button>

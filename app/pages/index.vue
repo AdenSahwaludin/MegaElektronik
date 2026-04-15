@@ -1,221 +1,258 @@
 <template>
-  <div
-    class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white"
-  >
+  <div class="min-h-screen bg-white text-gray-900">
+    <!-- Navigation Header -->
+    <header
+      class="bg-orange-600 text-white px-4 lg:px-6 py-4 shadow fixed w-full top-0 z-50"
+    >
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2 lg:gap-3">
+          <img
+            src="/Logo Mega Elektronik Bongas Merah no-bg.png"
+            alt="Mega Elektronik"
+            class="h-8 lg:h-10 w-auto"
+          />
+          <h1 class="text-lg lg:text-2xl font-bold">Mega Elektronik</h1>
+        </div>
+        <p class="text-xs lg:text-base hidden sm:block">POS & Inventory</p>
+      </div>
+    </header>
+
+    <!-- Top Padding for Fixed Header -->
+    <div class="h-16 lg:h-20"></div>
+
     <!-- Hero Section -->
-    <div class="relative overflow-hidden">
-      <div class="absolute inset-0 opacity-30">
-        <div
-          class="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob"
-        ></div>
-        <div
-          class="absolute top-40 right-10 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"
-        ></div>
-        <div
-          class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"
-        ></div>
+    <div class="bg-orange-50 py-8 lg:py-12 px-4">
+      <div class="max-w-7xl mx-auto text-center">
+        <h2 class="text-2xl lg:text-4xl font-bold text-gray-900 mb-3">
+          Sistem Point of Sale Terpadu
+        </h2>
+        <p class="text-gray-700 text-sm lg:text-base mb-1">
+          Kelola penjualan dan inventori dengan mudah
+        </p>
+        <p class="text-gray-600 text-xs lg:text-sm">
+          Optimal untuk iPad, Laptop, dan Smartphone
+        </p>
       </div>
+    </div>
 
-      <div class="relative px-6 py-20 mx-auto max-w-6xl">
-        <div class="text-center mb-12">
-          <h1
-            class="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600"
-          >
-            Mega Elektronik
-          </h1>
-          <p class="text-xl text-gray-300 mb-2">
-            Point of Sale & Inventory Management System
+    <!-- Main Navigation Cards -->
+    <div class="max-w-7xl mx-auto px-4 py-8 lg:py-12">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+        <!-- POS Card -->
+        <NuxtLink
+          to="/pos"
+          class="bg-orange-600 hover:bg-orange-700 text-white rounded-lg p-6 lg:p-8 shadow hover:shadow-lg transition active:scale-95"
+        >
+          <Icon
+            name="lucide:shopping-cart"
+            class="w-8 lg:w-10 h-8 lg:h-10 mb-3"
+          />
+          <h3 class="text-xl lg:text-2xl font-bold mb-2">Point of Sale</h3>
+          <p class="text-orange-100 text-sm lg:text-base mb-4">
+            Kelola transaksi, keranjang belanja, harga bargain, dan checkout
+            real-time
           </p>
-          <p class="text-gray-400">
-            Optimized for iPad - Touch-Friendly & Ultra-Fast
+          <div
+            class="flex items-center text-orange-200 font-semibold text-sm lg:text-base"
+          >
+            <span>Buka POS</span>
+            <span class="ml-2">→</span>
+          </div>
+        </NuxtLink>
+
+        <!-- Products Card -->
+        <NuxtLink
+          to="/products"
+          class="bg-orange-600 hover:bg-orange-700 text-white rounded-lg p-6 lg:p-8 shadow hover:shadow-lg transition active:scale-95"
+        >
+          <Icon name="lucide:package" class="w-8 lg:w-10 h-8 lg:h-10 mb-3" />
+          <h3 class="text-xl lg:text-2xl font-bold mb-2">Kelola Produk</h3>
+          <p class="text-orange-100 text-sm lg:text-base mb-4">
+            Tambah, edit, dan hapus produk dengan mudah. Pantau stok real-time.
           </p>
-        </div>
-
-        <!-- Main Cards -->
-        <div class="grid md:grid-cols-2 gap-8 mt-16">
-          <!-- POS Section -->
-          <div class="group relative">
-            <div
-              class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"
-            ></div>
-            <NuxtLink
-              to="/pos"
-              class="relative block px-8 py-12 bg-slate-900 rounded-2xl hover:scale-105 transition transform duration-200"
-            >
-              <div class="text-5xl mb-4">🛒</div>
-              <h2 class="text-3xl font-bold mb-3">Point of Sale</h2>
-              <p class="text-gray-400 mb-6">
-                Process transactions, manage cart with bargaining feature, and
-                checkout with real-time stock management.
-              </p>
-              <div class="flex items-center text-blue-400 font-semibold">
-                <span>Open POS</span>
-                <span class="ml-2 group-hover:translate-x-1 transition">→</span>
-              </div>
-            </NuxtLink>
-          </div>
-
-          <!-- Financial Report Section -->
-          <div class="group relative">
-            <div
-              class="absolute -inset-1 bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"
-            ></div>
-            <NuxtLink
-              to="/profit"
-              class="relative block px-8 py-12 bg-slate-900 rounded-2xl hover:scale-105 transition transform duration-200"
-            >
-              <div class="text-5xl mb-4">📊</div>
-              <h2 class="text-3xl font-bold mb-3">Financial Report</h2>
-              <p class="text-gray-400 mb-6">
-                View comprehensive sales analytics, profit margins, transaction
-                history, and detailed financial insights.
-              </p>
-              <div class="flex items-center text-green-400 font-semibold">
-                <span>View Reports</span>
-                <span class="ml-2 group-hover:translate-x-1 transition">→</span>
-              </div>
-            </NuxtLink>
-          </div>
-        </div>
-
-        <!-- Features Section -->
-        <div class="mt-20 grid md:grid-cols-3 gap-6">
           <div
-            class="p-6 bg-white/10 backdrop-blur rounded-lg border border-white/20 hover:bg-white/20 transition"
+            class="flex items-center text-orange-200 font-semibold text-sm lg:text-base"
           >
-            <div class="text-4xl mb-4">📱</div>
-            <h3 class="text-xl font-bold mb-2">iPad Optimized</h3>
-            <p class="text-gray-400 text-sm">
-              Touch-friendly UI with large buttons and split-screen layout
+            <span>Kelola Produk</span>
+            <span class="ml-2">→</span>
+          </div>
+        </NuxtLink>
+
+        <!-- Reports Card -->
+        <NuxtLink
+          to="/profit"
+          class="bg-orange-600 hover:bg-orange-700 text-white rounded-lg p-6 lg:p-8 shadow hover:shadow-lg transition active:scale-95"
+        >
+          <Icon
+            name="lucide:bar-chart-3"
+            class="w-8 lg:w-10 h-8 lg:h-10 mb-3"
+          />
+          <h3 class="text-xl lg:text-2xl font-bold mb-2">Laporan Keuangan</h3>
+          <p class="text-orange-100 text-sm lg:text-base mb-4">
+            Lihat analisis penjualan, margin keuntungan, dan riwayat transaksi
+            detail
+          </p>
+          <div
+            class="flex items-center text-orange-200 font-semibold text-sm lg:text-base"
+          >
+            <span>Lihat Laporan</span>
+            <span class="ml-2">→</span>
+          </div>
+        </NuxtLink>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="bg-gray-50 py-8 lg:py-12 px-4">
+      <div class="max-w-7xl mx-auto">
+        <h3
+          class="text-xl lg:text-2xl font-bold text-center mb-6 lg:mb-8 text-gray-900"
+        >
+          Fitur Unggulan
+        </h3>
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
+          <div class="bg-white rounded-lg p-4 lg:p-6 shadow">
+            <Icon
+              name="lucide:smartphone"
+              class="w-6 lg:w-8 h-6 lg:h-8 mb-2 text-orange-600"
+            />
+            <h4 class="font-bold text-sm lg:text-base mb-1 text-gray-900">
+              Responsif
+            </h4>
+            <p class="text-gray-600 text-xs lg:text-sm">
+              Bekerja di iPad, Laptop, dan Smartphone
             </p>
           </div>
 
-          <div
-            class="p-6 bg-white/10 backdrop-blur rounded-lg border border-white/20 hover:bg-white/20 transition"
-          >
-            <div class="text-4xl mb-4">💬</div>
-            <h3 class="text-xl font-bold mb-2">Price Bargaining</h3>
-            <p class="text-gray-400 text-sm">
-              Editable prices in cart - perfect for flexible pricing
-              negotiations
+          <div class="bg-white rounded-lg p-4 lg:p-6 shadow">
+            <Icon
+              name="lucide:dollar-sign"
+              class="w-6 lg:w-8 h-6 lg:h-8 mb-2 text-orange-600"
+            />
+            <h4 class="font-bold text-sm lg:text-base mb-1 text-gray-900">
+              Bargain
+            </h4>
+            <p class="text-gray-600 text-xs lg:text-sm">
+              Edit harga di keranjang untuk negosiasi
             </p>
           </div>
 
-          <div
-            class="p-6 bg-white/10 backdrop-blur rounded-lg border border-white/20 hover:bg-white/20 transition"
-          >
-            <div class="text-4xl mb-4">📈</div>
-            <h3 class="text-xl font-bold mb-2">Real-Time Analytics</h3>
-            <p class="text-gray-400 text-sm">
-              Live profit tracking and comprehensive financial reports
+          <div class="bg-white rounded-lg p-4 lg:p-6 shadow">
+            <Icon
+              name="lucide:trending-up"
+              class="w-6 lg:w-8 h-6 lg:h-8 mb-2 text-orange-600"
+            />
+            <h4 class="font-bold text-sm lg:text-base mb-1 text-gray-900">
+              Analytics
+            </h4>
+            <p class="text-gray-600 text-xs lg:text-sm">
+              Pelacakan profit real-time
             </p>
           </div>
 
-          <div
-            class="p-6 bg-white/10 backdrop-blur rounded-lg border border-white/20 hover:bg-white/20 transition"
-          >
-            <div class="text-4xl mb-4">📦</div>
-            <h3 class="text-xl font-bold mb-2">Stock Management</h3>
-            <p class="text-gray-400 text-sm">
-              Automatic inventory tracking with low-stock alerts
+          <div class="bg-white rounded-lg p-4 lg:p-6 shadow">
+            <Icon
+              name="lucide:box"
+              class="w-6 lg:w-8 h-6 lg:h-8 mb-2 text-orange-600"
+            />
+            <h4 class="font-bold text-sm lg:text-base mb-1 text-gray-900">
+              Stok
+            </h4>
+            <p class="text-gray-600 text-xs lg:text-sm">
+              Manajemen inventori otomatis
             </p>
           </div>
 
-          <div
-            class="p-6 bg-white/10 backdrop-blur rounded-lg border border-white/20 hover:bg-white/20 transition"
-          >
-            <div class="text-4xl mb-4">🔄</div>
-            <h3 class="text-xl font-bold mb-2">Bulk Import</h3>
-            <p class="text-gray-400 text-sm">
-              Import products from JSON with easy data management
+          <div class="bg-white rounded-lg p-4 lg:p-6 shadow">
+            <Icon
+              name="lucide:upload"
+              class="w-6 lg:w-8 h-6 lg:h-8 mb-2 text-orange-600"
+            />
+            <h4 class="font-bold text-sm lg:text-base mb-1 text-gray-900">
+              Import
+            </h4>
+            <p class="text-gray-600 text-xs lg:text-sm">
+              Import produk dari JSON
             </p>
           </div>
 
-          <div
-            class="p-6 bg-white/10 backdrop-blur rounded-lg border border-white/20 hover:bg-white/20 transition"
-          >
-            <div class="text-4xl mb-4">👥</div>
-            <h3 class="text-xl font-bold mb-2">Customer Management</h3>
-            <p class="text-gray-400 text-sm">
-              Track customers, phone numbers, and delivery addresses
+          <div class="bg-white rounded-lg p-4 lg:p-6 shadow">
+            <Icon
+              name="lucide:users"
+              class="w-6 lg:w-8 h-6 lg:h-8 mb-2 text-orange-600"
+            />
+            <h4 class="font-bold text-sm lg:text-base mb-1 text-gray-900">
+              Pelanggan
+            </h4>
+            <p class="text-gray-600 text-xs lg:text-sm">
+              Kelola data pelanggan
             </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Help Section -->
-    <div
-      class="relative px-6 py-16 mx-auto max-w-6xl border-t border-white/10 mt-20"
-    >
-      <h2 class="text-3xl font-bold mb-12 text-center">Quick Start Guide</h2>
-
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="space-y-4">
-          <div class="bg-blue-500/20 border border-blue-500 rounded-lg p-4">
-            <div class="text-2xl font-bold text-blue-400 mb-2">1️⃣</div>
-            <h3 class="text-lg font-semibold mb-2">Import Products</h3>
-            <p class="text-gray-400 text-sm">
-              Use API endpoint or master data page to bulk import products from
-              JSON file
-            </p>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <div class="bg-purple-500/20 border border-purple-500 rounded-lg p-4">
-            <div class="text-2xl font-bold text-purple-400 mb-2">2️⃣</div>
-            <h3 class="text-lg font-semibold mb-2">Start Selling</h3>
-            <p class="text-gray-400 text-sm">
-              Open POS page, tap products to add to cart, adjust prices for
-              bargaining
-            </p>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <div class="bg-green-500/20 border border-green-500 rounded-lg p-4">
-            <div class="text-2xl font-bold text-green-400 mb-2">3️⃣</div>
-            <h3 class="text-lg font-semibold mb-2">Check Reports</h3>
-            <p class="text-gray-400 text-sm">
-              View financial reports and profit analytics in real-time
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tech Stack Footer -->
-    <div
-      class="relative px-6 py-12 mx-auto max-w-6xl border-t border-white/10 mt-16"
-    >
-      <h3 class="text-center text-gray-400 mb-6">
-        Built with Modern Tech Stack
+    <!-- Quick Start Section -->
+    <div class="max-w-7xl mx-auto px-4 py-8 lg:py-12">
+      <h3
+        class="text-xl lg:text-2xl font-bold text-center mb-6 lg:mb-8 text-gray-900"
+      >
+        Panduan Cepat
       </h3>
-      <div class="flex flex-wrap justify-center gap-4 text-sm text-gray-300">
-        <span class="px-4 py-2 bg-white/10 rounded-full border border-white/20"
-          >Nuxt 3</span
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+        <div
+          class="bg-orange-50 border-l-4 border-orange-600 rounded p-4 lg:p-6"
         >
-        <span class="px-4 py-2 bg-white/10 rounded-full border border-white/20"
-          >Vue.js</span
+          <div
+            class="flex items-center gap-2 text-lg lg:text-xl font-bold text-orange-600 mb-2"
+          >
+            <Icon name="lucide:cog" class="w-5 h-5" />
+            Setup
+          </div>
+          <p class="text-gray-700 text-xs lg:text-sm">
+            Instal dependencies dan setup database
+          </p>
+        </div>
+
+        <div
+          class="bg-orange-50 border-l-4 border-orange-600 rounded p-4 lg:p-6"
         >
-        <span class="px-4 py-2 bg-white/10 rounded-full border border-white/20"
-          >Tailwind CSS</span
+          <div
+            class="flex items-center gap-2 text-lg lg:text-xl font-bold text-orange-600 mb-2"
+          >
+            <Icon name="lucide:shopping-cart" class="w-5 h-5" />
+            Jual
+          </div>
+          <p class="text-gray-700 text-xs lg:text-sm">
+            Buka POS, tambah produk, checkout
+          </p>
+        </div>
+
+        <div
+          class="bg-orange-50 border-l-4 border-orange-600 rounded p-4 lg:p-6"
         >
-        <span class="px-4 py-2 bg-white/10 rounded-full border border-white/20"
-          >Pinia</span
-        >
-        <span class="px-4 py-2 bg-white/10 rounded-full border border-white/20"
-          >Prisma</span
-        >
-        <span class="px-4 py-2 bg-white/10 rounded-full border border-white/20"
-          >SQLite</span
-        >
-        <span class="px-4 py-2 bg-white/10 rounded-full border border-white/20"
-          >Nuxt UI</span
-        >
+          <div
+            class="flex items-center gap-2 text-lg lg:text-xl font-bold text-orange-600 mb-2"
+          >
+            <Icon name="lucide:bar-chart-3" class="w-5 h-5" />
+            Laporan
+          </div>
+          <p class="text-gray-700 text-xs lg:text-sm">
+            Lihat profit dan analisis penjualan
+          </p>
+        </div>
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer
+      class="bg-gray-900 text-gray-400 py-6 lg:py-8 px-4 text-center text-xs lg:text-sm"
+    >
+      <p>
+        &copy; 2026 Mega Elektronik. Powered by Nuxt 3 • Vue 3 • Tailwind CSS •
+        Prisma
+      </p>
+    </footer>
   </div>
 </template>
 
@@ -224,30 +261,3 @@ definePageMeta({
   layout: "default",
 });
 </script>
-
-<style scoped>
-@keyframes blob {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-</style>

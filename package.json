@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
+    "@nuxt/icon": "^2.2.1",
     "eslint": "^10.2.0",
     "prisma": "6",
     "typescript": "^6.0.2",
