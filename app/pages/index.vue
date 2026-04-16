@@ -6,11 +6,7 @@
     >
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-2 lg:gap-3">
-          <img
-            src="/Logo Mega Elektronik Bongas Merah no-bg.png"
-            alt="Mega Elektronik"
-            class="h-8 lg:h-10 w-auto"
-          />
+          <AppLogo class="h-12 lg:h-16 w-auto rounded-full" />
           <h1 class="text-lg lg:text-2xl font-bold">Mega Elektronik</h1>
         </div>
         <p class="text-xs lg:text-base hidden sm:block">POS & Inventory</p>

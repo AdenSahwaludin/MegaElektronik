@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Start a transaction
-    const transaction = await prisma.$transaction(async (tx) => {
+    const transaction = await prisma.$transaction(async (tx: any) => {
       // Verify stock for all items
       for (const item of body.items) {
         const product = await tx.product.findUnique({

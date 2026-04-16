@@ -6,11 +6,7 @@
     >
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-2 lg:gap-3">
-          <img
-            src="/Logo Mega Elektronik Bongas Merah no-bg.png"
-            alt="Mega Elektronik"
-            class="h-8 lg:h-10 w-auto"
-          />
+          <AppLogo class="h-12 lg:h-16 w-auto rounded-full" />
           <h1 class="text-lg lg:text-2xl font-bold hidden sm:block">
             Mega Elektronik POS
           </h1>
@@ -51,7 +47,7 @@
             v-if="lowStockProducts.length > 0"
             class="bg-yellow-50 border border-yellow-200 rounded p-2 mb-3 text-sm text-yellow-800 flex items-center gap-2"
           >
-            <Icon name="lucide:alert-triangle" class="w-5 h-5 flex-shrink-0" />
+            <Icon name="lucide:alert-triangle" class="w-5 h-5 shrink-0" />
             {{ lowStockProducts.length }} product(s) low on stock
           </div>
         </div>
@@ -155,7 +151,7 @@
 
             <!-- Quantity Control -->
             <div class="flex items-center gap-2 mb-2">
-              <label class="text-xs font-semibold flex-shrink-0">Qty:</label>
+              <label class="text-xs font-semibold shrink-0">Qty:</label>
               <div class="flex items-center border border-gray-300 rounded">
                 <button
                   @click="cartStore.updateQuantity(item.id, item.quantity - 1)"
@@ -439,7 +435,7 @@ const filteredCustomers = computed(() => {
 const fetchProducts = async () => {
   loading.value = true;
   try {
-    const response = await $fetch("/api/products");
+    const response = await $fetch<any>("/api/products");
     products.value = response.products || [];
   } catch (error) {
     console.error("Error loading products:", error);

@@ -6,11 +6,7 @@
     >
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-2 lg:gap-3">
-          <img
-            src="/Logo Mega Elektronik Bongas Merah no-bg.png"
-            alt="Mega Elektronik"
-            class="h-8 lg:h-10 w-auto"
-          />
+          <AppLogo class="h-12 lg:h-16 w-auto rounded-full" />
           <h1 class="text-lg lg:text-2xl font-bold hidden sm:block">
             Product Management
           </h1>
@@ -46,7 +42,7 @@
               <input
                 v-model="newProduct.name"
                 type="text"
-                placeholder="e.g. LED Bulb 10W"
+                placeholder="Kipas Angin"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -58,7 +54,7 @@
               <input
                 v-model="newProduct.brand"
                 type="text"
-                placeholder="e.g. Philips"
+                placeholder="Sanex"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -70,7 +66,7 @@
               <input
                 v-model="newProduct.model"
                 type="text"
-                placeholder="e.g. A60"
+                placeholder="FS-1899"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -121,7 +117,7 @@
               <input
                 v-model="newProduct.category"
                 type="text"
-                placeholder="e.g. Lighting"
+                placeholder="Kipas Angin"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -461,7 +457,7 @@ const totalStock = computed(() => {
 const fetchProducts = async () => {
   loading.value = true;
   try {
-    const response = await $fetch("/api/products");
+    const response = await $fetch<any>("/api/products");
     products.value = response.products || [];
   } catch (error) {
     console.error("Error loading products:", error);
@@ -483,7 +479,7 @@ const addProduct = async () => {
   }
 
   try {
-    const response = await $fetch("/api/products", {
+    const response = await $fetch<any>("/api/products", {
       method: "POST",
       body: {
         name: newProduct.name,
@@ -517,7 +513,7 @@ const editProduct = (product: any) => {
 
 const saveProduct = async () => {
   try {
-    const response = await $fetch(`/api/products/${editingProduct.id}`, {
+    const response = await $fetch<any>(`/api/products/${editingProduct.id}`, {
       method: "PUT",
       body: {
         name: editingProduct.name,
