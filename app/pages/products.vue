@@ -1,27 +1,10 @@
 <template>
   <div class="min-h-screen w-screen bg-orange-50 flex flex-col overflow-hidden">
-    <!-- Header -->
-    <header
-      class="bg-orange-600 text-white px-4 lg:px-6 py-4 shadow-lg fixed w-full top-0 z-50"
-    >
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-2 lg:gap-3">
-          <AppLogo class="h-12 lg:h-16 w-auto rounded-full" />
-          <h1 class="text-lg lg:text-2xl font-bold hidden sm:block">
-            Product Management
-          </h1>
-        </div>
-        <NuxtLink
-          to="/"
-          class="px-4 lg:px-6 py-2 bg-white hover:bg-orange-50 text-orange-600 font-semibold text-sm lg:text-base rounded-lg transition"
-        >
-          ← Home
-        </NuxtLink>
-      </div>
-    </header>
+    <!-- App Header with Navigation -->
+    <AppHeader />
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto p-4 lg:p-6 mt-16">
+    <div class="flex-1 overflow-y-auto p-4 lg:p-6 mt-12 lg:mt-10">
       <div class="max-w-7xl mx-auto">
         <!-- Add Product Section -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
@@ -30,7 +13,7 @@
               class="text-xl lg:text-2xl font-bold text-gray-900 flex items-center gap-2"
             >
               <Icon name="lucide:plus-circle" class="w-6 h-6 text-orange-600" />
-              Add New Product
+              Tambah Produk Baru
             </h2>
           </div>
 

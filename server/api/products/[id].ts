@@ -3,22 +3,46 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, "id");
+  const rawId = getRouterParam(event, "id");
+  // Ubah teks menjadi angka
+  const id = parseInt(rawId as string, 10);
 
+  // Pengecekan ekstra: pastikan ID benar-benar angka yang valid
+  if (isNaN(id)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Invalid Product ID",
+    });
+  }
   // PUT: Update product
   if (getMethod(event) === "PUT") {
     try {
       const body = await readBody(event);
 
+      // Validate and sanitize input
+      const name = body.name?.trim();
+      const brand = body.brand?.trim() || "Unbranded";
+      const model = body.model?.trim() || "Standard";
+      const stock = parseInt(body.stock, 10) || 0;
+      const buyPrice = parseFloat(body.buyPrice) || 0;
+      const askingPrice = parseFloat(body.askingPrice) || 0;
+
+      if (!name) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Product name is required",
+        });
+      }
+
       const product = await prisma.product.update({
         where: { id },
         data: {
-          name: body.name,
-          brand: body.brand,
-          model: body.model,
-          stock: body.stock,
-          buyPrice: body.buyPrice,
-          askingPrice: body.askingPrice,
+          name,
+          brand,
+          model,
+          stock,
+          buyPrice,
+          askingPrice,
         },
       });
 
@@ -27,10 +51,10 @@ export default defineEventHandler(async (event) => {
       console.error("Update product error:", error);
       throw createError({
         statusCode: 500,
-        statusMessage: "Failed to update product",
-      });
-    }
-  }
+        statusMessage: error.message || "Failed to update product",
+      }); // <-- Tambahan penutup fungsi createError
+    } // <-- Tambahan penutup blok catch
+  } // <-- Tambahan penutup blok if (PUT)
 
   // DELETE: Delete product
   if (getMethod(event) === "DELETE") {

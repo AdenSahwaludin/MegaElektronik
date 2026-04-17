@@ -1,13 +1,15 @@
 <script setup>
 useHead({
   meta: [{ name: "viewport", content: "width=device-width, initial-scale=1" }],
-  link: [{ rel: "icon", href: "/favicon.ico" }],
+  link: [
+    { rel: "icon", href: "/Logo Mega Elektronik Bongas Merah no-bg1.png" },
+  ],
   htmlAttrs: {
-    lang: "en",
+    lang: "id",
   },
 });
 
-const title = "Nuxt Starter Template";
+const title = "Mega Elektronik";
 const description =
   "A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.";
 

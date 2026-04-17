@@ -1,42 +1,17 @@
 <template>
   <div class="min-h-screen w-screen bg-orange-50 flex flex-col overflow-hidden">
-    <!-- Header -->
-    <header
-      class="bg-orange-600 text-white px-4 lg:px-6 py-4 shadow-lg fixed w-full top-0 z-50"
-    >
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-2 lg:gap-3">
-          <AppLogo class="h-12 lg:h-16 w-auto rounded-full" />
-          <h1 class="text-lg lg:text-2xl font-bold hidden sm:block">
-            Financial Report
-          </h1>
-        </div>
-        <div class="flex items-center gap-2 lg:gap-6">
-          <div class="text-right hidden sm:block">
-            <p class="text-xs lg:text-sm opacity-75">Today's Date</p>
-            <p class="text-base lg:text-lg font-semibold">
-              {{ new Date().toLocaleDateString("id-ID") }}
-            </p>
-          </div>
-          <NuxtLink
-            to="/pos"
-            class="px-4 lg:px-6 py-2 bg-white hover:bg-orange-50 text-orange-600 font-semibold text-sm lg:text-base rounded-lg transition"
-          >
-            ← Back to POS
-          </NuxtLink>
-        </div>
-      </div>
-    </header>
+    <!-- App Header with Navigation -->
+    <AppHeader />
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto p-4 lg:p-6 mt-16">
+    <div class="flex-1 overflow-y-auto p-4 lg:p-6 mt-12 lg:mt-10">
       <!-- Summary Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8">
         <!-- Total Revenue Card -->
         <div class="bg-blue-500 rounded-xl p-6 text-white shadow-xl">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm opacity-75 mb-1">Total Revenue</p>
+              <p class="text-sm opacity-75 mb-1">Omset Total</p>
               <p class="text-2xl lg:text-4xl font-bold">
                 {{ formatCurrency(summary.totalRevenue) }}
               </p>
@@ -47,7 +22,7 @@
             />
           </div>
           <p class="text-xs lg:text-sm mt-4 opacity-75">
-            From {{ summary.transactionCount }} transactions
+            Dari {{ summary.transactionCount }} transaksi
           </p>
         </div>
 
@@ -55,7 +30,7 @@
         <div class="bg-green-500 rounded-xl p-6 text-white shadow-xl">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm opacity-75 mb-1">Total Net Profit</p>
+              <p class="text-sm opacity-75 mb-1">Untung Bersih</p>
               <p class="text-2xl lg:text-4xl font-bold">
                 {{ formatCurrency(summary.totalProfit) }}
               </p>
@@ -66,7 +41,7 @@
             />
           </div>
           <p class="text-xs lg:text-sm mt-4 opacity-75">
-            Profit Margin: {{ profitMargin }}%
+            Margin: {{ profitMargin }}%
           </p>
         </div>
 
@@ -74,7 +49,7 @@
         <div class="bg-orange-500 rounded-xl p-6 text-white shadow-xl">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm opacity-75 mb-1">Total Items Sold</p>
+              <p class="text-sm opacity-75 mb-1">Total Item Terjual</p>
               <p class="text-2xl lg:text-4xl font-bold">
                 {{ summary.totalItemsSold }}
               </p>
@@ -85,7 +60,7 @@
             />
           </div>
           <p class="text-xs lg:text-sm mt-4 opacity-75">
-            {{ summary.avgItemsPerTransaction.toFixed(1) }} per transaction
+            {{ summary.avgItemsPerTransaction.toFixed(1) }} per transaksi
           </p>
         </div>
       </div>
@@ -95,27 +70,49 @@
         <div class="flex flex-col lg:flex-row gap-4">
           <div class="flex-1">
             <label class="block text-gray-700 text-sm font-semibold mb-2"
-              >Search by Product/Customer:</label
+              >Cari Produk/Pelanggan:</label
             >
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Type to filter..."
+              placeholder="Ketik untuk filter..."
               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
+
           <div class="flex-1">
             <label class="block text-gray-700 text-sm font-semibold mb-2"
-              >Date Range:</label
+              >Range Tanggal:</label
             >
             <select
               v-model="dateRange"
               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
+              <option value="all">Semua Waktu</option>
+              <option value="today">Hari Ini</option>
+              <option value="week">Minggu Ini</option>
+              <option value="month">Bulan Ini</option>
+            </select>
+          </div>
+          <div class="flex-1 lg:flex-none">
+            <label class="block text-gray-700 text-sm font-semibold mb-2"
+              >Baris per Halaman:</label
+            >
+            <select
+              :value="itemsPerPage"
+              @change="
+                setItemsPerPage(
+                  parseInt(($event.target as HTMLSelectElement).value),
+                )
+              "
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="999999">Semua</option>
             </select>
           </div>
           <div class="flex items-end">
@@ -123,7 +120,7 @@
               @click="refreshData"
               class="w-full lg:w-auto px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition"
             >
-              Refresh
+              Segarkan
             </button>
           </div>
         </div>
@@ -132,26 +129,26 @@
       <!-- Transaction History Table -->
       <div class="bg-white rounded-xl shadow-xl overflow-hidden">
         <div class="px-6 py-4 bg-orange-600 text-white">
-          <h2 class="text-xl lg:text-2xl font-bold">Transaction History</h2>
+          <h2 class="text-xl lg:text-2xl font-bold">Riwayat Transaksi</h2>
           <p class="text-sm opacity-75">
-            {{ filteredTransactions.length }} transactions found
+            {{ transactions.length }} transaksi ditemukan
           </p>
         </div>
 
         <div v-if="loading" class="flex items-center justify-center py-20">
           <p class="text-gray-500 flex items-center gap-2">
             <Icon name="lucide:loader" class="w-5 h-5 animate-spin" />
-            Loading transactions...
+            Muat transaksi...
           </p>
         </div>
 
         <div
-          v-else-if="filteredTransactions.length === 0"
+          v-else-if="transactions.length === 0"
           class="flex items-center justify-center py-20"
         >
           <p class="text-gray-500 flex items-center gap-2">
             <Icon name="lucide:inbox" class="w-5 h-5" />
-            No transactions found
+            Transaksi tidak ada
           </p>
         </div>
 
@@ -159,30 +156,29 @@
           <table class="w-full">
             <thead class="bg-gray-100 border-b border-gray-300">
               <tr>
-                <th
-                  class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
-                >
-                  Date/Time
+                <th class="px-4 py-3 text-left font-semibold text-gray-700">
+                  Tgl/Jam
                 </th>
                 <th
                   class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
                 >
-                  Customer
+                  Pelanggan
                 </th>
+
                 <th
                   class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
                 >
-                  Product Details
+                  Detail Produk
                 </th>
                 <th
                   class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                 >
-                  Buy Price
+                  Harga Pokok
                 </th>
                 <th
                   class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                 >
-                  Sold Price
+                  Harga Jual
                 </th>
                 <th
                   class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
@@ -192,24 +188,29 @@
                 <th
                   class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                 >
-                  Profit/Item
+                  Untung/Item
                 </th>
                 <th
                   class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                 >
-                  Total Profit
+                  Total Untung
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+                >
+                  Aksi
                 </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
               <template
-                v-for="transaction in filteredTransactions"
+                v-for="transaction in transactions"
                 :key="transaction.id"
               >
                 <tr
                   v-for="(item, index) in transaction.transactionItems"
                   :key="item.id"
-                  :class="index === 0 ? 'bg-orange-50' : 'bg-white'"
+                  :class="index === 0 ? 'bg-orange-50' : 'bg-orange-50'"
                   class="hover:bg-gray-50 transition"
                 >
                   <td
@@ -227,7 +228,7 @@
                     <span v-if="transaction.customer" class="font-semibold">{{
                       transaction.customer.name
                     }}</span>
-                    <span v-else class="text-gray-400">Anonymous</span>
+                    <span v-else class="text-gray-400">Ga Dikenal</span>
                     <p
                       v-if="transaction.customer?.phone"
                       class="text-xs text-gray-500"
@@ -276,34 +277,95 @@
                   >
                     {{ formatCurrency(item.profitPerItem * item.quantity) }}
                   </td>
+                  <td
+                    v-if="index === 0"
+                    :rowspan="transaction.transactionItems.length"
+                    class="px-4 py-3 text-sm"
+                  >
+                    <button
+                      @click="deleteTransaction(transaction.id)"
+                      class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded transition flex items-center gap-1"
+                    >
+                      <Icon name="lucide:trash-2" class="w-4 h-4" />
+                      Hapus
+                    </button>
+                  </td>
                 </tr>
               </template>
             </tbody>
           </table>
         </div>
 
+        <!-- Pagination Controls -->
+        <div
+          v-if="transactions.length > 0"
+          class="bg-gray-50 border-t border-gray-300 px-6 py-4"
+        >
+          <div
+            class="flex flex-col lg:flex-row items-center justify-between gap-4"
+          >
+            <p class="text-sm text-gray-600">
+              Halaman {{ currentPage }} dari {{ totalPages }} | Menampilkan
+              {{ transactions.length }} dari {{ totalCount }} transaksi
+            </p>
+            <div class="flex items-center gap-2">
+              <button
+                @click="prevPage"
+                :disabled="currentPage === 1"
+                class="px-3 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition flex items-center gap-1"
+              >
+                <Icon name="lucide:chevron-left" class="w-4 h-4" />
+                Sebelum
+              </button>
+              <div class="flex gap-1">
+                <button
+                  v-for="page in Math.min(5, totalPages)"
+                  :key="page"
+                  @click="goToPage(page)"
+                  :class="[
+                    'px-2 py-2 rounded font-semibold text-sm transition',
+                    currentPage === page
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-white border border-gray-300 hover:border-orange-500 text-gray-700',
+                  ]"
+                >
+                  {{ page }}
+                </button>
+              </div>
+              <button
+                @click="nextPage"
+                :disabled="currentPage === totalPages"
+                class="px-3 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition flex items-center gap-1"
+              >
+                <span>Setelah</span>
+                <Icon name="lucide:chevron-right" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Table Footer -->
         <div
-          v-if="filteredTransactions.length > 0"
+          v-if="transactions.length > 0"
           class="bg-gray-100 border-t border-gray-300 px-6 py-4"
         >
           <div class="grid grid-cols-3 gap-6 text-right">
             <div>
-              <p class="text-sm text-gray-600">Total Revenue</p>
-              <p class="text-2xl font-bold text-blue-600">
-                {{ formatCurrency(filteredTotalRevenue) }}
+              <p class="text-sm text-gray-600">Omset Total</p>
+              <p class="text-sm sm:text-2xl font-bold text-blue-600">
+                {{ formatCurrency(summaryData.totalRevenue) }}
               </p>
             </div>
             <div>
-              <p class="text-sm text-gray-600">Total Cost</p>
-              <p class="text-2xl font-bold text-orange-600">
-                {{ formatCurrency(filteredTotalCost) }}
+              <p class="text-sm text-gray-600">Total Pokok</p>
+              <p class="text-sm sm:text-2xl font-bold text-orange-600">
+                {{ formatCurrency(summaryData.totalCost) }}
               </p>
             </div>
             <div>
-              <p class="text-sm text-gray-600">Net Profit</p>
-              <p class="text-2xl font-bold text-green-600">
-                {{ formatCurrency(filteredTotalProfit) }}
+              <p class="text-sm text-gray-600">Untung Bersih</p>
+              <p class="text-sm sm:text-2xl font-bold text-green-600">
+                {{ formatCurrency(summaryData.totalProfit) }}
               </p>
             </div>
           </div>
@@ -328,35 +390,28 @@ const transactions: Ref<any[]> = ref([]);
 const loading = ref(false);
 const searchQuery = ref("");
 const dateRange = ref("all");
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+const totalPages = ref(0);
+const totalCount = ref(0);
+const summaryData = ref({
+  totalRevenue: 0,
+  totalProfit: 0,
+  totalCost: 0,
+  totalItemsSold: 0,
+  transactionCount: 0,
+});
 
 // Computed
 const summary = computed(() => {
-  const totalRevenue = transactions.value.reduce(
-    (sum, t) => sum + t.totalAmount,
-    0,
-  );
-  const totalProfit = transactions.value.reduce(
-    (sum, t) => sum + t.totalProfit,
-    0,
-  );
-  const totalItemsSold = transactions.value.reduce(
-    (sum, t) =>
-      sum +
-      t.transactionItems.reduce(
-        (itemSum: number, item: any) => itemSum + item.quantity,
-        0,
-      ),
-    0,
-  );
-
   return {
-    totalRevenue,
-    totalProfit,
-    totalItemsSold,
-    transactionCount: transactions.value.length,
+    totalRevenue: summaryData.value.totalRevenue,
+    totalProfit: summaryData.value.totalProfit,
+    totalItemsSold: summaryData.value.totalItemsSold,
+    transactionCount: summaryData.value.transactionCount,
     avgItemsPerTransaction:
-      transactions.value.length > 0
-        ? totalItemsSold / transactions.value.length
+      summaryData.value.transactionCount > 0
+        ? summaryData.value.totalItemsSold / summaryData.value.transactionCount
         : 0,
   };
 });
@@ -369,71 +424,28 @@ const profitMargin = computed(() => {
   ).toFixed(2);
 });
 
-const filteredTransactions = computed(() => {
-  let filtered = transactions.value;
-
-  // Apply search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    filtered = filtered.filter(
-      (t) =>
-        t.customer?.name.toLowerCase().includes(query) ||
-        t.transactionItems.some(
-          (item: any) =>
-            item.product.name.toLowerCase().includes(query) ||
-            item.product.brand.toLowerCase().includes(query) ||
-            item.product.model.toLowerCase().includes(query),
-        ),
-    );
-  }
-
-  // Apply date filter
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  if (dateRange.value !== "all") {
-    filtered = filtered.filter((t) => {
-      const txDate = new Date(t.createdAt);
-      if (dateRange.value === "today") return txDate >= today;
-      if (dateRange.value === "week") return txDate >= weekStart;
-      if (dateRange.value === "month") return txDate >= monthStart;
-      return true;
-    });
-  }
-
-  return filtered;
-});
-
-const filteredTotalRevenue = computed(() => {
-  return filteredTransactions.value.reduce((sum, t) => sum + t.totalAmount, 0);
-});
-
-const filteredTotalCost = computed(() => {
-  return filteredTransactions.value.reduce(
-    (sum, t) =>
-      sum +
-      t.transactionItems.reduce(
-        (itemSum: number, item: any) =>
-          itemSum + item.product.buyPrice * item.quantity,
-        0,
-      ),
-    0,
-  );
-});
-
-const filteredTotalProfit = computed(() => {
-  return filteredTotalRevenue.value - filteredTotalCost.value;
-});
-
 // Methods
 const fetchTransactions = async () => {
   loading.value = true;
   try {
-    const response = await $fetch<any>("/api/transactions");
+    const params = new URLSearchParams({
+      page: currentPage.value.toString(),
+      limit: itemsPerPage.value.toString(),
+      dateRange: dateRange.value,
+      search: searchQuery.value,
+    });
+
+    const response = await $fetch<any>(`/api/transactions?${params}`);
     transactions.value = response.transactions || [];
+    totalPages.value = response.pagination.totalPages || 1;
+    totalCount.value = response.pagination.totalCount || 0;
+    summaryData.value = response.summary || {
+      totalRevenue: 0,
+      totalProfit: 0,
+      totalCost: 0,
+      totalItemsSold: 0,
+      transactionCount: 0,
+    };
   } catch (error) {
     console.error("Error loading transactions:", error);
   } finally {
@@ -441,7 +453,14 @@ const fetchTransactions = async () => {
   }
 };
 
+const setItemsPerPage = (limit: number) => {
+  itemsPerPage.value = limit;
+  currentPage.value = 1;
+  fetchTransactions();
+};
+
 const refreshData = async () => {
+  currentPage.value = 1;
   await fetchTransactions();
 };
 
@@ -455,6 +474,52 @@ const formatDateTime = (dateString: string): string => {
     minute: "2-digit",
   });
 };
+
+const deleteTransaction = async (transactionId: string) => {
+  if (!confirm("Hapus transaksi ini? Aksi tidak bisa dibalik!")) {
+    return;
+  }
+
+  try {
+    await $fetch(`/api/transactions/${transactionId}`, {
+      method: "DELETE",
+    });
+    await fetchTransactions();
+    alert("✓ Transaksi berhasil dihapus");
+  } catch (error: any) {
+    alert(
+      "❌ Gagal hapus transaksi: " +
+        (error.message || error.data?.message || "Error"),
+    );
+  }
+};
+
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+    fetchTransactions();
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+    fetchTransactions();
+  }
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    fetchTransactions();
+  }
+};
+
+// Watch for filter changes to reset pagination
+watch([searchQuery, dateRange], () => {
+  currentPage.value = 1;
+  fetchTransactions();
+});
 
 // Lifecycle
 onMounted(() => {
