@@ -78,11 +78,17 @@
                   {{ product.brand }} - {{ product.model }}
                 </p>
                 <div class="space-y-1">
-                  <p class="text-xs">
-                    <span class="font-semibold">{{
-                      formatCurrency(product.askingPrice)
-                    }}</span>
-                  </p>
+                  <div class="text-xs space-y-0.5">
+                    <p class="text-gray-600">
+                      Tawar:
+                      <span class="font-semibold">{{
+                        formatCurrency(product.askingPrice)
+                      }}</span>
+                    </p>
+                    <p class="text-orange-600 font-bold">
+                      Pas: {{ formatCurrency(product.fixedPrice) }}
+                    </p>
+                  </div>
                   <p class="text-xs text-gray-500">
                     Stok:
                     <span

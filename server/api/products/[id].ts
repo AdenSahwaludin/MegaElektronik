@@ -26,6 +26,9 @@ export default defineEventHandler(async (event) => {
       const stock = parseInt(body.stock, 10) || 0;
       const buyPrice = parseFloat(body.buyPrice) || 0;
       const askingPrice = parseFloat(body.askingPrice) || 0;
+      const fixedPrice = body.fixedPrice
+        ? parseFloat(body.fixedPrice)
+        : askingPrice;
 
       if (!name) {
         throw createError({
@@ -43,6 +46,7 @@ export default defineEventHandler(async (event) => {
           stock,
           buyPrice,
           askingPrice,
+          fixedPrice,
         },
       });
 

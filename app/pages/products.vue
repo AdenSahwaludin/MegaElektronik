@@ -95,6 +95,19 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Fixed Price (Rp)</label
+              >
+              <input
+                v-model.number="newProduct.fixedPrice"
+                type="number"
+                min="0"
+                placeholder="0"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2"
                 >Category</label
               >
               <input
@@ -191,6 +204,11 @@
                     Ask Price
                   </th>
                   <th
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell"
+                  >
+                    Fixed Price
+                  </th>
+                  <th
                     class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
                   >
                     Actions
@@ -233,6 +251,11 @@
                     class="px-4 py-3 text-right text-sm font-mono hidden lg:table-cell"
                   >
                     {{ formatCurrency(product.askingPrice) }}
+                  </td>
+                  <td
+                    class="px-4 py-3 text-right text-sm font-mono hidden lg:table-cell"
+                  >
+                    {{ formatCurrency(product.fixedPrice) }}
                   </td>
                   <td class="px-4 py-3 text-center">
                     <div class="flex items-center justify-center gap-2">
@@ -361,6 +384,18 @@
               />
             </div>
 
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Fixed Price</label
+              >
+              <input
+                v-model.number="editingProduct.fixedPrice"
+                type="number"
+                min="0"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
             <div class="flex gap-2 pt-4">
               <button
                 @click="saveProduct"
@@ -418,6 +453,7 @@ const newProduct = reactive({
   stock: 0,
   buyPrice: 0,
   askingPrice: 0,
+  fixedPrice: 0,
   category: "",
 });
 
@@ -429,6 +465,7 @@ const editingProduct = reactive({
   stock: 0,
   buyPrice: 0,
   askingPrice: 0,
+  fixedPrice: 0,
 });
 
 // Computed
@@ -471,6 +508,7 @@ const addProduct = async () => {
         stock: newProduct.stock,
         buyPrice: newProduct.buyPrice,
         askingPrice: newProduct.askingPrice,
+        fixedPrice: newProduct.fixedPrice || newProduct.askingPrice,
         category: newProduct.category || null,
       },
     });
@@ -491,6 +529,7 @@ const editProduct = (product: any) => {
   editingProduct.stock = product.stock;
   editingProduct.buyPrice = product.buyPrice;
   editingProduct.askingPrice = product.askingPrice;
+  editingProduct.fixedPrice = product.fixedPrice;
   showEditModal.value = true;
 };
 
@@ -504,6 +543,7 @@ const saveProduct = async () => {
         model: editingProduct.model,
         stock: editingProduct.stock,
         buyPrice: editingProduct.buyPrice,
+        fixedPrice: editingProduct.fixedPrice,
         askingPrice: editingProduct.askingPrice,
       },
     });
@@ -540,6 +580,7 @@ const resetForm = () => {
   newProduct.model = "";
   newProduct.stock = 0;
   newProduct.buyPrice = 0;
+  newProduct.fixedPrice = 0;
   newProduct.askingPrice = 0;
   newProduct.category = "";
 };

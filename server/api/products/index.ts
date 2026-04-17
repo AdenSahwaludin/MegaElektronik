@@ -86,7 +86,9 @@ export default defineEventHandler(async (event) => {
             stock: parseInt(body.stock, 10),
             buyPrice: parseInt(body.buyPrice, 10),
             askingPrice: parseInt(body.askingPrice, 10),
-            fixedPrice: parseInt(body.askingPrice, 10),
+            fixedPrice: body.fixedPrice
+              ? parseInt(body.fixedPrice, 10)
+              : parseInt(body.askingPrice, 10),
           },
         });
 
