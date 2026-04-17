@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { getPrismaClient } from "../../utils/prisma";
 
-const prisma = new PrismaClient();
+const prisma = getPrismaClient();
 
 export default defineEventHandler(async (event) => {
   if (getMethod(event) === "GET") {

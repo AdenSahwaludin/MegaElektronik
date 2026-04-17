@@ -36,5 +36,6 @@ export default defineNuxtConfig({
       crawlLinks: true,
       routes: ["/"],
     },
+    srcDir: "./server",
   },
 });
