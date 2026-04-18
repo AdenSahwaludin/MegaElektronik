@@ -73,7 +73,7 @@
               ]"
             >
               <div class="text-left">
-                <p class="font-bold text-sm truncate">{{ product.name }}</p>
+                <p class="font-bold text-sm ">{{ product.name }}</p>
                 <p class="text-xs text-gray-600 mb-2">
                   {{ product.brand }} - {{ product.model }}
                 </p>

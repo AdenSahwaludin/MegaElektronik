@@ -254,7 +254,7 @@
                     Model
                   </th>
                   <th
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell"
                   >
                     Stock
                   </th>
@@ -300,7 +300,7 @@
                     {{ product.model || "-" }}
                   </td>
                   <td
-                    class="px-4 py-3 text-right text-sm font-mono font-bold"
+                    class="px-4 py-3 text-right text-sm font-mono font-bold hidden lg:table-cell"
                     :class="
                       product.stock < 5 ? 'text-red-600' : 'text-green-600'
                     "
