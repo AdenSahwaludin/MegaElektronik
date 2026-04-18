@@ -259,17 +259,17 @@
                     Stock
                   </th>
                   <th
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                   >
                     Buy Price
                   </th>
                   <th
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                   >
                     Ask Price
                   </th>
                   <th
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                   >
                     Fixed Price
                   </th>
@@ -307,19 +307,13 @@
                   >
                     {{ product.stock }}
                   </td>
-                  <td
-                    class="px-4 py-3 text-right text-sm font-mono hidden lg:table-cell"
-                  >
+                  <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.buyPrice) }}
                   </td>
-                  <td
-                    class="px-4 py-3 text-right text-sm font-mono hidden lg:table-cell"
-                  >
+                  <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.askingPrice) }}
                   </td>
-                  <td
-                    class="px-4 py-3 text-right text-sm font-mono hidden lg:table-cell"
-                  >
+                  <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.fixedPrice) }}
                   </td>
                   <td class="px-4 py-3 text-center">
