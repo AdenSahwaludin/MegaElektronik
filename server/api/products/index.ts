@@ -3,9 +3,9 @@ import { getPrismaClient } from "../../utils/prisma";
 const prisma = getPrismaClient();
 
 export default defineEventHandler(async (event) => {
-  // POST: Add single product or bulk import
-  if (getMethod(event) === "POST") {
-    try {
+  try {
+    // POST: Add single product or bulk import
+    if (getMethod(event) === "POST") {
       const body = await readBody(event);
 
       // Check if it's bulk import (with products array) or single product
@@ -42,6 +42,7 @@ export default defineEventHandler(async (event) => {
                   ? parseInt(product.fixedPrice, 10)
                   : parseInt(product.askingPrice, 10),
                 stock: product.stock ? parseInt(product.stock, 10) : 0,
+                isActive: product.isActive !== false, // Default to true
               },
             });
             createdProducts.push(created);
@@ -89,6 +90,7 @@ export default defineEventHandler(async (event) => {
             fixedPrice: body.fixedPrice
               ? parseInt(body.fixedPrice, 10)
               : parseInt(body.askingPrice, 10),
+            isActive: body.isActive !== false, // Default to true
           },
         });
 
@@ -98,16 +100,50 @@ export default defineEventHandler(async (event) => {
           message: "Product added successfully",
         };
       }
-    } catch (error: any) {
-      console.error("Product error:", error);
-      throw error;
     }
-  }
 
-  // GET: Fetch all products
-  if (getMethod(event) === "GET") {
-    try {
+    // GET: Fetch all products with advanced search and pagination
+    if (getMethod(event) === "GET") {
+      const query = getQuery(event);
+      const search = (query.search as string) || "";
+      const page = parseInt(query.page as string) || 1;
+      const limit = Math.min(parseInt(query.limit as string) || 10, 100);
+      const offset = (page - 1) * limit;
+
+      // Build WHERE clause for advanced search
+      let where: any = {};
+
+      // Advanced search: split by spaces and match ALL keywords
+      if (search.trim()) {
+        const keywords = search
+          .trim()
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((k) => k.length > 0);
+
+        if (keywords.length > 0) {
+          // Every keyword must match name, brand, or model
+          const searchConditions = keywords.map((keyword) => ({
+            OR: [
+              { name: { contains: keyword } },
+              { brand: { contains: keyword } },
+              { model: { contains: keyword } },
+            ],
+          }));
+
+          // Apply AND logic: all conditions must match
+          where = {
+            AND: searchConditions,
+          };
+        }
+      }
+
+      // Fetch total count
+      const total = await prisma.product.count({ where });
+
+      // Fetch paginated results
       const products = await prisma.product.findMany({
+        where,
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
@@ -118,17 +154,28 @@ export default defineEventHandler(async (event) => {
           askingPrice: true,
           fixedPrice: true,
           stock: true,
+          isActive: true,
           createdAt: true,
           updatedAt: true,
         },
+        take: limit,
+        skip: offset,
       });
-      return { products, total: products.length };
-    } catch (error: any) {
-      console.error("Fetch products error:", error);
-      throw createError({
-        statusCode: 500,
-        statusMessage: "Failed to fetch products",
-      });
+
+      return {
+        products,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     }
+  } catch (error: any) {
+    console.error("API Handler error:", error);
+    const errorMsg = error?.message || "Internal server error";
+    throw createError({
+      statusCode: 500,
+      message: errorMsg,
+    });
   }
 });

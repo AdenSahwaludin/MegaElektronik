@@ -8,17 +8,14 @@ useHead({
     lang: "id",
   },
 });
-
-const title = "Mega Elektronik";
-const description =
-  "A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.";
-
 useSeoMeta({
-  title,
-  description,
-  ogTitle: title,
-  ogDescription: description,
-  ogImage: "https://ui.nuxt.com/assets/templates/nuxt/starter-light.png",
+  title: "Mega Elektronik",
+  ogTitle: "Mega Elektronik - Sistem Kasir dan Manajemen Stok",
+  description:
+    "Aplikasi Point of Sale (POS) dan manajemen stok untuk toko Mega Elektronik.",
+  ogDescription:
+    "Aplikasi Point of Sale (POS) dan manajemen stok untuk toko Mega Elektronik.",
+  ogImage: "/cover-image.png", // Kita akan bahas ini di langkah 2
   twitterCard: "summary_large_image",
 });
 </script>

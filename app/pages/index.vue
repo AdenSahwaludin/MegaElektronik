@@ -581,6 +581,7 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
+import { watch, computed, ref } from "vue";
 import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 
@@ -597,7 +598,7 @@ const loading = ref(false);
 const searchQuery = ref("");
 
 // Customer Form
-const showCustomerForm = ref(false);
+const showCustomerForm = ref(true); // Changed: default to true (expanded)
 const showMobileCart = ref(false);
 const newCustomer = reactive({
   name: "",
@@ -611,24 +612,27 @@ const successMessage = ref("");
 
 // Computed
 const filteredProducts = computed(() => {
-  const query = searchQuery.value.toLowerCase();
-  return products.value.filter(
-    (p) =>
-      p.name.toLowerCase().includes(query) ||
-      p.brand.toLowerCase().includes(query) ||
-      p.model.toLowerCase().includes(query),
-  );
+  // Products are already filtered & active on server, just return them
+  return products.value;
 });
 
 const lowStockProducts = computed(() => {
-  return products.value.filter((p) => p.stock > 0 && p.stock < 5);
+  return products.value.filter((p) => p.stock >= 0 && p.stock < 2);
 });
 
 // Methods
 const fetchProducts = async () => {
   loading.value = true;
   try {
-    const response = await $fetch<any>("/api/products");
+    // Use advanced search from API - pass searchQuery as parameter
+    const params = new URLSearchParams();
+    if (searchQuery.value.trim()) {
+      params.append("search", searchQuery.value);
+    }
+    params.append("limit", "100"); // Get all products for POS view
+
+    const url = `/api/products?${params.toString()}`;
+    const response = await $fetch<any>(url);
     products.value = response.products || [];
   } catch (error) {
     console.error("Error loading products:", error);
@@ -642,6 +646,15 @@ const refreshProducts = async () => {
   await fetchProducts();
   showToast("Produk diperbarui");
 };
+
+// Watch for search query changes with debounce
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(searchQuery, async () => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(async () => {
+    await fetchProducts();
+  }, 300);
+});
 
 const addProductToCart = (product: any) => {
   if (product.stock > 0) {

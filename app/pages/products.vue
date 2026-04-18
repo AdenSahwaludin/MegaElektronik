@@ -148,8 +148,73 @@
           <div class="px-6 py-4 bg-orange-600 text-white">
             <h2 class="text-lg lg:text-xl font-bold flex items-center gap-2">
               <Icon name="lucide:list" class="w-6 h-6" />
-              Product List ({{ products.length }})
+              Product List ({{ totalItems }})
             </h2>
+          </div>
+
+          <!-- Search and Pagination Controls -->
+          <div class="px-6 py-4 border-b border-gray-200 space-y-4">
+            <!-- Search Input -->
+            <div class="flex gap-2">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search products by name, brand, or model..."
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
+            <!-- Pagination Info and Controls -->
+            <div
+              class="flex flex-col sm:flex-row items-center justify-between gap-4"
+            >
+              <!-- Items Per Page Selector -->
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-semibold text-gray-700"
+                  >Items per page:</label
+                >
+                <select
+                  :value="itemsPerPage"
+                  @change="
+                    changeItemsPerPage(
+                      parseInt(($event.target as HTMLSelectElement).value),
+                    )
+                  "
+                  class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option :value="10">10</option>
+                  <option :value="25">25</option>
+                  <option :value="50">50</option>
+                </select>
+              </div>
+
+              <!-- Pagination Info -->
+              <div class="text-sm text-gray-600">
+                <span v-if="totalItems > 0">
+                  Page {{ currentPage }} of {{ totalPages }} |
+                  {{ totalItems }} total items
+                </span>
+                <span v-else>No products found</span>
+              </div>
+
+              <!-- Pagination Buttons -->
+              <div class="flex items-center gap-2">
+                <button
+                  @click="goToPreviousPage"
+                  :disabled="!canGoToPrevPage"
+                  class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition font-semibold"
+                >
+                  ← Previous
+                </button>
+                <button
+                  @click="goToNextPage"
+                  :disabled="!canGoToNextPage"
+                  class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition font-semibold"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
           </div>
 
           <div v-if="loading" class="flex items-center justify-center py-20">
@@ -281,14 +346,45 @@
           </div>
 
           <div
-            v-if="products.length > 0"
-            class="bg-gray-50 border-t border-gray-300 px-6 py-4"
+            v-if="!loading && products.length === 0"
+            class="flex items-center justify-center py-20"
+          >
+            <p class="text-gray-500 text-lg">No products found</p>
+          </div>
+
+          <div
+            v-if="!loading && products.length > 0"
+            class="bg-gray-50 border-t border-gray-300 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"
           >
             <p class="text-sm text-gray-600">
               <Icon name="lucide:info" class="w-4 h-4 inline mr-1" />
-              Total {{ products.length }} products | Total Stock:
+              Showing {{ (currentPage - 1) * itemsPerPage + 1 }}-{{
+                Math.min(currentPage * itemsPerPage, totalItems)
+              }}
+              of {{ totalItems }} products | Total Stock:
               <span class="font-bold">{{ totalStock }}</span>
             </p>
+
+            <!-- Bottom Pagination Controls -->
+            <div class="flex items-center gap-2">
+              <button
+                @click="goToPreviousPage"
+                :disabled="!canGoToPrevPage"
+                class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
+              >
+                ← Prev
+              </button>
+              <div class="text-sm font-semibold text-gray-700">
+                {{ currentPage }} / {{ totalPages }}
+              </div>
+              <button
+                @click="goToNextPage"
+                :disabled="!canGoToNextPage"
+                class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
+              >
+                Next →
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -431,6 +527,7 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
+import { watch, computed, ref, reactive } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 
 definePageMeta({
@@ -445,6 +542,13 @@ const loading = ref(false);
 const showEditModal = ref(false);
 const showMessage = ref(false);
 const message = ref("");
+
+// Search and Pagination State
+const searchQuery = ref("");
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+const totalItems = ref(0);
+const totalPages = ref(0);
 
 const newProduct = reactive({
   name: "",
@@ -473,12 +577,26 @@ const totalStock = computed(() => {
   return products.value.reduce((sum, p) => sum + p.stock, 0);
 });
 
+const canGoToPrevPage = computed(() => currentPage.value > 1);
+const canGoToNextPage = computed(() => currentPage.value < totalPages.value);
+
 // Methods
 const fetchProducts = async () => {
   loading.value = true;
   try {
-    const response = await $fetch<any>("/api/products");
+    // Build query with search and pagination
+    const params = new URLSearchParams();
+    if (searchQuery.value.trim()) {
+      params.append("search", searchQuery.value);
+    }
+    params.append("page", currentPage.value.toString());
+    params.append("limit", itemsPerPage.value.toString());
+
+    const url = `/api/products?${params.toString()}`;
+    const response = await $fetch<any>(url);
     products.value = response.products || [];
+    totalItems.value = response.total || 0;
+    totalPages.value = response.totalPages || 0;
   } catch (error) {
     console.error("Error loading products:", error);
     showToast("Failed to load products");
@@ -592,6 +710,44 @@ const showToast = (msg: string) => {
     showMessage.value = false;
   }, 3000);
 };
+
+// Pagination Methods
+const goToPreviousPage = () => {
+  if (canGoToPrevPage.value) {
+    currentPage.value--;
+    fetchProducts();
+  }
+};
+
+const goToNextPage = () => {
+  if (canGoToNextPage.value) {
+    currentPage.value++;
+    fetchProducts();
+  }
+};
+
+const goToPage = (page: number) => {
+  if (page > 0 && page <= totalPages.value) {
+    currentPage.value = page;
+    fetchProducts();
+  }
+};
+
+const changeItemsPerPage = (newLimit: number) => {
+  itemsPerPage.value = newLimit;
+  currentPage.value = 1; // Reset to first page
+  fetchProducts();
+};
+
+// Watch for search query changes with debounce
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(searchQuery, () => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(async () => {
+    currentPage.value = 1; // Reset to first page on search
+    await fetchProducts();
+  }, 300);
+});
 
 // Lifecycle
 onMounted(() => {

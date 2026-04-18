@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
       const fixedPrice = body.fixedPrice
         ? parseFloat(body.fixedPrice)
         : askingPrice;
+      const isActive = body.isActive !== false; // Default to true if not specified
 
       if (!name) {
         throw createError({
@@ -47,6 +48,7 @@ export default defineEventHandler(async (event) => {
           buyPrice,
           askingPrice,
           fixedPrice,
+          isActive,
         },
       });
 
