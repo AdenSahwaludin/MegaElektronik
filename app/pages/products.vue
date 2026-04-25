@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen w-screen bg-orange-50 flex flex-col overflow-hidden">
+  <div class="h-screen w-full bg-orange-50 flex flex-col overflow-hidden">
     <!-- App Header with Navigation -->
     <AppHeader />
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto p-4 lg:p-6 mt-12 lg:mt-10">
+    <div class="flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
       <div class="max-w-7xl mx-auto">
         <!-- Add Product Section -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
@@ -20,7 +20,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Product Name *</label
+                >Nama Produk *</label
               >
               <input
                 v-model="newProduct.name"
@@ -32,7 +32,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Brand</label
+                >Merk</label
               >
               <input
                 v-model="newProduct.brand"
@@ -44,7 +44,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Model</label
+                >Model/Tipe</label
               >
               <input
                 v-model="newProduct.model"
@@ -56,7 +56,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Stock *</label
+                >Stok *</label
               >
               <input
                 v-model.number="newProduct.stock"
@@ -69,7 +69,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Buying Price (Rp) *</label
+                >Harga Beli (Rp) *</label
               >
               <input
                 v-model.number="newProduct.buyPrice"
@@ -82,7 +82,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Asking Price (Rp) *</label
+                >Harga Tawar (Rp) *</label
               >
               <input
                 v-model.number="newProduct.askingPrice"
@@ -95,7 +95,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Fixed Price (Rp)</label
+                >Harga Pas (Rp)</label
               >
               <input
                 v-model.number="newProduct.fixedPrice"
@@ -108,7 +108,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Category</label
+                >Kategori</label
               >
               <input
                 v-model="newProduct.category"
@@ -130,7 +130,7 @@
                 class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
               >
                 <Icon name="lucide:check" class="w-5 h-5" />
-                <span class="hidden sm:inline">Add</span>
+                <span class="hidden sm:inline">Tambah</span>
               </button>
               <button
                 @click="resetForm"
@@ -148,7 +148,7 @@
           <div class="px-6 py-4 bg-orange-600 text-white">
             <h2 class="text-lg lg:text-xl font-bold flex items-center gap-2">
               <Icon name="lucide:list" class="w-6 h-6" />
-              Product List ({{ totalItems }})
+              Daftar Produk ({{ totalItems }})
             </h2>
           </div>
 
@@ -159,7 +159,7 @@
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="Search products by name, brand, or model..."
+                placeholder="Cari produk pake nama, merk, atau model..."
                 class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -171,7 +171,7 @@
               <!-- Items Per Page Selector -->
               <div class="flex items-center gap-2">
                 <label class="text-sm font-semibold text-gray-700"
-                  >Items per page:</label
+                  >Item per halaman:</label
                 >
                 <select
                   :value="itemsPerPage"
@@ -191,10 +191,10 @@
               <!-- Pagination Info -->
               <div class="text-sm text-gray-600">
                 <span v-if="totalItems > 0">
-                  Page {{ currentPage }} of {{ totalPages }} |
-                  {{ totalItems }} total items
+                  Halaman {{ currentPage }} dari {{ totalPages }} |
+                  Total {{ totalItems }} item
                 </span>
-                <span v-else>No products found</span>
+                <span v-else>0 item ditemukan</span>
               </div>
 
               <!-- Pagination Buttons -->
@@ -204,14 +204,14 @@
                   :disabled="!canGoToPrevPage"
                   class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition font-semibold"
                 >
-                  ← Previous
+                  ← Sebelumnya
                 </button>
                 <button
                   @click="goToNextPage"
                   :disabled="!canGoToNextPage"
                   class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition font-semibold"
                 >
-                  Next →
+                  Lanjut →
                 </button>
               </div>
             </div>
@@ -220,18 +220,31 @@
           <div v-if="loading" class="flex items-center justify-center py-20">
             <p class="text-gray-500 flex items-center gap-2">
               <Icon name="lucide:loader" class="w-5 h-5 animate-spin" />
-              Loading products...
+              Lagi loading produk...
             </p>
           </div>
 
           <div
             v-else-if="products.length === 0"
-            class="flex items-center justify-center py-20"
+            class="flex flex-col items-center justify-center py-20 text-center"
           >
-            <p class="text-gray-500 flex items-center gap-2">
-              <Icon name="lucide:inbox" class="w-5 h-5" />
-              No products yet. Add one above.
+            <div class="bg-orange-100 p-4 rounded-full mb-4">
+              <Icon :name="searchQuery ? 'lucide:search-x' : 'lucide:inbox'" class="w-10 h-10 text-orange-600" />
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">
+              {{ searchQuery ? 'Produk nggak ketemu' : 'Belum ada produk' }}
+            </h3>
+            <p class="text-gray-500 max-w-xs mx-auto">
+              {{ searchQuery ? `Maaf, produk dengan kata kunci "${searchQuery}" nggak ada di daftar.` : 'Daftar produk kamu masih kosong nih. Yuk tambahin produk baru di atas!' }}
             </p>
+            <button 
+              v-if="searchQuery"
+              @click="searchQuery = ''"
+              class="mt-4 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition font-semibold flex items-center gap-2"
+            >
+              <Icon name="lucide:refresh-cw" class="w-4 h-4" />
+              Reset Pencarian
+            </button>
           </div>
 
           <div v-else class="overflow-x-auto">
@@ -239,14 +252,14 @@
               <thead class="bg-gray-100 border-b border-gray-300">
                 <tr>
                   <th
-                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-1/4 min-w-[200px]"
                   >
-                    Product Name
+                    Nama Produk
                   </th>
                   <th
                     class="px-4 py-3 text-left text-sm font-semibold text-gray-700 hidden sm:table-cell"
                   >
-                    Brand
+                    Merk
                   </th>
                   <th
                     class="px-4 py-3 text-left text-sm font-semibold text-gray-700 hidden md:table-cell"
@@ -256,27 +269,27 @@
                   <th
                     class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell"
                   >
-                    Stock
+                    Stok
                   </th>
                   <th
                     class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                   >
-                    Buy Price
+                    Harga Tawar
                   </th>
                   <th
                     class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                   >
-                    Ask Price
+                    Harga Pas
                   </th>
                   <th
                     class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
                   >
-                    Fixed Price
+                    Harga Beli
                   </th>
                   <th
                     class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
                   >
-                    Actions
+                    Aksi
                   </th>
                 </tr>
               </thead>
@@ -286,7 +299,7 @@
                   :key="product.id"
                   class="hover:bg-orange-50 transition"
                 >
-                  <td class="px-4 py-3 text-sm font-semibold text-gray-800">
+                  <td class="px-4 py-3 text-sm font-semibold text-gray-800 break-words max-w-[300px]">
                     {{ product.name }}
                   </td>
                   <td
@@ -308,13 +321,13 @@
                     {{ product.stock }}
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
-                    {{ formatCurrency(product.buyPrice) }}
-                  </td>
-                  <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.askingPrice) }}
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.fixedPrice) }}
+                  </td>
+                  <td class="px-4 py-3 text-right text-sm font-mono">
+                    {{ formatCurrency(product.buyPrice) }}
                   </td>
                   <td class="px-4 py-3 text-center">
                     <div class="flex items-center justify-center gap-2">
@@ -330,7 +343,7 @@
                         class="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded transition flex items-center gap-1 text-sm"
                       >
                         <Icon name="lucide:trash" class="w-4 h-4" />
-                        <span class="hidden sm:inline">Delete</span>
+                        <span class="hidden sm:inline">Hapus</span>
                       </button>
                     </div>
                   </td>
@@ -339,12 +352,6 @@
             </table>
           </div>
 
-          <div
-            v-if="!loading && products.length === 0"
-            class="flex items-center justify-center py-20"
-          >
-            <p class="text-gray-500 text-lg">No products found</p>
-          </div>
 
           <div
             v-if="!loading && products.length > 0"
@@ -352,10 +359,10 @@
           >
             <p class="text-sm text-gray-600">
               <Icon name="lucide:info" class="w-4 h-4 inline mr-1" />
-              Showing {{ (currentPage - 1) * itemsPerPage + 1 }}-{{
+              Nampilin {{ (currentPage - 1) * itemsPerPage + 1 }}-{{
                 Math.min(currentPage * itemsPerPage, totalItems)
               }}
-              of {{ totalItems }} products | Total Stock:
+              dari {{ totalItems }} produk | Total Stok:
               <span class="font-bold">{{ totalStock }}</span>
             </p>
 
@@ -366,7 +373,7 @@
                 :disabled="!canGoToPrevPage"
                 class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
               >
-                ← Prev
+                ← Sebelum
               </button>
               <div class="text-sm font-semibold text-gray-700">
                 {{ currentPage }} / {{ totalPages }}
@@ -376,7 +383,7 @@
                 :disabled="!canGoToNextPage"
                 class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
               >
-                Next →
+                Lanjut →
               </button>
             </div>
           </div>
@@ -394,7 +401,7 @@
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Icon name="lucide:edit-2" class="w-6 h-6 text-orange-600" />
-              Edit Product
+              Edit Produk
             </h3>
             <button
               @click="showEditModal = false"
@@ -407,7 +414,7 @@
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Product Name</label
+                >Nama Produk</label
               >
               <input
                 v-model="editingProduct.name"
@@ -418,7 +425,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Brand</label
+                >Merk</label
               >
               <input
                 v-model="editingProduct.brand"
@@ -440,7 +447,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Stock</label
+                >Stok</label
               >
               <input
                 v-model.number="editingProduct.stock"
@@ -452,7 +459,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Buying Price</label
+                >Harga Beli</label
               >
               <input
                 v-model.number="editingProduct.buyPrice"
@@ -464,7 +471,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Asking Price</label
+                >Harga Tawar</label
               >
               <input
                 v-model.number="editingProduct.askingPrice"
@@ -476,7 +483,7 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Fixed Price</label
+                >Harga Pas</label
               >
               <input
                 v-model.number="editingProduct.fixedPrice"
@@ -492,13 +499,13 @@
                 class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
               >
                 <Icon name="lucide:save" class="w-5 h-5" />
-                Save
+                Simpan
               </button>
               <button
                 @click="showEditModal = false"
                 class="flex-1 px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white font-semibold rounded-lg transition"
               >
-                Cancel
+                Batal
               </button>
             </div>
           </div>
@@ -593,7 +600,7 @@ const fetchProducts = async () => {
     totalPages.value = response.totalPages || 0;
   } catch (error) {
     console.error("Error loading products:", error);
-    showToast("Failed to load products");
+    showToast("Gagal muat data produk");
   } finally {
     loading.value = false;
   }
@@ -606,7 +613,7 @@ const addProduct = async () => {
     !newProduct.buyPrice ||
     !newProduct.askingPrice
   ) {
-    showToast("Please fill all required fields");
+    showToast("Isi dulu semua yang wajib ya");
     return;
   }
 
@@ -627,9 +634,9 @@ const addProduct = async () => {
 
     products.value.push(response.product);
     resetForm();
-    showToast("Product added successfully!");
+    showToast("Sip, produk udah ditambah!");
   } catch (error: any) {
-    showToast(error.message || "Failed to add product");
+    showToast(error.message || "Yah, gagal nambahin produk");
   }
 };
 
@@ -665,14 +672,14 @@ const saveProduct = async () => {
       products.value[index] = response.product;
     }
     showEditModal.value = false;
-    showToast("Product updated successfully!");
+    showToast("Sip, produk udah diupdate!");
   } catch (error: any) {
-    showToast(error.message || "Failed to update product");
+    showToast(error.message || "Yah, gagal update produk");
   }
 };
 
 const deleteProduct = async (productId: string) => {
-  if (!confirm("Delete this product?")) return;
+  if (!confirm("Beneran mau hapus produk ini?")) return;
 
   try {
     await $fetch(`/api/products/${productId}`, {
@@ -680,9 +687,9 @@ const deleteProduct = async (productId: string) => {
     });
 
     products.value = products.value.filter((p) => p.id !== productId);
-    showToast("Product deleted successfully!");
+    showToast("Oke, produk udah dihapus");
   } catch (error: any) {
-    showToast(error.message || "Failed to delete product");
+    showToast(error.message || "Waduh, gagal hapus produk");
   }
 };
 

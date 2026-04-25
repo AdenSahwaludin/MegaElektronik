@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ref, computed } from "vue";
 
 export interface CartItem {
   id: string; // unique cart item ID (uuid or same as product id)
@@ -114,7 +115,7 @@ export const useCartStore = defineStore("cart", () => {
   // Checkout
   const checkout = async () => {
     if (items.value.length === 0) {
-      throw new Error("Cart is empty");
+      throw new Error("Keranjang masih kosong nih");
     }
 
     isProcessing.value = true;

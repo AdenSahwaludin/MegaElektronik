@@ -1,11 +1,11 @@
 <template>
-  <div class="h-screen w-screen bg-orange-50 flex flex-col overflow-hidden">
+  <div class="h-screen w-full bg-orange-50 flex flex-col overflow-hidden">
     <!-- App Header with Navigation -->
     <AppHeader />
 
     <!-- Main Content - Split Layout (iPad Optimized, Responsive) -->
     <div
-      class="flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden mt-12 lg:mt-10"
+      class="flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
     >
       <!-- Left Panel: Products Grid (Full width on mobile, flex-1 on desktop) -->
       <div class="flex-1 flex flex-col bg-white rounded-lg shadow">
@@ -54,12 +54,18 @@
 
           <div
             v-else-if="filteredProducts.length === 0"
-            class="flex items-center justify-center h-full"
+            class="flex flex-col items-center justify-center h-full text-center p-6"
           >
-            <p class="text-gray-500">Produk gak ada</p>
+            <Icon :name="searchQuery ? 'lucide:search-x' : 'lucide:package-open'" class="w-12 h-12 text-gray-300 mb-2" />
+            <p class="text-gray-500 font-semibold">
+              {{ searchQuery ? 'Produk nggak ketemu' : 'Belum ada produk' }}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+              {{ searchQuery ? 'Coba cari dengan kata kunci lain ya.' : 'Daftar produk masih kosong.' }}
+            </p>
           </div>
 
-          <div v-else class="grid grid-cols-2 gap-3 auto-rows-max">
+          <div v-else class="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-max">
             <button
               v-for="product in filteredProducts"
               :key="product.id"
@@ -73,10 +79,12 @@
               ]"
             >
               <div class="text-left">
-                <p class="font-bold text-sm ">{{ product.name }}</p>
-                <p class="text-xs text-gray-600 mb-2">
-                  {{ product.brand }} - {{ product.model }}
-                </p>
+                <div class="min-h-[3rem]">
+                  <p class="font-bold text-sm line-clamp-2">{{ product.name }}</p>
+                  <p class="text-xs text-gray-600 mb-2 truncate">
+                    {{ product.brand }} - {{ product.model }}
+                  </p>
+                </div>
                 <div class="space-y-1">
                   <div class="text-xs space-y-0.5">
                     <p class="text-gray-600">
@@ -121,7 +129,7 @@
             @click="showCustomerForm = !showCustomerForm"
             class="w-full flex items-center justify-between font-bold text-sm text-gray-900 hover:text-orange-700 transition"
           >
-            <span>Data Pelanggan (Opsional)</span>
+            <span>Data Pelanggan (Kalo ada)</span>
             <Icon
               :name="
                 showCustomerForm ? 'lucide:chevron-up' : 'lucide:chevron-down'
@@ -179,7 +187,7 @@
           v-if="cartStore.items.length === 0"
           class="flex-1 flex items-center justify-center text-gray-500"
         >
-          <p>Keranjang kosong</p>
+          <p>Keranjang masih sepi nih</p>
         </div>
 
         <div v-else class="flex-1 overflow-y-auto px-3 py-3 space-y-3">
@@ -230,9 +238,10 @@
 
             <!-- Price Input (Bargaining Feature) -->
             <div class="mb-2">
-              <label class="text-xs font-semibold block mb-1"
-                >Harga/Unit:</label
-              >
+              <label class="text-xs font-semibold mb-1 flex justify-between items-end">
+                <span>Harga/Unit:</span>
+                <span class="text-[10px] font-normal text-gray-400 italic">harga bisa diubah</span>
+              </label>
               <div class="relative">
                 <span
                   class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm"
@@ -250,7 +259,7 @@
                 class="text-xs text-red-600 mt-1 flex items-center gap-1"
               >
                 <Icon name="lucide:alert-circle" class="w-4 h-4" />
-                Harga di bawah pokok!
+                Harga di bawah modal!
               </p>
             </div>
 
@@ -322,14 +331,14 @@
             :disabled="cartStore.items.length === 0 || cartStore.isProcessing"
             class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-lg rounded-lg transition"
           >
-            {{ cartStore.isProcessing ? "Proses..." : "Bayar" }}
+            {{ cartStore.isProcessing ? "Sabar..." : "Bayar Sekarang" }}
           </button>
           <button
             @click="handleClearCart"
             :disabled="cartStore.items.length === 0"
             class="w-full px-4 py-3 bg-orange-400 hover:bg-orange-500 disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
           >
-            Hapus Semua
+            Kosongin Keranjang
           </button>
         </div>
       </div>
@@ -380,7 +389,7 @@
               @click="showCustomerForm = !showCustomerForm"
               class="w-full flex items-center justify-between font-bold text-sm text-gray-900 hover:text-orange-700 transition"
             >
-              <span>Data Pelanggan</span>
+              <span>Data Pelanggan (Kalo ada)</span>
               <Icon
                 :name="
                   showCustomerForm ? 'lucide:chevron-up' : 'lucide:chevron-down'
@@ -395,19 +404,19 @@
               <input
                 v-model="newCustomer.name"
                 type="text"
-                placeholder="Nama pelanggan"
+                placeholder="Nama pembeli"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               <input
                 v-model="newCustomer.phone"
                 type="tel"
-                placeholder="No HP (opsional)"
+                placeholder="No HP (Kalo ada)"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               <input
                 v-model="newCustomer.address"
                 type="text"
-                placeholder="Alamat (opsional)"
+                placeholder="Alamat (Kalo ada)"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               <button
@@ -434,7 +443,7 @@
             v-if="cartStore.items.length === 0"
             class="flex items-center justify-center py-20 text-gray-500"
           >
-            <p>Keranjang kosong</p>
+            <p>Keranjang masih sepi nih</p>
           </div>
 
           <div v-else class="px-3 py-3 space-y-3">
@@ -484,9 +493,10 @@
                 </div>
               </div>
               <div class="mb-2">
-                <label class="text-xs font-semibold block mb-1"
-                  >Harga/Unit:</label
-                >
+                <label class="text-xs font-semibold mb-1 flex justify-between items-end">
+                  <span>Harga/Unit:</span>
+                  <span class="text-[10px] font-normal text-gray-400 italic">harga bisa diubah</span>
+                </label>
                 <div class="relative">
                   <span
                     class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm"
@@ -563,14 +573,14 @@
               :disabled="cartStore.items.length === 0 || cartStore.isProcessing"
               class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
             >
-              {{ cartStore.isProcessing ? "Proses..." : "Bayar" }}
+              {{ cartStore.isProcessing ? "Sabar..." : "Bayar Sekarang" }}
             </button>
             <button
               @click="handleClearCart"
               :disabled="cartStore.items.length === 0"
               class="w-full px-4 py-3 bg-orange-400 hover:bg-orange-500 disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
             >
-              Hapus Semua
+              Kosongin Keranjang
             </button>
           </div>
         </div>
@@ -598,7 +608,7 @@ const loading = ref(false);
 const searchQuery = ref("");
 
 // Customer Form
-const showCustomerForm = ref(true); // Changed: default to true (expanded)
+const showCustomerForm = ref(false); // Changed: default to true (expanded)
 const showMobileCart = ref(false);
 const newCustomer = reactive({
   name: "",
@@ -636,7 +646,7 @@ const fetchProducts = async () => {
     products.value = response.products || [];
   } catch (error) {
     console.error("Error loading products:", error);
-    showToast("Gagal muat produk");
+    showToast("Yah, gagal muat produk nih");
   } finally {
     loading.value = false;
   }
@@ -644,7 +654,7 @@ const fetchProducts = async () => {
 
 const refreshProducts = async () => {
   await fetchProducts();
-  showToast("Produk diperbarui");
+  showToast("Sip, produk udah refresh");
 };
 
 // Watch for search query changes with debounce
@@ -671,22 +681,22 @@ const handlePriceInput = (cartItemId: string, event: Event) => {
 const handleCheckout = async () => {
   try {
     await cartStore.checkout();
-    showToast("✓ Transaksi berhasil!");
+    showToast("✓ Mantap, transaksi berhasil!");
     await fetchProducts(); // Refresh product stock
   } catch (error: any) {
-    showToast("❌ " + (error.message || "Transaksi gagal"));
+    showToast("❌ Duh, " + (error.message || "transaksinya gagal nih"));
   }
 };
 
 const handleClearCart = () => {
-  if (confirm("Hapus semua dari keranjang?")) {
+  if (confirm("Mau kosongin keranjang?")) {
     cartStore.clearCart();
   }
 };
 
 const createNewCustomer = async () => {
   if (!newCustomer.name.trim()) {
-    showToast("Nama pelanggan diperlukan");
+    showToast("Eh, nama pelanggannya diisi dulu dong");
     return;
   }
 
@@ -704,9 +714,9 @@ const createNewCustomer = async () => {
     newCustomer.name = "";
     newCustomer.phone = "";
     newCustomer.address = "";
-    showToast("✓ Pelanggan dibuat!");
+    showToast("✓ Pelanggan baru udah dibuat!");
   } catch (error: any) {
-    showToast("❌ " + (error.message || "Gagal buat pelanggan"));
+    showToast("❌ Yah, " + (error.message || "gagal pas bikin data pelanggan"));
   }
 };
 

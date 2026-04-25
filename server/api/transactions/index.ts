@@ -171,7 +171,7 @@ export default defineEventHandler(async (event) => {
     console.error("Fetch transactions error:", error);
     throw createError({
       statusCode: 500,
-      statusMessage: "Failed to fetch transactions",
+      statusMessage: "Gagal ngambil data transaksi",
     });
   }
 });

@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
           ) {
             throw createError({
               statusCode: 400,
-              statusMessage: `Invalid product format: ${JSON.stringify(product)}`,
+              statusMessage: `Format produk nggak bener: ${JSON.stringify(product)}`,
             });
           }
 
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
           success: true,
           importedCount: createdProducts.length,
           skipped: body.products.length - createdProducts.length,
-          message: `Successfully imported ${createdProducts.length} products`,
+          message: `Sip, berhasil import ${createdProducts.length} produk`,
         };
       } else {
         // Single product mode
@@ -75,7 +75,7 @@ export default defineEventHandler(async (event) => {
           throw createError({
             statusCode: 400,
             statusMessage:
-              "Missing required fields: name, stock, buyPrice, askingPrice",
+              "Isi dulu semua yang wajib: nama, stok, harga beli, harga tawar",
           });
         }
 
@@ -97,7 +97,7 @@ export default defineEventHandler(async (event) => {
         return {
           success: true,
           product,
-          message: "Product added successfully",
+          message: "Produk berhasil ditambah",
         };
       }
     }
@@ -172,7 +172,7 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error: any) {
     console.error("API Handler error:", error);
-    const errorMsg = error?.message || "Internal server error";
+    const errorMsg = error?.message || "Yah, ada error di server nih";
     throw createError({
       statusCode: 500,
       message: errorMsg,
