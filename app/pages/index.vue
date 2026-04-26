@@ -5,7 +5,7 @@
 
     <!-- Main Content - Split Layout (iPad Optimized, Responsive) -->
     <div
-      class="flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
+      class="mt-4 flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
     >
       <!-- Left Panel: Products Grid (Full width on mobile, flex-1 on desktop) -->
       <div class="flex-1 flex flex-col bg-white rounded-lg shadow">
@@ -95,6 +95,9 @@
                     </p>
                     <p class="text-orange-600 font-bold">
                       Pas: {{ formatCurrency(product.fixedPrice) }}
+                    </p>
+                    <p class="text-[10px] text-gray-400 italic">
+                      Modal: {{ formatCurrency(product.buyPrice) }}
                     </p>
                   </div>
                   <p class="text-xs text-gray-500">
@@ -318,9 +321,14 @@
             class="flex justify-between items-center text-sm bg-white p-2 rounded border border-green-200"
           >
             <span class="text-green-700 font-semibold">Untung Bersih:</span>
-            <span class="font-bold text-lg text-green-600">{{
-              formatCurrency(cartStore.totalProfit)
-            }}</span>
+            <div class="flex flex-col items-end">
+              <span class="font-bold text-lg text-green-600">{{
+                formatCurrency(cartStore.totalProfit)
+              }}</span>
+              <span v-if="cartStore.totalCost > 0" class="text-[10px] text-green-500 font-bold">
+                untung {{ ((cartStore.totalProfit / cartStore.totalCost) * 100).toFixed(1) }}% dari modal
+              </span>
+            </div>
           </div>
         </div>
 
@@ -563,9 +571,14 @@
             class="flex justify-between items-center text-sm bg-white p-2 rounded border border-green-200"
           >
             <span class="text-green-700 font-semibold">Untung:</span>
-            <span class="font-bold text-lg text-green-600">{{
-              formatCurrency(cartStore.totalProfit)
-            }}</span>
+            <div class="flex flex-col items-end">
+              <span class="font-bold text-lg text-green-600">{{
+                formatCurrency(cartStore.totalProfit)
+              }}</span>
+              <span v-if="cartStore.totalCost > 0" class="text-[10px] text-green-500 font-bold">
+                untung {{ ((cartStore.totalProfit / cartStore.totalCost) * 100).toFixed(1) }}% dari modal
+              </span>
+            </div>
           </div>
           <div class="space-y-2 pt-4">
             <button

@@ -19,11 +19,21 @@
               {{ formatCurrency(summary.totalRevenue) }}
             </p>
           </div>
-          <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
-            <p class="text-sm text-gray-600 mb-1">Total Untung</p>
-            <p class="text-2xl font-bold text-green-600">
-              {{ formatCurrency(summary.totalProfit) }}
-            </p>
+          <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500 flex justify-between items-start">
+            <div>
+              <p class="text-sm text-gray-600 mb-1">Total Untung</p>
+              <p class="text-2xl font-bold text-green-600">
+                {{ formatCurrency(summary.totalProfit) }}
+              </p>
+            </div>
+            <div 
+              v-if="summary.totalCost > 0"
+              class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1"
+              title="Keuntungan dibanding total modal"
+            >
+              <Icon name="lucide:trending-up" class="w-3 h-3" />
+              {{ markupPercentage }}%
+            </div>
           </div>
           <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
             <p class="text-sm text-gray-600 mb-1">Total Transaksi</p>
@@ -145,8 +155,13 @@
                   <td class="px-6 py-4 text-right font-bold">
                     {{ formatCurrency(transaction.totalAmount) }}
                   </td>
-                  <td class="px-6 py-4 text-right font-bold text-green-600">
-                    {{ formatCurrency(transaction.totalProfit) }}
+                  <td class="px-6 py-4 text-right">
+                    <p class="font-bold text-green-600">
+                      {{ formatCurrency(transaction.totalProfit) }}
+                    </p>
+                    <p v-if="transaction.totalAmount - transaction.totalProfit > 0" class="text-[10px] text-green-500 font-medium">
+                      untung {{ ((transaction.totalProfit / (transaction.totalAmount - transaction.totalProfit)) * 100).toFixed(1) }}% dari modal
+                    </p>
                   </td>
                   <td class="px-6 py-4 text-center">
                     <button
@@ -214,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 
 definePageMeta({
@@ -238,6 +253,12 @@ const totalPages = ref(1);
 const totalCount = ref(0);
 const dateRange = ref("all");
 const searchQuery = ref("");
+
+// Computed
+const markupPercentage = computed(() => {
+  if (!summary.value.totalCost) return "0";
+  return ((summary.value.totalProfit / summary.value.totalCost) * 100).toFixed(1);
+});
 
 // Methods
 const fetchTransactions = async () => {
