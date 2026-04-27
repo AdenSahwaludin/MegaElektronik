@@ -5,7 +5,7 @@
 
     <!-- Main Content - Split Layout (iPad Optimized, Responsive) -->
     <div
-      class="mt-4 flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
+      class="mt-8 flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
     >
       <!-- Left Panel: Products Grid (Full width on mobile, flex-1 on desktop) -->
       <div class="flex-1 flex flex-col bg-white rounded-lg shadow">
@@ -56,16 +56,26 @@
             v-else-if="filteredProducts.length === 0"
             class="flex flex-col items-center justify-center h-full text-center p-6"
           >
-            <Icon :name="searchQuery ? 'lucide:search-x' : 'lucide:package-open'" class="w-12 h-12 text-gray-300 mb-2" />
+            <Icon
+              :name="searchQuery ? 'lucide:search-x' : 'lucide:package-open'"
+              class="w-12 h-12 text-gray-300 mb-2"
+            />
             <p class="text-gray-500 font-semibold">
-              {{ searchQuery ? 'Produk nggak ketemu' : 'Belum ada produk' }}
+              {{ searchQuery ? "Produk nggak ketemu" : "Belum ada produk" }}
             </p>
             <p class="text-xs text-gray-400 mt-1">
-              {{ searchQuery ? 'Coba cari dengan kata kunci lain ya.' : 'Daftar produk masih kosong.' }}
+              {{
+                searchQuery
+                  ? "Coba cari dengan kata kunci lain ya."
+                  : "Daftar produk masih kosong."
+              }}
             </p>
           </div>
 
-          <div v-else class="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-max">
+          <div
+            v-else
+            class="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-max"
+          >
             <button
               v-for="product in filteredProducts"
               :key="product.id"
@@ -80,7 +90,9 @@
             >
               <div class="text-left">
                 <div class="min-h-12">
-                  <p class="font-bold text-sm line-clamp-2">{{ product.name }}</p>
+                  <p class="font-bold text-sm line-clamp-2">
+                    {{ product.name }}
+                  </p>
                   <p class="text-xs text-gray-600 mb-2 truncate">
                     {{ product.brand }} - {{ product.model }}
                   </p>
@@ -241,9 +253,13 @@
 
             <!-- Price Input (Bargaining Feature) -->
             <div class="mb-2">
-              <label class="text-xs font-semibold mb-1 flex justify-between items-end">
+              <label
+                class="text-xs font-semibold mb-1 flex justify-between items-end"
+              >
                 <span>Harga/Unit:</span>
-                <span class="text-[10px] font-normal text-gray-400 italic">harga bisa diubah</span>
+                <span class="text-[10px] font-normal text-gray-400 italic"
+                  >harga bisa diubah</span
+                >
               </label>
               <div class="relative">
                 <span
@@ -325,8 +341,16 @@
               <span class="font-bold text-lg text-green-600">{{
                 formatCurrency(cartStore.totalProfit)
               }}</span>
-              <span v-if="cartStore.totalCost > 0" class="text-[10px] text-green-500 font-bold">
-                untung {{ ((cartStore.totalProfit / cartStore.totalCost) * 100).toFixed(1) }}% dari modal
+              <span
+                v-if="cartStore.totalCost > 0"
+                class="text-[10px] text-green-500 font-bold"
+              >
+                untung
+                {{
+                  ((cartStore.totalProfit / cartStore.totalCost) * 100).toFixed(
+                    1,
+                  )
+                }}% dari modal
               </span>
             </div>
           </div>
@@ -501,9 +525,13 @@
                 </div>
               </div>
               <div class="mb-2">
-                <label class="text-xs font-semibold mb-1 flex justify-between items-end">
+                <label
+                  class="text-xs font-semibold mb-1 flex justify-between items-end"
+                >
                   <span>Harga/Unit:</span>
-                  <span class="text-[10px] font-normal text-gray-400 italic">harga bisa diubah</span>
+                  <span class="text-[10px] font-normal text-gray-400 italic"
+                    >harga bisa diubah</span
+                  >
                 </label>
                 <div class="relative">
                   <span
@@ -575,8 +603,16 @@
               <span class="font-bold text-lg text-green-600">{{
                 formatCurrency(cartStore.totalProfit)
               }}</span>
-              <span v-if="cartStore.totalCost > 0" class="text-[10px] text-green-500 font-bold">
-                untung {{ ((cartStore.totalProfit / cartStore.totalCost) * 100).toFixed(1) }}% dari modal
+              <span
+                v-if="cartStore.totalCost > 0"
+                class="text-[10px] text-green-500 font-bold"
+              >
+                untung
+                {{
+                  ((cartStore.totalProfit / cartStore.totalCost) * 100).toFixed(
+                    1,
+                  )
+                }}% dari modal
               </span>
             </div>
           </div>

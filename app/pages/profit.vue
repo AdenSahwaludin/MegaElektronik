@@ -4,7 +4,7 @@
     <AppHeader />
 
     <!-- Main Content -->
-    <div class="mt-4 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
+    <div class="mt-8 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
       <div class="max-w-7xl mx-auto">
         <h1
           class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"
@@ -143,9 +143,6 @@
                   <th class="px-6 py-3 text-right">Qty</th>
                   <th class="px-6 py-3 text-right">Harga/Unit</th>
                   <th class="px-6 py-3 text-right">Laba/Unit</th>
-                  <th class="px-6 py-3 text-right text-green-700">
-                    Total Laba
-                  </th>
                   <th class="px-6 py-3 text-center">Aksi</th>
                 </tr>
               </thead>
@@ -170,8 +167,8 @@
                       v-if="itemIndex === 0"
                       :rowspan="transaction.transactionItems.length"
                       :class="[
-                        'px-6 py-4 whitespace-nowrap border-r-2 border-orange-200',
-                        transaction.transactionItems.length > 1
+                        'px-6 py-4 whitespace-nowrap border-r-2 border-gray-200',
+                        transaction.transactionItems.length > 0
                           ? 'align-middle'
                           : 'align-top',
                       ]"
@@ -189,8 +186,8 @@
                       v-if="itemIndex === 0"
                       :rowspan="transaction.transactionItems.length"
                       :class="[
-                        'px-6 py-4 border-r-2 border-orange-200',
-                        transaction.transactionItems.length > 1
+                        'px-6 py-4 border-r-2 border-gray-200',
+                        transaction.transactionItems.length > 0
                           ? 'align-middle'
                           : 'align-top',
                       ]"
@@ -236,19 +233,10 @@
                           : 'text-red-600 font-semibold'
                       "
                     >
-                      {{ formatCurrency(item.profitPerItem) }}
-                    </td>
-
-                    <!-- Total Laba -->
-                    <td
-                      class="px-6 py-4 text-right"
-                      :class="
-                        item.profitPerItem * item.quantity > 0
-                          ? 'text-green-600 font-bold'
-                          : 'text-red-600 font-bold'
-                      "
-                    >
-                      {{ formatCurrency(item.profitPerItem * item.quantity) }}
+                      <p>{{ formatCurrency(item.profitPerItem) }}</p>
+                      <p class="text-xs font-normal text-gray-600 mt-1">
+                        Untung {{ ((item.profitPerItem / item.product.buyPrice) * 100).toFixed(1) }}% dari harga beli
+                      </p>
                     </td>
 
                     <!-- Aksi (only show on first item of transaction) -->
@@ -256,8 +244,8 @@
                       v-if="itemIndex === 0"
                       :rowspan="transaction.transactionItems.length"
                       :class="[
-                        'px-6 py-4 text-center border-l-2 border-orange-200',
-                        transaction.transactionItems.length > 1
+                        'px-6 py-4 text-center border-l-2 border-gray-200',
+                        transaction.transactionItems.length > 0
                           ? 'align-middle'
                           : 'align-top',
                       ]"
