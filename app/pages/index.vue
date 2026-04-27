@@ -79,7 +79,7 @@
               ]"
             >
               <div class="text-left">
-                <div class="min-h-[3rem]">
+                <div class="min-h-12">
                   <p class="font-bold text-sm line-clamp-2">{{ product.name }}</p>
                   <p class="text-xs text-gray-600 mb-2 truncate">
                     {{ product.brand }} - {{ product.model }}

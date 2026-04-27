@@ -4,7 +4,7 @@
     <AppHeader />
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
+    <div class="mt-4 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
       <div class="max-w-7xl mx-auto">
         <!-- Add Product Section -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
@@ -252,7 +252,7 @@
               <thead class="bg-gray-100 border-b border-gray-300">
                 <tr>
                   <th
-                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-1/4 min-w-[200px]"
+                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-1/4 min-w-50"
                   >
                     Nama Produk
                   </th>
@@ -299,7 +299,7 @@
                   :key="product.id"
                   class="hover:bg-orange-50 transition"
                 >
-                  <td class="px-4 py-3 text-sm font-semibold text-gray-800 break-words max-w-[300px]">
+                  <td class="px-4 py-3 text-sm font-semibold text-gray-800 wrap-break-words max-w-75">
                     {{ product.name }}
                   </td>
                   <td

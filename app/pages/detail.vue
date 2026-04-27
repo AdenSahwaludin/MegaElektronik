@@ -7,7 +7,7 @@
     <div class="h-24 lg:h-20"></div>
 
     <!-- Hero Section -->
-    <div class="bg-orange-50 py-8 lg:py-12 px-4">
+    <div class="mt-4 bg-orange-50 py-8 lg:py-12 px-4">
       <div class="max-w-7xl mx-auto text-center">
         <h2 class="text-2xl lg:text-4xl font-bold text-gray-900 mb-3">
           Sistem Point of Sale Terpadu
