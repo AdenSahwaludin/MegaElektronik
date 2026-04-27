@@ -112,67 +112,75 @@
                 <tr>
                   <th class="px-6 py-3">Tanggal</th>
                   <th class="px-6 py-3">Pelanggan</th>
-                  <th class="px-6 py-3">Detail Produk</th>
-                  <th class="px-6 py-3 text-right">Total Bayar</th>
-                  <th class="px-6 py-3 text-right text-green-700">Laba</th>
+                  <th class="px-6 py-3">Produk</th>
+                  <th class="px-6 py-3 text-right">Qty</th>
+                  <th class="px-6 py-3 text-right">Harga/Unit</th>
+                  <th class="px-6 py-3 text-right">Laba/Unit</th>
+                  <th class="px-6 py-3 text-right text-green-700">Total Laba</th>
                   <th class="px-6 py-3 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
-                <tr v-for="transaction in transactions" :key="transaction.id" class="hover:bg-orange-50">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <p class="font-semibold">{{ formatDate(transaction.createdAt) }}</p>
-                    <p class="text-xs text-gray-500">{{ formatTime(transaction.createdAt) }}</p>
-                  </td>
-                  <td class="px-6 py-4">
-                    <span v-if="transaction.customer" class="font-semibold">{{
-                      transaction.customer.name
-                    }}</span>
-                    <span v-else class="text-gray-400">Umum</span>
-                    <p
-                      v-if="transaction.customer?.phone"
-                      class="text-xs text-gray-500"
-                    >
-                      {{ transaction.customer.phone }}
-                    </p>
-                  </td>
-                  <td class="px-6 py-4">
-                    <div class="space-y-1">
-                      <div
-                        v-for="item in transaction.transactionItems"
-                        :key="item.id"
-                        class="flex justify-between gap-4 text-xs"
+                <template v-for="(transaction, txIndex) in transactions" :key="transaction.id">
+                  <tr v-for="(item, itemIndex) in transaction.transactionItems" :key="`${transaction.id}-${item.id}`" class="hover:bg-orange-50">
+                    <!-- Tanggal (only show on first item of transaction) -->
+                    <td v-if="itemIndex === 0" :rowspan="transaction.transactionItems.length" class="px-6 py-4 whitespace-nowrap align-top border-r-2 border-orange-200">
+                      <p class="font-semibold">{{ formatDate(transaction.createdAt) }}</p>
+                      <p class="text-xs text-gray-500">{{ formatTime(transaction.createdAt) }}</p>
+                    </td>
+
+                    <!-- Pelanggan (only show on first item of transaction) -->
+                    <td v-if="itemIndex === 0" :rowspan="transaction.transactionItems.length" class="px-6 py-4 align-top border-r-2 border-orange-200">
+                      <span v-if="transaction.customer" class="font-semibold">{{
+                        transaction.customer.name
+                      }}</span>
+                      <span v-else class="text-gray-400">Umum</span>
+                      <p
+                        v-if="transaction.customer?.phone"
+                        class="text-xs text-gray-500"
                       >
-                        <span class="text-gray-700">
-                          {{ item.quantity }}x {{ item.product.name }}
-                        </span>
-                        <span class="text-gray-500">
-                          {{ formatCurrency(item.soldPrice) }}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 text-right font-bold">
-                    {{ formatCurrency(transaction.totalAmount) }}
-                  </td>
-                  <td class="px-6 py-4 text-right">
-                    <p class="font-bold text-green-600">
-                      {{ formatCurrency(transaction.totalProfit) }}
-                    </p>
-                    <p v-if="transaction.totalAmount - transaction.totalProfit > 0" class="text-[10px] text-green-500 font-medium">
-                      untung {{ ((transaction.totalProfit / (transaction.totalAmount - transaction.totalProfit)) * 100).toFixed(1) }}% dari modal
-                    </p>
-                  </td>
-                  <td class="px-6 py-4 text-center">
-                    <button
-                      @click="deleteTransaction(transaction.id)"
-                      class="p-2 text-red-600 hover:bg-red-100 rounded transition"
-                      title="Hapus Transaksi"
-                    >
-                      <Icon name="lucide:trash-2" class="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
+                        {{ transaction.customer.phone }}
+                      </p>
+                    </td>
+
+                    <!-- Produk -->
+                    <td class="px-6 py-4">
+                      <p class="font-semibold text-gray-900">{{ item.product.name }}</p>
+                      <p class="text-xs text-gray-500">{{ item.product.brand }} {{ item.product.model }}</p>
+                    </td>
+
+                    <!-- Qty -->
+                    <td class="px-6 py-4 text-right">
+                      {{ item.quantity }}
+                    </td>
+
+                    <!-- Harga/Unit -->
+                    <td class="px-6 py-4 text-right text-gray-700">
+                      {{ formatCurrency(item.soldPrice) }}
+                    </td>
+
+                    <!-- Laba/Unit -->
+                    <td class="px-6 py-4 text-right" :class="item.profitPerItem > 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                      {{ formatCurrency(item.profitPerItem) }}
+                    </td>
+
+                    <!-- Total Laba -->
+                    <td class="px-6 py-4 text-right" :class="item.profitPerItem * item.quantity > 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'">
+                      {{ formatCurrency(item.profitPerItem * item.quantity) }}
+                    </td>
+
+                    <!-- Aksi (only show on first item of transaction) -->
+                    <td v-if="itemIndex === 0" :rowspan="transaction.transactionItems.length" class="px-6 py-4 text-center align-top border-l-2 border-orange-200">
+                      <button
+                        @click="deleteTransaction(transaction.id)"
+                        class="p-2 text-red-600 hover:bg-red-100 rounded transition"
+                        title="Hapus Transaksi"
+                      >
+                        <Icon name="lucide:trash-2" class="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                </template>
               </tbody>
             </table>
           </div>

@@ -100,7 +100,11 @@ export default defineEventHandler(async (event) => {
           },
         },
         transactionItems: {
-          include: {
+          select: {
+            id: true,
+            quantity: true,
+            soldPrice: true,
+            profitPerItem: true,
             product: {
               select: {
                 id: true,
