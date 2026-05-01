@@ -110,8 +110,15 @@ export default defineEventHandler(async (event) => {
       const limit = Math.min(parseInt(query.limit as string) || 10, 100);
       const offset = (page - 1) * limit;
 
-      // Build WHERE clause for advanced search
+      const activeOnly = query.activeOnly === "true";
+
+      // Build WHERE clause
       let where: any = {};
+      let andConditions: any[] = [];
+
+      if (activeOnly) {
+        andConditions.push({ isActive: true });
+      }
 
       // Advanced search: split by spaces and match ALL keywords
       if (search.trim()) {
@@ -131,11 +138,12 @@ export default defineEventHandler(async (event) => {
             ],
           }));
 
-          // Apply AND logic: all conditions must match
-          where = {
-            AND: searchConditions,
-          };
+          andConditions.push(...searchConditions);
         }
+      }
+
+      if (andConditions.length > 0) {
+        where.AND = andConditions;
       }
 
       // Fetch total count

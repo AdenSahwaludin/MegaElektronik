@@ -13,27 +13,55 @@
           <h2 class="text-xl font-bold text-gray-800 mb-3">Produk</h2>
 
           <!-- Search & Filter -->
-          <div class="flex gap-2 mb-4">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Cari produk..."
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <button
-              @click="refreshProducts"
-              class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
-            >
-              ↻
-            </button>
-            <!-- Mobile Cart Toggle Button -->
-            <button
-              @click="showMobileCart = true"
-              class="md:hidden px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition flex items-center gap-2"
-            >
-              <Icon name="lucide:shopping-cart" class="w-5 h-5" />
-              <span class="text-xs">{{ cartStore.totalItems }}</span>
-            </button>
+          <div class="space-y-3 mb-4">
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Cari produk..."
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-10"
+                />
+                <button
+                  v-if="searchQuery"
+                  @click="searchQuery = ''"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                >
+                  <Icon name="lucide:x" class="w-5 h-5" />
+                </button>
+              </div>
+              <button
+                @click="refreshProducts"
+                class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
+              >
+                ↻
+              </button>
+              <!-- Mobile Cart Toggle Button -->
+              <button
+                @click="showMobileCart = true"
+                class="md:hidden px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition flex items-center gap-2"
+              >
+                <Icon name="lucide:shopping-cart" class="w-5 h-5" />
+                <span class="text-xs">{{ cartStore.totalItems }}</span>
+              </button>
+            </div>
+
+            <!-- Quick Categories -->
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="cat in ['Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC', 'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko', 'Exhaust']"
+                :key="cat"
+                @click="searchQuery = cat"
+                :class="[
+                  'px-3 py-1 rounded-full text-xs font-semibold transition border',
+                  searchQuery === cat
+                    ? 'bg-orange-600 text-white border-orange-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-orange-500 hover:text-orange-600'
+                ]"
+              >
+                {{ cat }}
+              </button>
+            </div>
           </div>
 
           <!-- Stock Status -->
@@ -686,6 +714,7 @@ const fetchProducts = async () => {
       params.append("search", searchQuery.value);
     }
     params.append("limit", "100"); // Get all products for POS view
+    params.append("activeOnly", "true");
 
     const url = `/api/products?${params.toString()}`;
     const response = await $fetch<any>(url);

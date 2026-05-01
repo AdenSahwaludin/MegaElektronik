@@ -106,16 +106,16 @@
               />
             </div>
 
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Kategori</label
-              >
+
+
+            <div class="flex items-center gap-2 mt-auto pb-2">
               <input
-                v-model="newProduct.category"
-                type="text"
-                placeholder="Kipas Angin"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                type="checkbox"
+                id="isActiveNew"
+                v-model="newProduct.isActive"
+                class="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
               />
+              <label for="isActiveNew" class="text-sm font-semibold text-gray-700">Produk Aktif</label>
             </div>
 
             <div class="flex items-end gap-2">
@@ -309,6 +309,11 @@
                     </div>
                   </th>
                   <th
+                    class="lg:table-cell hidden px-4 py-3 text-center text-sm font-semibold text-gray-700"
+                  >
+                    Status
+                  </th>
+                  <th
                     class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
                   >
                     Aksi
@@ -351,7 +356,19 @@
                   <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.buyPrice) }}
                   </td>
-                  <td class="px-4 py-3 text-center">
+                  <td class="lg:table-cell hidden px-4 py-3 text-center whitespace-nowrap">
+                    <span
+                      :class="[
+                        'px-2 py-1 text-xs font-bold rounded-full',
+                        product.isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700',
+                      ]"
+                    >
+                      {{ product.isActive ? "Aktif" : "Non-Aktif" }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-center whitespace-nowrap">
                     <div class="flex items-center justify-center gap-2">
                       <button
                         @click="editProduct(product)"
@@ -514,8 +531,17 @@
                 min="0"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
+              <div class="flex items-center gap-2 pt-2">
+              <input
+                type="checkbox"
+                id="isActiveEdit"
+                v-model="editingProduct.isActive"
+                class="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+              />
+              <label for="isActiveEdit" class="text-sm font-semibold text-gray-700">Produk Aktif (Tampil di Penjualan)</label>
             </div>
-            <div class="flex gap-2 pt-4">
+            </div>
+            <div class="flex gap-4 pt-4">
               <button
                 @click="saveProduct"
                 class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
@@ -593,7 +619,7 @@ const newProduct = reactive({
   buyPrice: 0,
   askingPrice: 0,
   fixedPrice: 0,
-  category: "",
+  isActive: true,
 });
 
 const editingProduct = reactive({
@@ -605,6 +631,7 @@ const editingProduct = reactive({
   buyPrice: 0,
   askingPrice: 0,
   fixedPrice: 0,
+  isActive: true,
 });
 
 // Computed
@@ -628,6 +655,7 @@ const fetchProducts = async () => {
     params.append("limit", itemsPerPage.value.toString());
     params.append("sortBy", sortBy.value);
     params.append("sortOrder", sortOrder.value);
+    params.append("activeOnly", "false"); // Fetch all for management page
 
     const url = `/api/products?${params.toString()}`;
     const response = await $fetch<any>(url);
@@ -664,7 +692,7 @@ const addProduct = async () => {
         buyPrice: newProduct.buyPrice,
         askingPrice: newProduct.askingPrice,
         fixedPrice: newProduct.fixedPrice || newProduct.askingPrice,
-        category: newProduct.category || null,
+        isActive: newProduct.isActive,
       },
     });
 
@@ -685,6 +713,7 @@ const editProduct = (product: any) => {
   editingProduct.buyPrice = product.buyPrice;
   editingProduct.askingPrice = product.askingPrice;
   editingProduct.fixedPrice = product.fixedPrice;
+  editingProduct.isActive = product.isActive;
   showEditModal.value = true;
 };
 
@@ -700,6 +729,7 @@ const saveProduct = async () => {
         buyPrice: editingProduct.buyPrice,
         fixedPrice: editingProduct.fixedPrice,
         askingPrice: editingProduct.askingPrice,
+        isActive: editingProduct.isActive,
       },
     });
 
@@ -737,7 +767,6 @@ const resetForm = () => {
   newProduct.buyPrice = 0;
   newProduct.fixedPrice = 0;
   newProduct.askingPrice = 0;
-  newProduct.category = "";
 };
 
 const showToast = (msg: string) => {
