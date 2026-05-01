@@ -141,10 +141,13 @@ export default defineEventHandler(async (event) => {
       // Fetch total count
       const total = await prisma.product.count({ where });
 
+      const sortBy = (query.sortBy as string) || "name";
+      const sortOrder = (query.sortOrder as string) || "asc";
+
       // Fetch paginated results
       const products = await prisma.product.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: { [sortBy]: sortOrder },
         select: {
           id: true,
           name: true,

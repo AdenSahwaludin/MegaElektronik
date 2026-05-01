@@ -48,12 +48,8 @@
 
         <!-- Products Grid -->
         <div class="flex-1 overflow-y-auto px-4 pb-4">
-          <div v-if="loading" class="flex items-center justify-center h-full">
-            <p class="text-gray-500">Muat produk...</p>
-          </div>
-
           <div
-            v-else-if="filteredProducts.length === 0"
+            v-if="filteredProducts.length === 0"
             class="flex flex-col items-center justify-center h-full text-center p-6"
           >
             <Icon
@@ -73,7 +69,7 @@
           </div>
 
           <div
-            v-else
+            v-show="filteredProducts.length > 0"
             class="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-max"
           >
             <button
@@ -671,12 +667,13 @@ const successMessage = ref("");
 
 // Computed
 const filteredProducts = computed(() => {
-  // Products are already filtered & active on server, just return them
-  return products.value;
+  return [...products.value].sort((a, b) => 
+    a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
+  );
 });
 
 const lowStockProducts = computed(() => {
-  return products.value.filter((p) => p.stock >= 0 && p.stock < 2);
+  return products.value.filter((p) => p.stock === 0);
 });
 
 // Methods

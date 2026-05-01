@@ -67,19 +67,7 @@
               />
             </div>
 
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Beli (Rp) *</label
-              >
-              <input
-                v-model.number="newProduct.buyPrice"
-                type="number"
-                min="0"
-                placeholder="0"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
+            
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
                 >Harga Tawar (Rp) *</label
@@ -99,6 +87,18 @@
               >
               <input
                 v-model.number="newProduct.fixedPrice"
+                type="number"
+                min="0"
+                placeholder="0"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+<div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Harga Beli (Rp) *</label
+              >
+              <input
+                v-model.number="newProduct.buyPrice"
                 type="number"
                 min="0"
                 placeholder="0"
@@ -144,7 +144,7 @@
         </div>
 
         <!-- Products Table -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="bg-white rounded-lg shadow overflow-hidden min-h-[600px]">
           <div class="px-6 py-4 bg-orange-600 text-white">
             <h2 class="text-lg lg:text-xl font-bold flex items-center gap-2">
               <Icon name="lucide:list" class="w-6 h-6" />
@@ -217,15 +217,9 @@
             </div>
           </div>
 
-          <div v-if="loading" class="flex items-center justify-center py-20">
-            <p class="text-gray-500 flex items-center gap-2">
-              <Icon name="lucide:loader" class="w-5 h-5 animate-spin" />
-              Lagi loading produk...
-            </p>
-          </div>
-
+          <!-- Empty State -->
           <div
-            v-else-if="products.length === 0"
+            v-if="products.length === 0"
             class="flex flex-col items-center justify-center py-20 text-center"
           >
             <div class="bg-orange-100 p-4 rounded-full mb-4">
@@ -247,19 +241,31 @@
             </button>
           </div>
 
-          <div v-else class="overflow-x-auto">
+          <!-- Table Content -->
+          <div 
+            v-show="products.length > 0" 
+            class="overflow-x-auto"
+          >
             <table class="w-full">
               <thead class="bg-gray-100 border-b border-gray-300">
                 <tr>
                   <th
-                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-1/4 min-w-50"
+                    @click="toggleSort('name')"
+                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-1/4 min-w-50 cursor-pointer hover:bg-gray-200 transition"
                   >
-                    Nama Produk
+                    <div class="flex items-center gap-1">
+                      Nama Produk
+                      <Icon v-if="sortBy === 'name'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
+                    </div>
                   </th>
                   <th
-                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 hidden sm:table-cell"
+                    @click="toggleSort('brand')"
+                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition"
                   >
-                    Merk
+                    <div class="flex items-center gap-1">
+                      Merk
+                      <Icon v-if="sortBy === 'brand'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
+                    </div>
                   </th>
                   <th
                     class="px-4 py-3 text-left text-sm font-semibold text-gray-700 hidden md:table-cell"
@@ -267,24 +273,40 @@
                     Model
                   </th>
                   <th
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell"
+                    @click="toggleSort('stock')"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell cursor-pointer hover:bg-gray-200 transition"
                   >
-                    Stok
+                    <div class="flex items-center justify-end gap-1">
+                      Stok
+                      <Icon v-if="sortBy === 'stock'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
+                    </div>
                   </th>
                   <th
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
+                    @click="toggleSort('askingPrice')"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition"
                   >
-                    Harga Tawar
+                    <div class="flex items-center justify-end gap-1">
+                      Harga Tawar
+                      <Icon v-if="sortBy === 'askingPrice'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
+                    </div>
                   </th>
                   <th
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
+                    @click="toggleSort('fixedPrice')"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition"
                   >
-                    Harga Pas
+                    <div class="flex items-center justify-end gap-1">
+                      Harga Pas
+                      <Icon v-if="sortBy === 'fixedPrice'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
+                    </div>
                   </th>
                   <th
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700"
+                    @click="toggleSort('buyPrice')"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition"
                   >
-                    Harga Beli
+                    <div class="flex items-center justify-end gap-1">
+                      Harga Beli
+                      <Icon v-if="sortBy === 'buyPrice'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
+                    </div>
                   </th>
                   <th
                     class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
@@ -395,9 +417,9 @@
     <Transition name="fade">
       <div
         v-if="showEditModal"
-        class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4"
+        class="fixed inset-0 bg-black/50 z-[60] flex items-start justify-center p-4 overflow-y-auto py-10"
       >
-        <div class="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+        <div class="bg-white rounded-lg max-w-md w-full p-6 shadow-xl my-auto">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Icon name="lucide:edit-2" class="w-6 h-6 text-orange-600" />
@@ -457,17 +479,7 @@
               />
             </div>
 
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Beli</label
-              >
-              <input
-                v-model.number="editingProduct.buyPrice"
-                type="number"
-                min="0"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
+          
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
@@ -492,7 +504,17 @@
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
-
+        <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Harga Beli</label
+              >
+              <input
+                v-model.number="editingProduct.buyPrice"
+                type="number"
+                min="0"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
             <div class="flex gap-2 pt-4">
               <button
                 @click="saveProduct"
@@ -550,6 +572,18 @@ const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const totalItems = ref(0);
 const totalPages = ref(0);
+const sortBy = ref("name");
+const sortOrder = ref("asc");
+
+const toggleSort = (field: string) => {
+  if (sortBy.value === field) {
+    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+  } else {
+    sortBy.value = field;
+    sortOrder.value = "asc";
+  }
+  fetchProducts();
+};
 
 const newProduct = reactive({
   name: "",
@@ -592,6 +626,8 @@ const fetchProducts = async () => {
     }
     params.append("page", currentPage.value.toString());
     params.append("limit", itemsPerPage.value.toString());
+    params.append("sortBy", sortBy.value);
+    params.append("sortOrder", sortOrder.value);
 
     const url = `/api/products?${params.toString()}`;
     const response = await $fetch<any>(url);

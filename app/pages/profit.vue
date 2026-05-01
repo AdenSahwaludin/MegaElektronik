@@ -97,7 +97,7 @@
         </div>
 
         <!-- Transactions Table -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="bg-white rounded-lg shadow overflow-hidden min-h-[500px]">
           <div
             class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center"
           >
@@ -114,204 +114,138 @@
             </button>
           </div>
 
-          <!-- Loading State -->
-          <div v-if="loading" class="flex items-center justify-center py-20">
-            <p class="text-gray-500 flex items-center gap-2">
-              <Icon name="lucide:loader" class="w-5 h-5 animate-spin" />
-              Sabar ya, lagi ngambil data transaksi...
-            </p>
-          </div>
-
           <!-- Empty State -->
           <div
-            v-else-if="transactions.length === 0"
+            v-if="transactions.length === 0"
             class="flex items-center justify-center py-20"
           >
             <p class="text-gray-500">Belum ada transaksi di periode ini.</p>
           </div>
 
           <!-- Table Content -->
-          <div v-else class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-              <thead
-                class="bg-gray-50 text-gray-700 uppercase font-bold text-xs border-b"
-              >
+          <div 
+            v-show="transactions.length > 0" 
+            class="overflow-x-auto"
+          >
+            <table class="w-full text-sm text-left border-collapse min-w-[700px]">
+              <thead class="bg-gray-50 text-gray-700 uppercase font-bold text-xs border-b">
                 <tr>
-                  <th class="px-6 py-3">Tanggal</th>
-                  <th class="px-6 py-3">Pelanggan</th>
-                  <th class="px-6 py-3">Produk</th>
-                  <th class="px-6 py-3 text-right">Qty</th>
-                  <th class="px-6 py-3 text-right">Harga/Unit</th>
-                  <th class="px-6 py-3 text-right">Laba/Unit</th>
-                  <th class="px-6 py-3 text-center">Aksi</th>
+                  <th class="px-6 py-3 text-left w-24">Jam</th>
+                  <th class="px-6 py-3 text-left">Produk</th>
+                  <th class="px-6 py-3 text-right w-16">Qty</th>
+                  <th class="px-6 py-3 text-right w-36">Total</th>
+                  <th class="px-6 py-3 text-center w-28">Aksi</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200">
-                <template
-                  v-for="(transaction, txIndex) in transactions"
+
+              <tbody v-for="(group, date) in groupedTransactions" :key="date">
+                <!-- Date Header Row -->
+                <tr class="bg-orange-100/50">
+                  <td colspan="5" class="px-6 py-2 border-y border-orange-200">
+                    <div class="flex items-center gap-2">
+                      <Icon name="lucide:calendar" class="w-4 h-4 text-orange-600" />
+                      <span class="font-bold text-gray-900">{{ date }}</span>
+                    </div>
+                  </td>
+                </tr>
+                
+                <tr
+                  v-for="transaction in group"
                   :key="transaction.id"
+                  class="hover:bg-orange-50 border-b border-gray-100 transition-colors"
                 >
-                  <tr
-                    v-for="(item, itemIndex) in transaction.transactionItems"
-                    :key="`${transaction.id}-${item.id}`"
-                    :class="[
-                      hoveredTransactionId === transaction.id
-                        ? 'bg-orange-50'
-                        : 'hover:bg-orange-50',
-                    ]"
-                    @mouseenter="hoveredTransactionId = transaction.id"
-                    @mouseleave="hoveredTransactionId = null"
-                  >
-                    <!-- Tanggal (only show on first item of transaction) -->
-                    <td
-                      v-if="itemIndex === 0"
-                      :rowspan="transaction.transactionItems.length"
-                      :class="[
-                        'px-6 py-4 whitespace-nowrap border-r-2 border-gray-200',
-                        transaction.transactionItems.length > 0
-                          ? 'align-middle'
-                          : 'align-top',
-                      ]"
-                    >
-                      <p class="font-semibold">
-                        {{ formatDate(transaction.createdAt) }}
-                      </p>
-                      <p class="text-xs text-gray-500">
-                        {{ formatTime(transaction.createdAt) }}
-                      </p>
-                    </td>
+                  <td class="px-6 py-4 whitespace-nowrap align-middle">
+                    <p class="text-sm font-medium text-gray-700">
+                      {{ formatTime(transaction.createdAt) }}
+                    </p>
+                  </td>
 
-                    <!-- Pelanggan (only show on first item of transaction) -->
-                    <td
-                      v-if="itemIndex === 0"
-                      :rowspan="transaction.transactionItems.length"
-                      :class="[
-                        'px-6 py-4 border-r-2 border-gray-200',
-                        transaction.transactionItems.length > 0
-                          ? 'align-middle'
-                          : 'align-top',
-                      ]"
-                    >
-                      <span v-if="transaction.customer" class="font-semibold">{{
-                        transaction.customer.name
-                      }}</span>
-                      <span v-else class="text-gray-400">Umum</span>
-                      <p
-                        v-if="transaction.customer?.phone"
-                        class="text-xs text-gray-500"
+                  <td class="px-6 py-4 align-middle">
+                    <p class="font-semibold text-gray-900 whitespace-normal break-words max-w-[300px]">
+                      {{ getTransactionProductTitle(transaction) }}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1 whitespace-normal break-words max-w-[300px]">
+                      {{ getTransactionProductSubtitle(transaction) }}
+                    </p>
+                  </td>
+
+                  <td class="px-6 py-4 text-right align-middle">
+                    <span class="bg-gray-100 px-2 py-0.5 rounded text-gray-700 font-medium">
+                      {{ getTransactionQuantity(transaction) }}
+                    </span>
+                  </td>
+
+                  <td class="px-6 py-4 text-right align-middle font-bold text-gray-900">
+                    {{ formatCurrency(transaction.totalAmount) }}
+                  </td>
+
+                  <td class="px-6 py-4 text-center align-middle">
+                    <div class="flex items-center justify-center gap-2">
+                      <button
+                        @click="openDetail(transaction.id)"
+                        class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition shadow-sm"
                       >
-                        {{ transaction.customer.phone }}
-                      </p>
-                    </td>
-
-                    <!-- Produk -->
-                    <td class="px-6 py-4">
-                      <p class="font-semibold text-gray-900">
-                        {{ item.product.name }}
-                      </p>
-                      <p class="text-xs text-gray-500">
-                        {{ item.product.brand }} {{ item.product.model }}
-                      </p>
-                    </td>
-
-                    <!-- Qty -->
-                    <td class="px-6 py-4 text-right">
-                      {{ item.quantity }}
-                    </td>
-
-                    <!-- Harga/Unit -->
-                    <td class="px-6 py-4 text-right text-gray-700">
-                      {{ formatCurrency(item.soldPrice) }}
-                    </td>
-
-                    <!-- Laba/Unit -->
-                    <td
-                      class="px-6 py-4 text-right"
-                      :class="
-                        item.profitPerItem > 0
-                          ? 'text-green-600 font-semibold'
-                          : 'text-red-600 font-semibold'
-                      "
-                    >
-                      <p>{{ formatCurrency(item.profitPerItem) }}</p>
-                      <p class="text-xs font-normal text-gray-600 mt-1">
-                        Untung {{ ((item.profitPerItem / item.product.buyPrice) * 100).toFixed(1) }}% dari harga beli
-                      </p>
-                    </td>
-
-                    <!-- Aksi (only show on first item of transaction) -->
-                    <td
-                      v-if="itemIndex === 0"
-                      :rowspan="transaction.transactionItems.length"
-                      :class="[
-                        'px-6 py-4 text-center border-l-2 border-gray-200',
-                        transaction.transactionItems.length > 0
-                          ? 'align-middle'
-                          : 'align-top',
-                      ]"
-                    >
+                        Detail
+                      </button>
                       <button
                         @click="deleteTransaction(transaction.id)"
-                        class="p-2 text-red-600 hover:bg-red-100 rounded transition"
+                        class="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition"
                         title="Hapus Transaksi"
                       >
-                        <Icon name="lucide:trash-2" class="w-5 h-5" />
+                        <Icon name="lucide:trash-2" class="w-4 h-4" />
                       </button>
-                    </td>
-                  </tr>
-                </template>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Spacer after group -->
+                <tr class="h-4 bg-orange-50/20"><td colspan="5"></td></tr>
               </tbody>
             </table>
           </div>
 
-          <!-- Pagination -->
           <div
-            v-if="totalPages > 1"
-            class="bg-gray-50 px-6 py-4 border-t border-gray-200"
+            v-if="!loading && transactions.length > 0"
+            class="flex items-center gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50"
           >
-            <div
-              class="flex flex-col lg:flex-row items-center justify-between gap-4"
+            <button
+              @click="currentPage--"
+              :disabled="currentPage === 1"
+              class="px-3 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition flex items-center gap-1"
             >
-              <p class="text-sm text-gray-600">
-                Halaman {{ currentPage }} dari {{ totalPages }} | Ada
-                {{ transactions.length }} dari {{ totalCount }} transaksi
-              </p>
-              <div class="flex items-center gap-2">
-                <button
-                  @click="currentPage--"
-                  :disabled="currentPage === 1"
-                  class="px-3 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition flex items-center gap-1"
-                >
-                  <Icon name="lucide:chevron-left" class="w-4 h-4" />
-                  Sebelumnya
-                </button>
-                <div class="flex gap-1">
-                  <button
-                    v-for="p in totalPages"
-                    :key="p"
-                    @click="currentPage = p"
-                    :class="[
-                      'w-8 h-8 rounded-lg text-sm font-semibold transition',
-                      currentPage === p
-                        ? 'bg-orange-600 text-white'
-                        : 'bg-white text-gray-700 hover:bg-orange-100 border border-gray-300',
-                    ]"
-                  >
-                    {{ p }}
-                  </button>
-                </div>
-                <button
-                  @click="currentPage++"
-                  :disabled="currentPage === totalPages"
-                  class="px-3 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition flex items-center gap-1"
-                >
-                  <span>Lanjut</span>
-                  <Icon name="lucide:chevron-right" class="w-4 h-4" />
-                </button>
-              </div>
+              <Icon name="lucide:chevron-left" class="w-4 h-4" />
+              Sebelumnya
+            </button>
+            <div class="flex gap-1">
+              <button
+                v-for="p in totalPages"
+                :key="p"
+                @click="currentPage = p"
+                :class="[
+                  'w-8 h-8 rounded-lg text-sm font-semibold transition',
+                  currentPage === p
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-orange-100 border border-gray-300',
+                ]"
+              >
+                {{ p }}
+              </button>
             </div>
+            <button
+              @click="currentPage++"
+              :disabled="currentPage === totalPages"
+              class="px-3 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition flex items-center gap-1"
+            >
+              <span>Lanjut</span>
+              <Icon name="lucide:chevron-right" class="w-4 h-4" />
+            </button>
           </div>
         </div>
+
+        <TransactionDetailModal
+          v-if="modalVisible"
+          :transactionId="selectedTransactionId"
+          @close="closeDetailModal"
+        />
       </div>
     </div>
   </div>
@@ -320,6 +254,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
+import TransactionDetailModal from "../components/TransactionDetailModal.vue";
 
 definePageMeta({
   layout: "default",
@@ -342,7 +277,18 @@ const totalPages = ref(1);
 const totalCount = ref(0);
 const dateRange = ref("all");
 const searchQuery = ref("");
-const hoveredTransactionId = ref<number | null>(null);
+const modalVisible = ref(false);
+const selectedTransactionId = ref<number | null>(null);
+
+const openDetail = (id: number) => {
+  selectedTransactionId.value = id;
+  modalVisible.value = true;
+};
+
+const closeDetailModal = () => {
+  modalVisible.value = false;
+  selectedTransactionId.value = null;
+};
 
 // Computed
 const markupPercentage = computed(() => {
@@ -350,6 +296,20 @@ const markupPercentage = computed(() => {
   return ((summary.value.totalProfit / summary.value.totalCost) * 100).toFixed(
     1,
   );
+});
+
+const groupedTransactions = computed(() => {
+  const groups: Record<string, any[]> = {};
+
+  transactions.value.forEach((transaction) => {
+    const date = formatDate(transaction.createdAt);
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(transaction);
+  });
+
+  return groups;
 });
 
 // Methods
@@ -390,6 +350,38 @@ const formatTime = (dateStr: string) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const getTransactionQuantity = (transaction: any) => {
+  return (transaction.transactionItems || []).reduce(
+    (sum: number, item: any) => sum + Number(item.quantity || 0),
+    0,
+  );
+};
+
+const getTransactionProductTitle = (transaction: any) => {
+  const items = transaction.transactionItems || [];
+
+  if (items.length === 0) return "-";
+  if (items.length === 1) return items[0]?.product?.name || "-";
+
+  const names = items.slice(0, 2).map((item: any) => item.product?.name || "-");
+  return `${items.length} item — ${names.join(", ")}`;
+};
+
+const getTransactionProductSubtitle = (transaction: any) => {
+  const items = transaction.transactionItems || [];
+
+  if (items.length === 0) return "-";
+  if (items.length === 1) {
+    const brand = items[0]?.product?.brand || "";
+    const model = items[0]?.product?.model || "";
+    return `${brand} ${model}`.trim() || "-";
+  }
+
+  return items
+    .map((item: any) => `${item.quantity}x ${item.product?.name || "-"}`)
+    .join(", ");
 };
 
 const deleteTransaction = async (transactionId: string) => {
