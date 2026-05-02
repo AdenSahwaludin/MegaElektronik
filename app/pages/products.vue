@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[100dvh] w-full bg-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
+  <div class="h-screen w-full bg-orange-50 flex flex-col overflow-hidden">
     <!-- App Header with Navigation -->
     <AppHeader />
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[100dvh] w-full bg-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
+  <div class="h-screen w-full bg-orange-50 flex flex-col overflow-hidden">
     <!-- App Header with Navigation -->
     <AppHeader />
 
@@ -427,7 +427,7 @@
     >
       <div
         v-if="showMobileCart"
-        class="fixed inset-0 z-50 flex flex-col bg-white md:hidden mt-20 pb-[env(safe-area-inset-bottom)]"
+        class="fixed inset-0 z-50 flex flex-col bg-white md:hidden mt-24"
       >
         <!-- Mobile Cart Header -->
         <div
