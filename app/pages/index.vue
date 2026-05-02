@@ -1,16 +1,25 @@
 <template>
-  <div class="h-screen w-full bg-orange-50 flex flex-col overflow-hidden">
+  <div class="h-[100dvh] w-full bg-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
     <!-- App Header with Navigation -->
     <AppHeader />
 
     <!-- Main Content - Split Layout (iPad Optimized, Responsive) -->
     <div
-      class="mt-8 flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
+      class="mt-3 flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
     >
       <!-- Left Panel: Products Grid (Full width on mobile, flex-1 on desktop) -->
       <div class="flex-1 flex flex-col bg-white rounded-lg shadow">
         <div class="px-4 pt-4 pb-2">
-          <h2 class="text-xl font-bold text-gray-800 mb-3">Produk</h2>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xl font-bold text-gray-800">Produk</h2>
+            <button 
+              @click="showCategories = !showCategories"
+              class="flex items-center gap-1 px-3 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full text-xs font-bold transition-all active:scale-95"
+            >
+              <Icon :name="showCategories ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="w-3.5 h-3.5" />
+              {{ showCategories ? 'Sembunyikan Kategori' : 'Tampilkan Kategori' }}
+            </button>
+          </div>
 
           <!-- Search & Filter -->
           <div class="space-y-3 mb-4">
@@ -47,7 +56,7 @@
             </div>
 
             <!-- Quick Categories -->
-            <div class="flex flex-wrap gap-2">
+            <div v-show="showCategories" class="flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
               <button
                 v-for="cat in ['Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC', 'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko', 'Exhaust']"
                 :key="cat"
@@ -122,19 +131,15 @@
                   </p>
                 </div>
                 <div class="space-y-1">
-                  <div class="text-xs space-y-0.5">
-                    <p class="text-gray-600">
-                      Tawar:
-                      <span class="font-semibold">{{
-                        formatCurrency(product.askingPrice)
-                      }}</span>
-                    </p>
-                    <p class="text-orange-600 font-bold">
-                      Pas: {{ formatCurrency(product.fixedPrice) }}
-                    </p>
-                    <p class="text-[10px] text-gray-400 italic">
-                      Modal: {{ formatCurrency(product.buyPrice) }}
-                    </p>
+                  <div class="grid grid-cols-[45px_1fr] gap-y-0.5 items-baseline">
+                    <span class="text-[10px] text-gray-500">Tawar:</span>
+                    <span class="text-[11px] font-bold text-orange-600">{{ formatCurrency(product.askingPrice) }}</span>
+                    
+                    <span class="text-[10px] text-gray-500">Pas:</span>
+                    <span class="text-[11px] font-bold text-gray-600">{{ formatCurrency(product.fixedPrice) }}</span>
+                    
+                    <span class="text-[10px] text-gray-400 italic">Modal:</span>
+                    <span class="text-[10px] text-gray-400 italic">{{ formatCurrency(product.buyPrice) }}</span>
                   </div>
                   <p class="text-xs text-gray-500">
                     Stok:
@@ -422,7 +427,7 @@
     >
       <div
         v-if="showMobileCart"
-        class="fixed inset-0 z-50 flex flex-col bg-white md:hidden mt-24"
+        class="fixed inset-0 z-50 flex flex-col bg-white md:hidden mt-20 pb-[env(safe-area-inset-bottom)]"
       >
         <!-- Mobile Cart Header -->
         <div
@@ -683,6 +688,7 @@ const searchQuery = ref("");
 // Customer Form
 const showCustomerForm = ref(false); // Changed: default to true (expanded)
 const showMobileCart = ref(false);
+const showCategories = ref(true);
 const newCustomer = reactive({
   name: "",
   phone: "",

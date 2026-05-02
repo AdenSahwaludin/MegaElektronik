@@ -4,6 +4,18 @@ export default defineNuxtConfig({
   ui: {
     colorMode: false,
   },
+  app: {
+    head: {
+      title: "MegaTeknik POS",
+      meta: [
+        { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+        { name: "mobile-web-app-capable", content: "yes" },
+      ],
+    },
+  },
+
   devtools: {
     enabled: true,
   },

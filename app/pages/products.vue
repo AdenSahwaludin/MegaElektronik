@@ -1,10 +1,10 @@
 <template>
-  <div class="h-screen w-full bg-orange-50 flex flex-col overflow-hidden">
+  <div class="h-[100dvh] w-full bg-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
     <!-- App Header with Navigation -->
     <AppHeader />
 
     <!-- Main Content -->
-    <div class="mt-8 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
+    <div class="mt-3 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
       <div class="max-w-7xl mx-auto">
         <!-- Add Product Section -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
