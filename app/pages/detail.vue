@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-white text-gray-900">
+  <div class="min-h-[100dvh] bg-white text-gray-900 flex flex-col">
     <!-- App Header with Navigation -->
     <AppHeader />
 
@@ -232,7 +232,7 @@
 
     <!-- Footer -->
     <footer
-      class="bg-gray-900 text-gray-400 py-6 lg:py-8 px-4 text-center text-xs lg:text-sm"
+      class="bg-gray-900 text-gray-400 py-6 lg:py-8 px-4 text-center text-xs lg:text-sm mt-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-[calc(2rem+env(safe-area-inset-bottom))]"
     >
       <p>
         &copy; 2026 Mega Elektronik. Powered by Nuxt 3 • Vue 3 • Tailwind CSS •

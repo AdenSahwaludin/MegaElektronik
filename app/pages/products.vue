@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen w-full bg-orange-50 flex flex-col overflow-hidden">
+  <div class="h-[100dvh] w-full bg-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
     <!-- App Header with Navigation -->
     <AppHeader />
 
@@ -565,7 +565,8 @@
     <Transition name="fade">
       <div
         v-if="showMessage"
-        class="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg font-semibold flex items-center gap-2"
+        class="fixed right-6 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50"
+        style="bottom: calc(1.5rem + env(safe-area-inset-bottom));"
       >
         <Icon name="lucide:check-circle" class="w-5 h-5" />
         {{ message }}
