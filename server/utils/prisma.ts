@@ -34,6 +34,11 @@ export function getPrismaClient(): PrismaClient {
         prismaInstance = new PrismaClient({
           adapter,
           log: ["error", "warn"],
+          datasources: {
+            db: {
+              url: databaseUrl,
+            },
+          },
         });
 
         console.log("[Prisma] ✓ Connected to Turso (Production)");
