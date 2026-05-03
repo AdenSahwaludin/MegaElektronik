@@ -24,6 +24,9 @@ export function getPrismaClient(): PrismaClient {
           throw new Error("TURSO_DATABASE_URL or TURSO_AUTH_TOKEN is missing");
         }
 
+        // Prisma schema reads env("DATABASE_URL") — set it so Prisma doesn't crash
+        process.env.DATABASE_URL = databaseUrl;
+
         const libSql = createClient({
           url: databaseUrl,
           authToken: authToken,
@@ -34,11 +37,6 @@ export function getPrismaClient(): PrismaClient {
         prismaInstance = new PrismaClient({
           adapter,
           log: ["error", "warn"],
-          datasources: {
-            db: {
-              url: databaseUrl,
-            },
-          },
         });
 
         console.log("[Prisma] ✓ Connected to Turso (Production)");
