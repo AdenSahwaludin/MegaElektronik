@@ -1,31 +1,34 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSQL } from "@prisma/adapter-libsql";
-import { createClient } from "@libsql/client/web";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 let prismaInstance: PrismaClient | null = null;
 
 export function getPrismaClient(): PrismaClient {
   if (prismaInstance === null) {
+    const databaseUrl = process.env.TURSO_DATABASE_URL;
+    const authToken = process.env.TURSO_AUTH_TOKEN;
+
+    if (!databaseUrl) {
+      throw new Error("TURSO_DATABASE_URL environment variable is not set");
+    }
+
+    if (!authToken) {
+      throw new Error("TURSO_AUTH_TOKEN environment variable is not set");
+    }
+
     try {
-      const databaseUrl = process.env.TURSO_DATABASE_URL;
-      const authToken = process.env.TURSO_AUTH_TOKEN;
-
-      if (!databaseUrl || !authToken) {
-        throw new Error(
-          `Missing TURSO credentials. TURSO_DATABASE_URL=${!!databaseUrl}, TURSO_AUTH_TOKEN=${!!authToken}`
-        );
-      }
-
-      const libSql = createClient({
+      // PrismaLibSql adapter expects the config object with url and authToken
+      const adapter = new PrismaLibSql({
         url: databaseUrl,
         authToken: authToken,
       });
 
-      const adapter = new PrismaLibSQL(libSql);
-
       prismaInstance = new PrismaClient({
         adapter,
-        log: ["error", "warn"],
+        log:
+          process.env.NODE_ENV === "development"
+            ? ["query", "error", "warn"]
+            : ["error"],
       });
 
       console.log("[Prisma] ✓ Connected to Turso");
