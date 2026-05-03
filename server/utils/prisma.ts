@@ -2,6 +2,12 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { createClient } from "@libsql/client/web";
 
+// CRITICAL: Set DATABASE_URL from TURSO_DATABASE_URL at module load time,
+// BEFORE PrismaClient reads it. Prisma schema references env("DATABASE_URL").
+if (process.env.TURSO_DATABASE_URL) {
+  process.env.DATABASE_URL = process.env.TURSO_DATABASE_URL;
+}
+
 let prismaInstance: PrismaClient | null = null;
 
 export function getPrismaClient(): PrismaClient {
@@ -23,9 +29,6 @@ export function getPrismaClient(): PrismaClient {
         if (!databaseUrl || !authToken) {
           throw new Error("TURSO_DATABASE_URL or TURSO_AUTH_TOKEN is missing");
         }
-
-        // Prisma schema reads env("DATABASE_URL") — set it so Prisma doesn't crash
-        process.env.DATABASE_URL = databaseUrl;
 
         const libSql = createClient({
           url: databaseUrl,
