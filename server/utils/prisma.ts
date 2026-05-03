@@ -2,33 +2,40 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { createClient } from "@libsql/client/web";
 
-// CRITICAL: Set DATABASE_URL from TURSO_DATABASE_URL at module load time,
-// BEFORE PrismaClient reads it. Prisma schema references env("DATABASE_URL").
-if (process.env.TURSO_DATABASE_URL) {
-  process.env.DATABASE_URL = process.env.TURSO_DATABASE_URL;
-}
-
 let prismaInstance: PrismaClient | null = null;
+
+// Dynamic env access — prevents Nitro/Rollup from inlining values at build time
+function env(key: string): string | undefined {
+  return process.env[key];
+}
 
 export function getPrismaClient(): PrismaClient {
   if (prismaInstance === null) {
-    const isDev = process.env.NODE_ENV === "development";
+    const isDev = env("NODE_ENV") === "development";
 
     try {
       if (isDev) {
-        // In development, use local SQLite (defined in DATABASE_URL in .env)
-        // No adapter needed for standard SQLite
         prismaInstance = new PrismaClient({
           log: ["query", "error", "warn"],
         });
         console.log("[Prisma] ✓ Connected to Local SQLite (Development)");
       } else {
-        const databaseUrl = process.env.TURSO_DATABASE_URL;
-        const authToken = process.env.TURSO_AUTH_TOKEN;
+        const databaseUrl = env("TURSO_DATABASE_URL");
+        const authToken = env("TURSO_AUTH_TOKEN");
+
+        console.log("[Prisma] TURSO_DATABASE_URL present:", !!databaseUrl);
+        console.log("[Prisma] TURSO_AUTH_TOKEN present:", !!authToken);
+        console.log("[Prisma] DATABASE_URL before override:", env("DATABASE_URL"));
 
         if (!databaseUrl || !authToken) {
-          throw new Error("TURSO_DATABASE_URL or TURSO_AUTH_TOKEN is missing");
+          throw new Error(
+            `TURSO credentials missing. URL=${!!databaseUrl}, TOKEN=${!!authToken}`
+          );
         }
+
+        // Override DATABASE_URL so Prisma's internal validator doesn't crash
+        process.env["DATABASE_URL"] = databaseUrl;
+        console.log("[Prisma] DATABASE_URL after override:", env("DATABASE_URL"));
 
         const libSql = createClient({
           url: databaseUrl,

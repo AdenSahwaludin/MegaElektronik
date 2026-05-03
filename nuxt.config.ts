@@ -37,5 +37,15 @@ export default defineNuxtConfig({
       routes: ["/"],
     },
     srcDir: "./server",
+    // Prevent Nitro from inlining these env vars at build time
+    runtimeConfig: {
+      tursoUrl: "",
+      tursoToken: "",
+    },
+  },
+
+  runtimeConfig: {
+    tursoUrl: process.env.TURSO_DATABASE_URL || "",
+    tursoToken: process.env.TURSO_AUTH_TOKEN || "",
   },
 });
