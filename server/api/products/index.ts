@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
           }
 
           try {
-            const created = await prisma.product.create({
+            const created = await (prisma.product as any).create({
               data: {
                 name: product.name.trim(),
                 brand: product.brand.trim(),
@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
           });
         }
 
-        const product = await prisma.product.create({
+        const product = await (prisma.product as any).create({
           data: {
             name: body.name.trim(),
             brand: body.brand?.trim() || "Unbranded",
@@ -159,7 +159,7 @@ export default defineEventHandler(async (event) => {
       const sortOrder = (query.sortOrder as string) || "asc";
 
       // Fetch paginated results
-      const products = await prisma.product.findMany({
+      const products = await (prisma.product as any).findMany({
         where,
         orderBy: { [sortBy]: sortOrder },
         select: {

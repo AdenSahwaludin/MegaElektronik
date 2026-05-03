@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const product = await prisma.product.update({
+      const product = await (prisma.product as any).update({
         where: { id },
         data: {
           name,
