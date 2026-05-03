@@ -317,7 +317,7 @@
                     class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden md:table-cell cursor-pointer hover:bg-gray-200 transition"
                   >
                     <div class="flex items-center justify-end gap-1">
-                      Harga Svc
+                      Harga Service
                       <Icon v-if="sortBy === 'servicePrice'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
                     </div>
                   </th>
