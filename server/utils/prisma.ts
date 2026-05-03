@@ -23,19 +23,14 @@ export function getPrismaClient(): PrismaClient {
         const databaseUrl = env("TURSO_DATABASE_URL");
         const authToken = env("TURSO_AUTH_TOKEN");
 
-        console.log("[Prisma] TURSO_DATABASE_URL present:", !!databaseUrl);
-        console.log("[Prisma] TURSO_AUTH_TOKEN present:", !!authToken);
-        console.log("[Prisma] DATABASE_URL before override:", env("DATABASE_URL"));
-
         if (!databaseUrl || !authToken) {
           throw new Error(
             `TURSO credentials missing. URL=${!!databaseUrl}, TOKEN=${!!authToken}`
           );
         }
 
-        // Override DATABASE_URL so Prisma's internal validator doesn't crash
+        // Set DATABASE_URL for Prisma's internal resolution
         process.env["DATABASE_URL"] = databaseUrl;
-        console.log("[Prisma] DATABASE_URL after override:", env("DATABASE_URL"));
 
         const libSql = createClient({
           url: databaseUrl,
