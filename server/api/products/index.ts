@@ -193,6 +193,7 @@ export default defineEventHandler(async (event) => {
     const errorMsg = error?.message || "Yah, ada error di server nih";
     throw createError({
       statusCode: 500,
+      statusMessage: errorMsg.replace(/\n/g, ' ').substring(0, 100), // Show error in network tab
       message: errorMsg,
     });
   }
