@@ -4,45 +4,31 @@ import { createClient } from "@libsql/client/web";
 
 let prismaInstance: PrismaClient | null = null;
 
-// Dynamic env access — prevents Nitro/Rollup from inlining values at build time
-function env(key: string): string | undefined {
-  return process.env[key];
-}
-
 export function getPrismaClient(): PrismaClient {
   if (prismaInstance === null) {
-    const isDev = env("NODE_ENV") === "development";
-
     try {
-      if (isDev) {
-        prismaInstance = new PrismaClient({
-          log: ["query", "error", "warn"],
-        });
-        console.log("[Prisma] ✓ Connected to Local SQLite (Development)");
-      } else {
-        const databaseUrl = env("TURSO_DATABASE_URL");
-        const authToken = env("TURSO_AUTH_TOKEN");
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
 
-        if (!databaseUrl || !authToken) {
-          throw new Error(
-            `TURSO credentials missing. URL=${!!databaseUrl}, TOKEN=${!!authToken}`
-          );
-        }
-
-        const libSql = createClient({
-          url: databaseUrl,
-          authToken: authToken,
-        });
-
-        const adapter = new PrismaLibSql(libSql);
-
-        prismaInstance = new PrismaClient({
-          adapter,
-          log: ["error", "warn"],
-        });
-
-        console.log("[Prisma] ✓ Connected to Turso (Production)");
+      if (!databaseUrl || !authToken) {
+        throw new Error(
+          `Missing TURSO credentials. TURSO_DATABASE_URL=${!!databaseUrl}, TURSO_AUTH_TOKEN=${!!authToken}`
+        );
       }
+
+      const libSql = createClient({
+        url: databaseUrl,
+        authToken: authToken,
+      });
+
+      const adapter = new PrismaLibSql(libSql);
+
+      prismaInstance = new PrismaClient({
+        adapter,
+        log: ["error", "warn"],
+      });
+
+      console.log("[Prisma] ✓ Connected to Turso");
     } catch (error) {
       console.error("[Prisma] ✗ Connection failed:", error);
       throw error;
