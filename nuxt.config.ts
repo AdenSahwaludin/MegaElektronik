@@ -37,10 +37,14 @@ export default defineNuxtConfig({
       routes: ["/"],
     },
     srcDir: "./server",
-    // Prevent Nitro from inlining these env vars at build time
-    runtimeConfig: {
-      tursoUrl: "",
-      tursoToken: "",
+    // Keep Prisma as external (not bundled) so process.env is read at runtime
+    externals: {
+      external: [
+        "@prisma/client",
+        "@prisma/adapter-libsql",
+        "@libsql/client",
+        ".prisma",
+      ],
     },
   },
 
