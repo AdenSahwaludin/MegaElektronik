@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { createClient } from "@libsql/client";
 
 let prismaInstance: PrismaClient | null = null;
 
@@ -16,22 +17,23 @@ export function getPrismaClient(): PrismaClient {
         });
         console.log("[Prisma] ✓ Connected to Local SQLite (Development)");
       } else {
-        // In production, use Turso with LibSQL adapter
         const databaseUrl = process.env.TURSO_DATABASE_URL;
         const authToken = process.env.TURSO_AUTH_TOKEN;
 
         if (!databaseUrl || !authToken) {
-          throw new Error("TURSO credentials missing for production");
+          throw new Error("TURSO_DATABASE_URL or TURSO_AUTH_TOKEN is missing");
         }
 
-        const adapter = new PrismaLibSql({
+        const libSql = createClient({
           url: databaseUrl,
           authToken: authToken,
         });
 
+        const adapter = new PrismaLibSql(libSql);
+
         prismaInstance = new PrismaClient({
           adapter,
-          log: ["error"],
+          log: ["error", "warn"],
         });
 
         console.log("[Prisma] ✓ Connected to Turso (Production)");

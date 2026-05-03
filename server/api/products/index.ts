@@ -154,7 +154,8 @@ export default defineEventHandler(async (event) => {
       // Fetch total count
       const total = await prisma.product.count({ where });
 
-      const sortBy = (query.sortBy as string) || "name";
+      const validSortFields = ["name", "brand", "model", "stock", "askingPrice", "fixedPrice", "buyPrice", "servicePrice", "isActive", "createdAt"];
+      const sortBy = validSortFields.includes(query.sortBy as string) ? (query.sortBy as string) : "name";
       const sortOrder = (query.sortOrder as string) || "asc";
 
       // Fetch paginated results

@@ -804,11 +804,12 @@ const resetForm = () => {
   newProduct.name = "";
   newProduct.brand = "";
   newProduct.model = "";
-  newProduct.stockUmum = 0;
-  newProduct.stockService = 0;
+  newProduct.stock = 0;
+  newProduct.servicePrice = null;
   newProduct.buyPrice = 0;
-  newProduct.fixedPrice = 0;
   newProduct.askingPrice = 0;
+  newProduct.fixedPrice = 0;
+  newProduct.isActive = true;
 };
 
 const showToast = (msg: string) => {
