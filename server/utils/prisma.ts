@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
 import { createClient } from "@libsql/client/web";
 
 let prismaInstance: PrismaClient | null = null;
@@ -21,7 +21,7 @@ export function getPrismaClient(): PrismaClient {
         authToken: authToken,
       });
 
-      const adapter = new PrismaLibSql(libSql);
+      const adapter = new PrismaLibSQL(libSql);
 
       prismaInstance = new PrismaClient({
         adapter,
