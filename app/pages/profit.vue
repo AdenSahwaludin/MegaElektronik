@@ -142,9 +142,15 @@
                 <!-- Date Header Row -->
                 <tr class="bg-orange-100/50">
                   <td colspan="5" class="px-6 py-2 border-y border-orange-200">
-                    <div class="flex items-center gap-2">
-                      <Icon name="lucide:calendar" class="w-4 h-4 text-orange-600" />
-                      <span class="font-bold text-gray-900">{{ date }}</span>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <Icon name="lucide:calendar" class="w-4 h-4 text-orange-600" />
+                        <span class="font-bold text-gray-900">{{ date }}</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">Untung Hari Ini:</span>
+                        <span class="font-bold text-green-700">{{ formatCurrency(getDailyProfit(group)) }}</span>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -205,7 +211,7 @@
 
           <div
             v-if="!loading && transactions.length > 0"
-            class="flex items-center gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50"
+            class="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50"
           >
             <button
               @click="currentPage--"
@@ -357,6 +363,10 @@ const getTransactionQuantity = (transaction: any) => {
     (sum: number, item: any) => sum + Number(item.quantity || 0),
     0,
   );
+};
+
+const getDailyProfit = (group: any[]) => {
+  return group.reduce((sum, t) => sum + (t.totalProfit || 0), 0);
 };
 
 const getTransactionProductTitle = (transaction: any) => {

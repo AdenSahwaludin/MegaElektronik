@@ -67,6 +67,19 @@
               />
             </div>
 
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Harga Service (Teknisi)</label
+              >
+              <input
+                v-model.number="newProduct.servicePrice"
+                type="number"
+                min="0"
+                placeholder="Khusus teknisi"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
             
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
@@ -123,7 +136,7 @@
                 @click="addProduct"
                 :disabled="
                   !newProduct.name ||
-                  !newProduct.stock ||
+                  newProduct.stock === undefined ||
                   !newProduct.buyPrice ||
                   !newProduct.askingPrice
                 "
@@ -300,6 +313,15 @@
                     </div>
                   </th>
                   <th
+                    @click="toggleSort('servicePrice')"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden md:table-cell cursor-pointer hover:bg-gray-200 transition"
+                  >
+                    <div class="flex items-center justify-end gap-1">
+                      Harga Svc
+                      <Icon v-if="sortBy === 'servicePrice'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
+                    </div>
+                  </th>
+                  <th
                     @click="toggleSort('buyPrice')"
                     class="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition"
                   >
@@ -341,17 +363,17 @@
                   </td>
                   <td
                     class="px-4 py-3 text-right text-sm font-mono font-bold hidden lg:table-cell"
-                    :class="
-                      product.stock < 5 ? 'text-red-600' : 'text-green-600'
-                    "
                   >
-                    {{ product.stock }}
+                    <span :class="product.stock < 5 ? 'text-red-600' : 'text-green-600'">{{ product.stock }}</span>
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.askingPrice) }}
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.fixedPrice) }}
+                  </td>
+                  <td class="px-4 py-3 text-right text-sm font-mono hidden md:table-cell">
+                    {{ product.servicePrice ? formatCurrency(product.servicePrice) : "-" }}
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.buyPrice) }}
@@ -484,16 +506,29 @@
               />
             </div>
 
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Stok</label
-              >
-              <input
-                v-model.number="editingProduct.stock"
-                type="number"
-                min="0"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Stok</label
+                >
+                <input
+                  v-model.number="editingProduct.stock"
+                  type="number"
+                  min="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Service</label
+                >
+                <input
+                  v-model.number="editingProduct.servicePrice"
+                  type="number"
+                  min="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
             </div>
 
           
@@ -617,6 +652,7 @@ const newProduct = reactive({
   brand: "",
   model: "",
   stock: 0,
+  servicePrice: null as number | null,
   buyPrice: 0,
   askingPrice: 0,
   fixedPrice: 0,
@@ -629,6 +665,7 @@ const editingProduct = reactive({
   brand: "",
   model: "",
   stock: 0,
+  servicePrice: null as number | null,
   buyPrice: 0,
   askingPrice: 0,
   fixedPrice: 0,
@@ -690,6 +727,7 @@ const addProduct = async () => {
         brand: newProduct.brand || null,
         model: newProduct.model || null,
         stock: newProduct.stock,
+        servicePrice: newProduct.servicePrice,
         buyPrice: newProduct.buyPrice,
         askingPrice: newProduct.askingPrice,
         fixedPrice: newProduct.fixedPrice || newProduct.askingPrice,
@@ -711,6 +749,7 @@ const editProduct = (product: any) => {
   editingProduct.brand = product.brand;
   editingProduct.model = product.model;
   editingProduct.stock = product.stock;
+  editingProduct.servicePrice = product.servicePrice;
   editingProduct.buyPrice = product.buyPrice;
   editingProduct.askingPrice = product.askingPrice;
   editingProduct.fixedPrice = product.fixedPrice;
@@ -727,6 +766,7 @@ const saveProduct = async () => {
         brand: editingProduct.brand,
         model: editingProduct.model,
         stock: editingProduct.stock,
+        servicePrice: editingProduct.servicePrice,
         buyPrice: editingProduct.buyPrice,
         fixedPrice: editingProduct.fixedPrice,
         askingPrice: editingProduct.askingPrice,
@@ -764,7 +804,8 @@ const resetForm = () => {
   newProduct.name = "";
   newProduct.brand = "";
   newProduct.model = "";
-  newProduct.stock = 0;
+  newProduct.stockUmum = 0;
+  newProduct.stockService = 0;
   newProduct.buyPrice = 0;
   newProduct.fixedPrice = 0;
   newProduct.askingPrice = 0;

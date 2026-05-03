@@ -17,12 +17,13 @@ export default defineEventHandler(async (event) => {
     try {
       const body = await readBody(event);
       const name = body.name?.trim();
-      const brand = body.brand?.trim() || "Unbranded";
-      const model = body.model?.trim() || "Standard";
-      const stock = parseInt(body.stock, 10) || 0;
-      const buyPrice = parseFloat(body.buyPrice) || 0;
-      const askingPrice = parseFloat(body.askingPrice) || 0;
-      const fixedPrice = body.fixedPrice ? parseFloat(body.fixedPrice) : askingPrice;
+      const brand = body.brand?.trim() || "Tidak ada";
+      const model = body.model?.trim() || "Standar";
+      const stock = parseInt(String(body.stock), 10) || 0;
+      const servicePrice = (body.servicePrice !== undefined && body.servicePrice !== null && body.servicePrice !== "") ? parseInt(String(body.servicePrice), 10) : null;
+      const buyPrice = parseInt(String(body.buyPrice), 10) || 0;
+      const askingPrice = parseInt(String(body.askingPrice), 10) || 0;
+      const fixedPrice = (body.fixedPrice !== undefined && body.fixedPrice !== null && body.fixedPrice !== "") ? parseInt(String(body.fixedPrice), 10) : askingPrice;
       const isActive = body.isActive !== false;
 
       if (!name) {
@@ -34,7 +35,17 @@ export default defineEventHandler(async (event) => {
 
       const product = await prisma.product.update({
         where: { id },
-        data: { name, brand, model, stock, buyPrice, askingPrice, fixedPrice, isActive },
+        data: {
+          name,
+          brand,
+          model,
+          stock,
+          servicePrice,
+          buyPrice,
+          askingPrice,
+          fixedPrice,
+          isActive
+        },
       });
 
       return { success: true, product };

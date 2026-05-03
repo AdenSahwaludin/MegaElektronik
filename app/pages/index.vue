@@ -112,44 +112,60 @@
             <button
               v-for="product in filteredProducts"
               :key="product.id"
-              @click="addProductToCart(product)"
               :disabled="product.stock === 0"
+              @click="addProductToCart(product, 'umum')"
               :class="[
-                'p-4 rounded-lg border-2 transition-all transform active:scale-95',
+                'p-4 rounded-lg border-2 transition-all transform active:scale-[0.98] group relative overflow-hidden flex flex-col',
                 product.stock === 0
                   ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed opacity-50'
-                  : 'bg-white border-orange-300 hover:border-orange-500 hover:shadow-md cursor-pointer',
+                  : 'bg-white border-orange-200 hover:border-orange-500 hover:shadow-md cursor-pointer',
               ]"
             >
-              <div class="text-left">
-                <div class="min-h-12">
-                  <p class="font-bold text-sm line-clamp-2">
+              <div class="text-left flex flex-col h-full w-full">
+                <div class="min-h-10">
+                  <p class="font-bold text-sm line-clamp-2 group-hover:text-orange-700 transition-colors">
                     {{ product.name }}
                   </p>
-                  <p class="text-xs text-gray-600 mb-2 truncate">
+                  <p class="text-[10px] text-gray-500 truncate mb-2">
                     {{ product.brand }} - {{ product.model }}
                   </p>
                 </div>
-                <div class="space-y-1">
-                  <div class="grid grid-cols-[45px_1fr] gap-y-0.5 items-baseline">
-                    <span class="text-[10px] text-gray-500">Tawar:</span>
-                    <span class="text-[11px] font-bold text-orange-600">{{ formatCurrency(product.askingPrice) }}</span>
-                    
-                    <span class="text-[10px] text-gray-500">Pas:</span>
-                    <span class="text-[11px] font-bold text-gray-600">{{ formatCurrency(product.fixedPrice) }}</span>
-                    
-                    <span class="text-[10px] text-gray-400 italic">Modal:</span>
-                    <span class="text-[10px] text-gray-400 italic">{{ formatCurrency(product.buyPrice) }}</span>
+                
+                <div class="space-y-0.5 mb-3">
+                  <div class="grid grid-cols-[40px_1fr] gap-x-1 items-center">
+                    <span class="text-[9px] text-gray-400 uppercase font-bold">Tawar</span>
+                    <span class="text-xs font-bold text-orange-600">{{ formatCurrency(product.askingPrice) }}</span>
                   </div>
-                  <p class="text-xs text-gray-500">
-                    Stok:
-                    <span
-                      class="font-semibold"
-                      :class="product.stock < 5 ? 'text-red-600' : ''"
-                    >
+                  <div class="grid grid-cols-[40px_1fr] gap-x-1 items-center">
+                    <span class="text-[9px] text-gray-400 uppercase font-bold">Pas</span>
+                    <span class="text-[11px] font-semibold text-gray-700">{{ formatCurrency(product.fixedPrice) }}</span>
+                  </div>
+                  <div v-if="product.servicePrice" class="grid grid-cols-[40px_1fr] gap-x-1 items-center">
+                    <span class="text-[9px] text-blue-400 uppercase font-bold">Svc</span>
+                    <span class="text-[11px] font-bold text-blue-600">{{ formatCurrency(product.servicePrice) }}</span>
+                  </div>
+                  <div class="grid grid-cols-[40px_1fr] gap-x-1 items-center pt-1 mt-1 border-t border-dashed border-gray-100">
+                    <span class="text-[9px] text-gray-500 uppercase italic font-bold">Modal</span>
+                    <span class="text-[9px] text-gray-500 italic">{{ formatCurrency(product.buyPrice) }}</span>
+                  </div>
+                </div>
+
+                <div class="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between">
+                  <div class="flex flex-col items-start">
+                    <span class="text-[9px] text-gray-400 uppercase font-bold leading-tight">Stok</span>
+                    <span :class="product.stock < 5 ? 'text-red-600' : 'text-green-600'" class="text-sm font-black leading-tight">
                       {{ product.stock }}
                     </span>
-                  </p>
+                  </div>
+                  
+                  <button 
+                    v-if="product.servicePrice"
+                    @click.stop="addProductToCart(product, 'service')"
+                    class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[8px] font-bold rounded-lg shadow transition active:scale-90 flex items-center gap-1"
+                  >
+                    <Icon name="lucide:tag" class="w-2.5 h-2.5" />
+                    Service
+                  </button>
                 </div>
               </div>
             </button>
@@ -245,6 +261,9 @@
               <p class="font-bold text-sm">{{ item.productName }}</p>
               <p class="text-xs text-gray-600">
                 {{ item.brand }} - {{ item.model }}
+                <span v-if="item.servicePrice" :class="item.stockType === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'" class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">
+                  {{ item.stockType === 'service' ? 'Harga Service' : 'Harga Umum' }}
+                </span>
               </p>
             </div>
 
@@ -518,6 +537,9 @@
                 <p class="font-bold text-sm">{{ item.productName }}</p>
                 <p class="text-xs text-gray-600">
                   {{ item.brand }} - {{ item.model }}
+                  <span v-if="item.servicePrice" :class="item.stockType === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'" class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">
+                    {{ item.stockType === 'service' ? 'Harga Service' : 'Harga Umum' }}
+                  </span>
                 </p>
               </div>
               <div class="flex items-center gap-2 mb-2">
@@ -748,9 +770,13 @@ watch(searchQuery, async () => {
   }, 300);
 });
 
-const addProductToCart = (product: any) => {
+const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") => {
   if (product.stock > 0) {
-    cartStore.addToCart(product);
+    // If service price is selected, pass it to cart
+    const price = priceType === "service" ? product.servicePrice : product.askingPrice;
+    cartStore.addToCart({ ...product, askingPrice: price }, priceType);
+  } else {
+    showToast("Stok abis bos!");
   }
 };
 

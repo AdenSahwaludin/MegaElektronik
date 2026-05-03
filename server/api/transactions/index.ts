@@ -57,15 +57,15 @@ export default defineEventHandler(async (event) => {
     if (search) {
       searchFilter = {
         OR: [
-          { customer: { name: { contains: search, mode: "insensitive" } } },
+          { customer: { name: { contains: search } } },
           {
             transactionItems: {
               some: {
                 product: {
                   OR: [
-                    { name: { contains: search, mode: "insensitive" } },
-                    { brand: { contains: search, mode: "insensitive" } },
-                    { model: { contains: search, mode: "insensitive" } },
+                    { name: { contains: search } },
+                    { brand: { contains: search } },
+                    { model: { contains: search } },
                   ],
                 },
               },

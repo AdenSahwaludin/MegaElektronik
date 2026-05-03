@@ -5,33 +5,37 @@ let prismaInstance: PrismaClient | null = null;
 
 export function getPrismaClient(): PrismaClient {
   if (prismaInstance === null) {
-    const databaseUrl = process.env.TURSO_DATABASE_URL;
-    const authToken = process.env.TURSO_AUTH_TOKEN;
-
-    if (!databaseUrl) {
-      throw new Error("TURSO_DATABASE_URL environment variable is not set");
-    }
-
-    if (!authToken) {
-      throw new Error("TURSO_AUTH_TOKEN environment variable is not set");
-    }
+    const isDev = process.env.NODE_ENV === "development";
 
     try {
-      // PrismaLibSql adapter expects the config object with url and authToken
-      const adapter = new PrismaLibSql({
-        url: databaseUrl,
-        authToken: authToken,
-      });
+      if (isDev) {
+        // In development, use local SQLite (defined in DATABASE_URL in .env)
+        // No adapter needed for standard SQLite
+        prismaInstance = new PrismaClient({
+          log: ["query", "error", "warn"],
+        });
+        console.log("[Prisma] ✓ Connected to Local SQLite (Development)");
+      } else {
+        // In production, use Turso with LibSQL adapter
+        const databaseUrl = process.env.TURSO_DATABASE_URL;
+        const authToken = process.env.TURSO_AUTH_TOKEN;
 
-      prismaInstance = new PrismaClient({
-        adapter,
-        log:
-          process.env.NODE_ENV === "development"
-            ? ["query", "error", "warn"]
-            : ["error"],
-      });
+        if (!databaseUrl || !authToken) {
+          throw new Error("TURSO credentials missing for production");
+        }
 
-      console.log("[Prisma] ✓ Connected to Turso");
+        const adapter = new PrismaLibSql({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+
+        prismaInstance = new PrismaClient({
+          adapter,
+          log: ["error"],
+        });
+
+        console.log("[Prisma] ✓ Connected to Turso (Production)");
+      }
     } catch (error) {
       console.error("[Prisma] ✗ Connection failed:", error);
       throw error;

@@ -41,7 +41,8 @@ export default defineEventHandler(async (event) => {
                 fixedPrice: product.fixedPrice
                   ? parseInt(product.fixedPrice, 10)
                   : parseInt(product.askingPrice, 10),
-                stock: product.stock ? parseInt(product.stock, 10) : 0,
+                stock: parseInt(String(product.stock), 10) || 0,
+                servicePrice: (product.servicePrice !== undefined && product.servicePrice !== null) ? parseInt(String(product.servicePrice), 10) : null,
                 isActive: product.isActive !== false, // Default to true
               },
             });
@@ -69,8 +70,11 @@ export default defineEventHandler(async (event) => {
         if (
           !body.name ||
           body.stock === undefined ||
+          body.stock === null ||
           body.buyPrice === undefined ||
-          body.askingPrice === undefined
+          body.buyPrice === null ||
+          body.askingPrice === undefined ||
+          body.askingPrice === null
         ) {
           throw createError({
             statusCode: 400,
@@ -84,12 +88,13 @@ export default defineEventHandler(async (event) => {
             name: body.name.trim(),
             brand: body.brand?.trim() || "Unbranded",
             model: body.model?.trim() || "Standard",
-            stock: parseInt(body.stock, 10),
-            buyPrice: parseInt(body.buyPrice, 10),
-            askingPrice: parseInt(body.askingPrice, 10),
-            fixedPrice: body.fixedPrice
-              ? parseInt(body.fixedPrice, 10)
-              : parseInt(body.askingPrice, 10),
+            stock: parseInt(String(body.stock), 10) || 0,
+            servicePrice: (body.servicePrice !== undefined && body.servicePrice !== null && body.servicePrice !== "") ? parseInt(String(body.servicePrice), 10) : null,
+            buyPrice: parseInt(String(body.buyPrice), 10) || 0,
+            askingPrice: parseInt(String(body.askingPrice), 10) || 0,
+            fixedPrice: (body.fixedPrice !== undefined && body.fixedPrice !== null && body.fixedPrice !== "")
+              ? parseInt(String(body.fixedPrice), 10)
+              : parseInt(String(body.askingPrice), 10),
             isActive: body.isActive !== false, // Default to true
           },
         });
@@ -165,6 +170,7 @@ export default defineEventHandler(async (event) => {
           askingPrice: true,
           fixedPrice: true,
           stock: true,
+          servicePrice: true,
           isActive: true,
           createdAt: true,
           updatedAt: true,

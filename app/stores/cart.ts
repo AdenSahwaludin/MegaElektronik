@@ -12,6 +12,8 @@ export interface CartItem {
   fixedPrice: number;
   quantity: number;
   soldPrice: number; // editable price per unit - defaults to askingPrice
+  stockType: "umum" | "service";
+  servicePrice: number | null;
 }
 
 interface CustomerData {
@@ -27,16 +29,16 @@ export const useCartStore = defineStore("cart", () => {
   const isProcessing = ref(false);
 
   // Add or update item in cart
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, stockType: "umum" | "service" = "umum") => {
     const existingItem = items.value.find(
-      (item) => item.productId === product.id,
+      (item) => item.productId === product.id && item.stockType === stockType,
     );
 
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
       const cartItem: CartItem = {
-        id: `cart-${product.id}-${Date.now()}`,
+        id: `cart-${product.id}-${stockType}-${Date.now()}`,
         productId: product.id,
         productName: product.name,
         brand: product.brand,
@@ -46,6 +48,8 @@ export const useCartStore = defineStore("cart", () => {
         fixedPrice: product.fixedPrice,
         quantity: 1,
         soldPrice: product.askingPrice, // default to asking price
+        stockType: stockType,
+        servicePrice: product.servicePrice,
       };
       items.value.push(cartItem);
     }
@@ -133,6 +137,7 @@ export const useCartStore = defineStore("cart", () => {
             quantity: item.quantity,
             soldPrice: item.soldPrice,
             buyPrice: item.buyPrice,
+            stockType: item.stockType,
           })),
           totalAmount: totalRevenue.value,
           totalProfit: totalProfit.value,

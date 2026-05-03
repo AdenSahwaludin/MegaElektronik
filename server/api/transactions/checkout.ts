@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
 
         if (product.stock < item.quantity) {
           throw new Error(
-            `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`,
+            `Stok tidak mencukupi untuk ${product.name}. Tersedia: ${product.stock}, Diminta: ${item.quantity}`,
           );
         }
       }
@@ -76,9 +76,7 @@ export default defineEventHandler(async (event) => {
         await tx.product.update({
           where: { id: item.productId },
           data: {
-            stock: {
-              decrement: item.quantity,
-            },
+            stock: { decrement: item.quantity }
           },
         });
       }

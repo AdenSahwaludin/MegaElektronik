@@ -34,5 +34,8 @@
     "typescript": "^6.0.2",
     "vue-tsc": "^3.2.6"
   },
-  "packageManager": "bun@latest"
+  "packageManager": "bun@latest",
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
+  }
 }
