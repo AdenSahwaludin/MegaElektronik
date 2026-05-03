@@ -37,10 +37,6 @@ export default defineNuxtConfig({
       routes: ["/"],
     },
     srcDir: "./server",
-    // Prevent Nitro from breaking Prisma Client bundling
-    externals: {
-      inline: ["@prisma/client", ".prisma"],
-    },
     // Prevent Nitro from inlining these env vars at build time
     runtimeConfig: {
       tursoUrl: "",

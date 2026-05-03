@@ -29,9 +29,6 @@ export function getPrismaClient(): PrismaClient {
           );
         }
 
-        // Set DATABASE_URL for Prisma's internal resolution
-        process.env["DATABASE_URL"] = databaseUrl;
-
         const libSql = createClient({
           url: databaseUrl,
           authToken: authToken,
@@ -39,8 +36,15 @@ export function getPrismaClient(): PrismaClient {
 
         const adapter = new PrismaLibSql(libSql);
 
+        // Pass a dummy SQLite URL to satisfy Prisma's internal URL validator.
+        // The adapter handles ALL actual database communication with Turso.
         prismaInstance = new PrismaClient({
           adapter,
+          datasources: {
+            db: {
+              url: "file:./prisma/production.db",
+            },
+          },
           log: ["error", "warn"],
         });
 
