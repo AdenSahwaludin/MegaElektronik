@@ -97,6 +97,7 @@ export default defineEventHandler(async (event) => {
             id: true,
             name: true,
             phone: true,
+            address: true,
           },
         },
         transactionItems: {
@@ -147,8 +148,17 @@ export default defineEventHandler(async (event) => {
 
     let totalCost = 0;
     let totalItemsSold = 0;
+    const dailyProfits: Record<string, number> = {};
 
     for (const transaction of allFilteredTransactions) {
+      // Calculate daily profit using the same formatting as the frontend
+      const dateKey = new Date(transaction.createdAt).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+      dailyProfits[dateKey] = (dailyProfits[dateKey] || 0) + (transaction.totalProfit || 0);
+
       for (const item of transaction.transactionItems) {
         totalCost += item.product.buyPrice * item.quantity;
         totalItemsSold += item.quantity;
@@ -170,6 +180,7 @@ export default defineEventHandler(async (event) => {
         totalItemsSold,
         transactionCount: aggregateData._count,
       },
+      dailyProfits,
     };
   } catch (error: any) {
     console.error("Fetch transactions error:", error);

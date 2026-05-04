@@ -22,6 +22,12 @@
         <p class="text-sm text-gray-600">
           Pelanggan: {{ transaction.customer?.name || "Umum" }}
         </p>
+        <p class="text-sm text-gray-600">
+          No. Telp: {{ transaction.customer?.phone || "Ga di isi" }}
+        </p>
+        <p class="text-sm text-gray-600">
+          Alamat: {{ transaction.customer?.address || "Ga di isi" }}
+        </p>
 
         <table class="w-full mt-4 text-sm">
           <thead class="text-left text-xs text-gray-600 border-b">

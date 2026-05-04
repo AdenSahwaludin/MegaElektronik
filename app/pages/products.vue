@@ -273,7 +273,7 @@
                   </th>
                   <th
                     @click="toggleSort('brand')"
-                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition"
+                    class="px-4 py-3 text-left text-sm font-semibold text-gray-700 hidden lg:table-cell cursor-pointer hover:bg-gray-200 transition"
                   >
                     <div class="flex items-center gap-1">
                       Merk
@@ -287,7 +287,7 @@
                   </th>
                   <th
                     @click="toggleSort('stock')"
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden lg:table-cell cursor-pointer hover:bg-gray-200 transition"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition"
                   >
                     <div class="flex items-center justify-end gap-1">
                       Stok
@@ -352,7 +352,7 @@
                     {{ product.name }}
                   </td>
                   <td
-                    class="px-4 py-3 text-sm text-gray-700 hidden sm:table-cell"
+                    class="px-4 py-3 text-sm text-gray-700 hidden lg:table-cell"
                   >
                     {{ product.brand || "-" }}
                   </td>
@@ -362,7 +362,7 @@
                     {{ product.model || "-" }}
                   </td>
                   <td
-                    class="px-4 py-3 text-right text-sm font-mono font-bold hidden lg:table-cell"
+                    class="px-4 py-3 text-right text-sm font-mono font-bold"
                   >
                     <span :class="product.stock < 5 ? 'text-red-600' : 'text-green-600'">{{ product.stock }}</span>
                   </td>

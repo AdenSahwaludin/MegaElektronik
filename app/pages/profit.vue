@@ -134,6 +134,7 @@
                   <th class="px-6 py-3 text-left">Produk</th>
                   <th class="px-6 py-3 text-right w-16">Qty</th>
                   <th class="px-6 py-3 text-right w-36">Total</th>
+                  <th class="px-6 py-3 text-right w-36">Untung</th>
                   <th class="px-6 py-3 text-center w-28">Aksi</th>
                 </tr>
               </thead>
@@ -141,15 +142,15 @@
               <tbody v-for="(group, date) in groupedTransactions" :key="date">
                 <!-- Date Header Row -->
                 <tr class="bg-orange-100/50">
-                  <td colspan="5" class="px-6 py-2 border-y border-orange-200">
+                  <td colspan="6" class="px-6 py-2 border-y border-orange-200">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
                         <Icon name="lucide:calendar" class="w-4 h-4 text-orange-600" />
                         <span class="font-bold text-gray-900">{{ date }}</span>
                       </div>
                       <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase">Untung Hari Ini:</span>
-                        <span class="font-bold text-green-700">{{ formatCurrency(getDailyProfit(group)) }}</span>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">Keuntungan {{ date }} :</span>
+                        <span class="font-bold text-green-700">{{ formatCurrency(dailyProfits[date] || 0) }}</span>
                       </div>
                     </div>
                   </td>
@@ -184,6 +185,10 @@
                   <td class="px-6 py-4 text-right align-middle font-bold text-gray-900">
                     {{ formatCurrency(transaction.totalAmount) }}
                   </td>
+                  
+                  <td class="px-6 py-4 text-right align-middle font-bold text-green-700">
+                    {{ formatCurrency(transaction.totalProfit) }}
+                  </td>
 
                   <td class="px-6 py-4 text-center align-middle">
                     <div class="flex items-center justify-center gap-2">
@@ -204,7 +209,7 @@
                   </td>
                 </tr>
                 <!-- Spacer after group -->
-                <tr class="h-4 bg-orange-50/20"><td colspan="5"></td></tr>
+                <tr class="h-4 bg-orange-50/20"><td colspan="6"></td></tr>
               </tbody>
             </table>
           </div>
@@ -270,6 +275,8 @@ const { formatCurrency } = useCurrency();
 
 // State
 const transactions = ref<any[]>([]);
+const dailyProfits = ref<Record<string, number>>({});
+const totalCount = ref(0);
 const summary = ref({
   totalRevenue: 0,
   totalProfit: 0,
@@ -280,7 +287,6 @@ const summary = ref({
 const loading = ref(false);
 const currentPage = ref(1);
 const totalPages = ref(1);
-const totalCount = ref(0);
 const dateRange = ref("all");
 const searchQuery = ref("");
 const modalVisible = ref(false);
@@ -333,6 +339,7 @@ const fetchTransactions = async () => {
       `/api/transactions?${params.toString()}`,
     );
     transactions.value = response.transactions;
+    dailyProfits.value = response.dailyProfits || {};
     summary.value = response.summary;
     totalCount.value = response.pagination.totalCount;
     totalPages.value = response.pagination.totalPages;
