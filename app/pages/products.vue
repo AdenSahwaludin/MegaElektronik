@@ -59,9 +59,10 @@
                 >Stok *</label
               >
               <input
-                v-model.number="newProduct.stock"
-                type="number"
-                min="0"
+                :value="newProduct.stock !== undefined ? formatNumber(newProduct.stock) : ''"
+                @input="newProduct.stock = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                type="text"
+                inputmode="numeric"
                 placeholder="0"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
@@ -72,9 +73,10 @@
                 >Harga Service (Teknisi)</label
               >
               <input
-                v-model.number="newProduct.servicePrice"
-                type="number"
-                min="0"
+                :value="newProduct.servicePrice ? formatNumber(newProduct.servicePrice) : ''"
+                @input="newProduct.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                type="text"
+                inputmode="numeric"
                 placeholder="Khusus teknisi"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
@@ -86,9 +88,10 @@
                 >Harga Tawar (Rp) *</label
               >
               <input
-                v-model.number="newProduct.askingPrice"
-                type="number"
-                min="0"
+                :value="newProduct.askingPrice ? formatNumber(newProduct.askingPrice) : ''"
+                @input="newProduct.askingPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                type="text"
+                inputmode="numeric"
                 placeholder="0"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
@@ -99,9 +102,10 @@
                 >Harga Pas (Rp)</label
               >
               <input
-                v-model.number="newProduct.fixedPrice"
-                type="number"
-                min="0"
+                :value="newProduct.fixedPrice ? formatNumber(newProduct.fixedPrice) : ''"
+                @input="newProduct.fixedPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                type="text"
+                inputmode="numeric"
                 placeholder="0"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
@@ -111,9 +115,10 @@
                 >Harga Beli (Rp) *</label
               >
               <input
-                v-model.number="newProduct.buyPrice"
-                type="number"
-                min="0"
+                :value="newProduct.buyPrice ? formatNumber(newProduct.buyPrice) : ''"
+                @input="newProduct.buyPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                type="text"
+                inputmode="numeric"
                 placeholder="0"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
@@ -512,9 +517,10 @@
                   >Stok</label
                 >
                 <input
-                  v-model.number="editingProduct.stock"
-                  type="number"
-                  min="0"
+                  :value="editingProduct.stock !== undefined ? formatNumber(editingProduct.stock) : ''"
+                  @input="editingProduct.stock = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  type="text"
+                  inputmode="numeric"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
@@ -523,9 +529,10 @@
                   >Harga Service</label
                 >
                 <input
-                  v-model.number="editingProduct.servicePrice"
-                  type="number"
-                  min="0"
+                  :value="editingProduct.servicePrice ? formatNumber(editingProduct.servicePrice) : ''"
+                  @input="editingProduct.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  type="text"
+                  inputmode="numeric"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
@@ -538,9 +545,10 @@
                 >Harga Tawar</label
               >
               <input
-                v-model.number="editingProduct.askingPrice"
-                type="number"
-                min="0"
+                :value="editingProduct.askingPrice ? formatNumber(editingProduct.askingPrice) : ''"
+                @input="editingProduct.askingPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                type="text"
+                inputmode="numeric"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -550,9 +558,10 @@
                 >Harga Pas</label
               >
               <input
-                v-model.number="editingProduct.fixedPrice"
-                type="number"
-                min="0"
+                :value="editingProduct.fixedPrice ? formatNumber(editingProduct.fixedPrice) : ''"
+                @input="editingProduct.fixedPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                type="text"
+                inputmode="numeric"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -561,9 +570,10 @@
                 >Harga Beli</label
               >
               <input
-                v-model.number="editingProduct.buyPrice"
-                type="number"
-                min="0"
+                :value="editingProduct.buyPrice ? formatNumber(editingProduct.buyPrice) : ''"
+                @input="editingProduct.buyPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                type="text"
+                inputmode="numeric"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               <div class="flex items-center gap-2 pt-2">
@@ -619,7 +629,7 @@ definePageMeta({
   layout: "default",
 });
 
-const { formatCurrency } = useCurrency();
+const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
 
 // State
 const products: Ref<any[]> = ref([]);

@@ -315,9 +315,10 @@
                   >Rp</span
                 >
                 <input
-                  :value="formatCurrency(item.soldPrice)"
+                  :value="item.soldPrice ? formatNumber(item.soldPrice) : ''"
                   @input="handlePriceInput(item.id, $event)"
                   type="text"
+                  inputmode="numeric"
                   class="w-full pl-8 pr-3 py-2 border border-orange-300 rounded font-semibold text-right focus:outline-none focus:ring-2 focus:ring-orange-500 bg-orange-50"
                 />
               </div>
@@ -591,9 +592,10 @@
                     >Rp</span
                   >
                   <input
-                    :value="formatCurrency(item.soldPrice)"
+                    :value="item.soldPrice ? formatNumber(item.soldPrice) : ''"
                     @input="handlePriceInput(item.id, $event)"
                     type="text"
+                    inputmode="numeric"
                     class="w-full pl-8 pr-3 py-2 border border-orange-300 rounded font-semibold text-right focus:outline-none focus:ring-2 focus:ring-orange-500 bg-orange-50"
                   />
                 </div>
@@ -701,7 +703,7 @@ definePageMeta({
 });
 
 const cartStore = useCartStore();
-const { formatCurrency } = useCurrency();
+const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
 
 // Products
 const products: Ref<any[]> = ref([]);
@@ -782,7 +784,7 @@ const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") 
 
 const handlePriceInput = (cartItemId: string, event: Event) => {
   const input = event.target as HTMLInputElement;
-  const value = parseFloat(input.value.replace(/\D/g, "")) || 0;
+  const value = parseFromDisplay(input.value);
   cartStore.updateSoldPrice(cartItemId, value);
 };
 

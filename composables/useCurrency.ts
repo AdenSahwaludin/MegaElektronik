@@ -21,8 +21,13 @@ export const useCurrency = () => {
     return parseInt(cleaned, 10) || 0;
   };
 
+  const formatNumber = (value: number): string => {
+    return new Intl.NumberFormat("id-ID").format(value);
+  };
+
   return {
     formatCurrency,
+    formatNumber,
     parseFromDisplay,
   };
 };

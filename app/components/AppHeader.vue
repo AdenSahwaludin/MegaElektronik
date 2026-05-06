@@ -52,12 +52,23 @@
           </NuxtLink>
         </nav>
 
-        <!-- Live Clock (Right) -->
-        <div class="text-right shrink-0">
-          <p class="text-xs lg:text-sm opacity-90">{{ formattedDate }}</p>
-          <p class="text-sm lg:text-base font-semibold font-mono">
-            {{ formattedTime }}
-          </p>
+        <!-- Live Clock & Actions (Right) -->
+        <div class="flex items-center gap-4 shrink-0">
+          <div class="text-right hidden sm:block">
+            <p class="text-xs lg:text-sm opacity-90">{{ formattedDate }}</p>
+            <p class="text-sm lg:text-base font-semibold font-mono">
+              {{ formattedTime }}
+            </p>
+          </div>
+          
+          <!-- Tombol Logout -->
+          <button
+            @click="handleLogout"
+            class="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition shadow-sm flex items-center justify-center group"
+            title="Keluar"
+          >
+            <Icon name="lucide:log-out" class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+          </button>
         </div>
       </div>
     </div>
@@ -90,6 +101,23 @@ const formattedTime = computed(() => {
 
 const isActive = (path: string) => {
   return route.path === path;
+};
+
+// Fungsi Logout
+const handleLogout = async () => {
+  try {
+    // Panggil API logout untuk menghapus cookie di sisi server jika perlu (walaupun cookie bisa dihapus dari sisi client atau lewat instruksi server response)
+    await $fetch('/api/logout', { method: 'POST' });
+  } catch (error) {
+    console.error("Gagal logout:", error);
+  } finally {
+    // Hapus cookie dari state aplikasi / sisi client
+    const token = useCookie("auth_token");
+    token.value = null; // Menyetel ke null akan menghapus cookie
+    
+    // Redirect paksa ke halaman login
+    await navigateTo("/login");
+  }
 };
 
 let interval: any;
