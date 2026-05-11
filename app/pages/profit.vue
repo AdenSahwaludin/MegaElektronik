@@ -60,38 +60,73 @@
         </div>
 
         <!-- Filters & Search -->
-        <div class="bg-white p-4 rounded-lg shadow mb-6">
-          <div class="flex flex-col lg:flex-row gap-4">
-            <div class="flex-1">
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Cari Transaksi</label
-              >
-              <div class="relative">
-                <Icon
-                  name="lucide:search"
-                  class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Cari nama pelanggan atau produk..."
-                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-                />
+        <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+          <div class="flex flex-col gap-6">
+            <!-- Row 1: Search and Quick Filter -->
+            <div class="flex flex-col md:flex-row gap-4">
+              <div class="flex-1 md:w-1/2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Cari Nama Produk</label>
+                <div class="relative">
+                  <Icon name="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Masukkan nama produk..."
+                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div class="md:w-1/2 lg:w-64">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Rentang Waktu</label>
+                <select
+                  v-model="dateRange"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-semibold"
+                >
+                  <option value="all">Semua Waktu</option>
+                  <option value="today">Hari Ini</option>
+                  <option value="week">Minggu Ini</option>
+                  <option value="month">Bulan Ini</option>
+                  <option value="custom">Custom Tanggal</option>
+                </select>
               </div>
             </div>
-            <div class="lg:w-48">
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Rentang Waktu</label
+            
+            <!-- Row 2: Custom Date Range (Conditional) -->
+            <div 
+              v-if="dateRange === 'custom'"
+              class="flex flex-col lg:flex-row gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 animate-in fade-in slide-in-from-top-2 duration-300"
+            >
+              <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                <div>
+                  <label class="flex items-center gap-2 text-[11px] uppercase font-bold text-gray-500 mb-1.5">
+                    <Icon name="lucide:calendar-range" class="w-3 h-3 text-orange-600" />
+                    Dari Tanggal
+                  </label>
+                  <input
+                    v-model="startDate"
+                    type="date"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-orange-500 shadow-sm transition-all"
+                  />
+                </div>
+                <div>
+                  <label class="flex items-center gap-2 text-[11px] uppercase font-bold text-gray-500 mb-1.5">
+                    <Icon name="lucide:calendar-check" class="w-3 h-3 text-orange-600" />
+                    Sampai Tanggal
+                  </label>
+                  <input
+                    v-model="endDate"
+                    type="date"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-orange-500 shadow-sm transition-all"
+                  />
+                </div>
+              </div>
+              <button 
+                @click="startDate = ''; endDate = ''; dateRange = 'all'"
+                class="text-xs font-bold text-red-600 hover:text-red-700 px-4 py-2.5 bg-white border border-red-200 rounded-lg flex items-center gap-2 shadow-sm transition-all hover:bg-red-50 active:scale-95 shrink-0"
               >
-              <select
-                v-model="dateRange"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-              >
-                <option value="all">Semua Waktu</option>
-                <option value="today">Hari Ini</option>
-                <option value="week">Minggu Ini</option>
-                <option value="month">Bulan Ini</option>
-              </select>
+                <Icon name="lucide:x" class="w-4 h-4" />
+                Batal
+              </button>
             </div>
           </div>
         </div>
@@ -186,8 +221,11 @@
                     {{ formatCurrency(transaction.totalAmount) }}
                   </td>
                   
-                  <td class="px-6 py-4 text-right align-middle font-bold text-green-700">
-                    {{ formatCurrency(transaction.totalProfit) }}
+                  <td class="py-4 px-4 text-right align-middle">
+                    <div class="flex items-center justify-end gap-1">
+                      <span class="font-black text-green-700">{{ formatCurrency(transaction.totalProfit) }}</span>
+                      <span class="text-green-600 font-bold text-xs">/ {{ ((transaction.totalProfit / (transaction.totalAmount || 1)) * 100).toFixed(0) }}%</span>
+                    </div>
                   </td>
 
                   <td class="px-6 py-4 text-center align-middle">
@@ -288,6 +326,8 @@ const loading = ref(false);
 const currentPage = ref(1);
 const totalPages = ref(1);
 const dateRange = ref("all");
+const startDate = ref("");
+const endDate = ref("");
 const searchQuery = ref("");
 const modalVisible = ref(false);
 const selectedTransactionId = ref<number | null>(null);
@@ -332,6 +372,8 @@ const fetchTransactions = async () => {
       page: currentPage.value.toString(),
       limit: "10",
       dateRange: dateRange.value,
+      startDate: startDate.value,
+      endDate: endDate.value,
       search: searchQuery.value,
     });
 
@@ -425,7 +467,7 @@ const deleteTransaction = async (transactionId: string) => {
 };
 
 // Watchers
-watch([searchQuery, dateRange], () => {
+watch([searchQuery, dateRange, startDate, endDate], () => {
   currentPage.value = 1;
   fetchTransactions();
 });

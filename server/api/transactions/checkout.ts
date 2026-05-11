@@ -47,18 +47,23 @@ export default defineEventHandler(async (event) => {
         }
       }
 
+      // Transaction date
+      const createdAt = body.createdAt ? new Date(body.createdAt) : new Date();
+
       // Create transaction record
       const transactionRecord = await tx.transaction.create({
         data: {
           customerId: body.customerId || null,
           totalAmount: body.totalAmount,
           totalProfit: body.totalProfit,
+          createdAt: createdAt,
           transactionItems: {
             create: body.items.map((item: any) => ({
               productId: item.productId,
               quantity: item.quantity,
               soldPrice: item.soldPrice,
               profitPerItem: item.soldPrice - item.buyPrice,
+              createdAt: createdAt,
             })),
           },
         },

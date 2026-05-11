@@ -121,7 +121,7 @@ export const useCartStore = defineStore("cart", () => {
   }));
 
   // Checkout
-  const checkout = async () => {
+  const checkout = async (createdAt?: string) => {
     if (items.value.length === 0) {
       throw new Error("Keranjang masih kosong nih");
     }
@@ -141,6 +141,7 @@ export const useCartStore = defineStore("cart", () => {
           })),
           totalAmount: totalRevenue.value,
           totalProfit: totalProfit.value,
+          createdAt: createdAt || null,
         },
       });
 

@@ -9,21 +9,17 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // Proteksi rute: jika belum login dan bukan ke halaman login
   if (!token.value && to.path !== "/login") {
-    return navigateTo("/login");
+    return navigateTo("/login", { replace: true });
   }
 
   // Jika sudah login dan mencoba ke halaman login
   if (token.value && to.path === "/login") {
-    return navigateTo("/");
+    return navigateTo("/", { replace: true });
   }
 
-  // Rolling Session: 
-  // Jika token ada, kita "refresh" nilainya dengan mengisinya kembali.
-  // Ini akan memicu Nuxt/Nitro untuk mengirimkan header Set-Cookie 
-  // dengan maxAge baru (24 jam dari sekarang).
-  if (token.value) {
-    // Pada Nuxt 3, menugaskan ulang useCookie dengan nilai yang sama
-    // akan memperbarui cookie dengan opsi maxAge yang telah dikonfigurasi
+  // Rolling Session: Perbarui masa aktif cookie jika sedang aktif
+  // Hanya lakukan di server-side untuk memperbarui header Set-Cookie
+  if (process.server && token.value) {
     token.value = token.value;
   }
 });

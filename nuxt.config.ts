@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
 
   routeRules: {
-    "/": { prerender: true },
+    "/": { ssr: true },
   },
 
   compatibilityDate: "2025-01-15",
@@ -32,10 +32,6 @@ export default defineNuxtConfig({
 
   // Server middleware
   nitro: {
-    prerender: {
-      crawlLinks: true,
-      routes: ["/"],
-    },
     srcDir: "./server",
   },
 });

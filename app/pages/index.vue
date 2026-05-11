@@ -183,63 +183,21 @@
           <p class="text-sm opacity-90">Item: {{ cartStore.totalItems }}</p>
         </div>
 
-        <!-- Create Customer Section (Collapsible) -->
+        <!-- Transaction Date & Time Section -->
         <div class="border-b px-4 py-3 bg-orange-50">
-          <button
-            @click="showCustomerForm = !showCustomerForm"
-            class="w-full flex items-center justify-between font-bold text-sm text-gray-900 hover:text-orange-700 transition"
-          >
-            <span>Data Pelanggan (Kalo ada)</span>
-            <Icon
-              :name="
-                showCustomerForm ? 'lucide:chevron-up' : 'lucide:chevron-down'
-              "
-              class="w-5 h-5"
-            />
-          </button>
-
-          <!-- Collapsible Form -->
-          <div
-            v-show="showCustomerForm"
-            class="space-y-2 mt-3 pt-3 border-t border-orange-200"
-          >
-            <input
-              v-model="newCustomer.name"
-              type="text"
-              placeholder="Nama pelanggan"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <input
-              v-model="newCustomer.phone"
-              type="tel"
-              placeholder="No HP (opsional)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <input
-              v-model="newCustomer.address"
-              type="text"
-              placeholder="Alamat (opsional)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <button
-              @click="createNewCustomer"
-              :disabled="!newCustomer.name.trim()"
-              class="w-full px-3 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition"
-            >
-              Buat Pelanggan
-            </button>
+          <div class="flex items-center justify-between mb-2">
+             <span class="text-sm font-bold text-gray-900 flex items-center gap-1">
+               <Icon name="lucide:calendar-days" class="w-4 h-4 text-orange-600" />
+               Waktu Transaksi
+             </span>
           </div>
-
-          <!-- Selected Customer -->
-          <div
-            v-if="cartStore.selectedCustomer"
-            class="mt-3 p-2 bg-white rounded border border-green-300"
-          >
-            <p class="text-xs text-gray-600">Pelanggan saat ini:</p>
-            <p class="font-bold text-sm text-green-700">
-              {{ cartStore.selectedCustomer.name }}
-            </p>
-          </div>
+          <input
+            v-model="transactionDateTime"
+            type="datetime-local"
+            @input="stopLiveClock"
+            class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+          />
+          <p class="text-[10px] text-gray-400 mt-1 italic">* Default adalah waktu sekarang</p>
         </div>
 
         <!-- Cart Items -->
@@ -465,59 +423,20 @@
 
         <!-- Mobile Cart Content -->
         <div class="flex-1 overflow-y-auto">
-          <!-- Customer Section -->
+          <!-- Transaction Date Section -->
           <div class="border-b px-4 py-3 bg-orange-50">
-            <button
-              @click="showCustomerForm = !showCustomerForm"
-              class="w-full flex items-center justify-between font-bold text-sm text-gray-900 hover:text-orange-700 transition"
-            >
-              <span>Data Pelanggan (Kalo ada)</span>
-              <Icon
-                :name="
-                  showCustomerForm ? 'lucide:chevron-up' : 'lucide:chevron-down'
-                "
-                class="w-5 h-5"
-              />
-            </button>
-            <div
-              v-show="showCustomerForm"
-              class="space-y-2 mt-3 pt-3 border-t border-orange-200"
-            >
-              <input
-                v-model="newCustomer.name"
-                type="text"
-                placeholder="Nama pembeli"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <input
-                v-model="newCustomer.phone"
-                type="tel"
-                placeholder="No HP (Kalo ada)"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <input
-                v-model="newCustomer.address"
-                type="text"
-                placeholder="Alamat (Kalo ada)"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <button
-                @click="createNewCustomer"
-                :disabled="!newCustomer.name.trim()"
-                class="w-full px-3 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition"
-              >
-                Buat Pelanggan
-              </button>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-bold text-gray-900 flex items-center gap-1">
+                <Icon name="lucide:calendar-days" class="w-4 h-4 text-orange-600" />
+                Waktu Transaksi
+              </span>
             </div>
-            <div
-              v-if="cartStore.selectedCustomer"
-              class="mt-3 p-2 bg-white rounded border border-green-300"
-            >
-              <p class="text-xs text-gray-600">Pelanggan saat ini:</p>
-              <p class="font-bold text-sm text-green-700">
-                {{ cartStore.selectedCustomer.name }}
-              </p>
-            </div>
+            <input
+              v-model="transactionDateTime"
+              type="datetime-local"
+              @input="stopLiveClock"
+              class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+            />
           </div>
 
           <!-- Cart Items -->
@@ -710,15 +629,11 @@ const products: Ref<any[]> = ref([]);
 const loading = ref(false);
 const searchQuery = ref("");
 
-// Customer Form
-const showCustomerForm = ref(false); // Changed: default to true (expanded)
+// Transaction Config
+const transactionDateTime = ref("");
+const isManualTime = ref(false);
 const showMobileCart = ref(false);
 const showCategories = ref(true);
-const newCustomer = reactive({
-  name: "",
-  phone: "",
-  address: "",
-});
 
 // Messages
 const showSuccessMessage = ref(false);
@@ -735,16 +650,38 @@ const lowStockProducts = computed(() => {
   return products.value.filter((p) => p.stock === 0);
 });
 
+let timeInterval: any = null;
+
+const updateTimeToNow = () => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  transactionDateTime.value = now.toISOString().slice(0, 16);
+};
+
+const startLiveClock = () => {
+  isManualTime.value = false;
+  updateTimeToNow();
+  if (timeInterval) clearInterval(timeInterval);
+  timeInterval = setInterval(() => {
+    if (!isManualTime.value) {
+      updateTimeToNow();
+    }
+  }, 10000); 
+};
+
+const stopLiveClock = () => {
+  isManualTime.value = true;
+};
+
 // Methods
 const fetchProducts = async () => {
   loading.value = true;
   try {
-    // Use advanced search from API - pass searchQuery as parameter
     const params = new URLSearchParams();
     if (searchQuery.value.trim()) {
       params.append("search", searchQuery.value);
     }
-    params.append("limit", "100"); // Get all products for POS view
+    params.append("limit", "100");
     params.append("activeOnly", "true");
 
     const url = `/api/products?${params.toString()}`;
@@ -774,7 +711,6 @@ watch(searchQuery, async () => {
 
 const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") => {
   if (product.stock > 0) {
-    // If service price is selected, pass it to cart
     const price = priceType === "service" ? product.servicePrice : product.askingPrice;
     cartStore.addToCart({ ...product, askingPrice: price }, priceType);
   } else {
@@ -790,9 +726,10 @@ const handlePriceInput = (cartItemId: string, event: Event) => {
 
 const handleCheckout = async () => {
   try {
-    await cartStore.checkout();
+    await cartStore.checkout(transactionDateTime.value);
     showToast("✓ Mantap, transaksi berhasil!");
-    await fetchProducts(); // Refresh product stock
+    startLiveClock();
+    await fetchProducts(); 
   } catch (error: any) {
     showToast("❌ Duh, " + (error.message || "transaksinya gagal nih"));
   }
@@ -801,32 +738,6 @@ const handleCheckout = async () => {
 const handleClearCart = () => {
   if (confirm("Mau kosongin keranjang?")) {
     cartStore.clearCart();
-  }
-};
-
-const createNewCustomer = async () => {
-  if (!newCustomer.name.trim()) {
-    showToast("Eh, nama pelanggannya diisi dulu dong");
-    return;
-  }
-
-  try {
-    const response = await $fetch<any>("/api/customers", {
-      method: "POST",
-      body: {
-        name: newCustomer.name,
-        phone: newCustomer.phone || null,
-        address: newCustomer.address || null,
-      },
-    });
-
-    cartStore.selectedCustomer = response;
-    newCustomer.name = "";
-    newCustomer.phone = "";
-    newCustomer.address = "";
-    showToast("✓ Pelanggan baru udah dibuat!");
-  } catch (error: any) {
-    showToast("❌ Yah, " + (error.message || "gagal pas bikin data pelanggan"));
   }
 };
 
@@ -840,7 +751,12 @@ const showToast = (message: string) => {
 
 // Lifecycle
 onMounted(() => {
+  startLiveClock();
   fetchProducts();
+});
+
+onUnmounted(() => {
+  if (timeInterval) clearInterval(timeInterval);
 });
 </script>
 

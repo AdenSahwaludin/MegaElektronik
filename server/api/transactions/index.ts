@@ -9,9 +9,11 @@ export default defineEventHandler(async (event) => {
     const page = parseInt(query.page as string) || 1;
     const limit = Math.min(parseInt(query.limit as string) || 10, 100);
     const dateRange = (query.dateRange as string) || "all";
+    const startDate = (query.startDate as string) || "";
+    const endDate = (query.endDate as string) || "";
     const search = (query.search as string) || "";
 
-    // Calculate date boundaries
+    // Calculate date boundaries for quick filters
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
@@ -19,63 +21,54 @@ export default defineEventHandler(async (event) => {
 
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay());
-
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-    // Build WHERE clause based on dateRange
+    // Build WHERE clause
     let dateFilter: any = {};
 
-    if (dateRange === "today") {
+    if (startDate || endDate) {
+      const start = startDate ? new Date(startDate) : new Date(0);
+      const end = endDate ? new Date(endDate) : new Date();
+      end.setHours(23, 59, 59, 999);
+      
       dateFilter = {
         createdAt: {
-          gte: today,
-          lt: tomorrow,
+          gte: start,
+          lte: end,
         },
       };
-    } else if (dateRange === "week") {
-      dateFilter = {
-        createdAt: {
-          gte: weekStart,
-          lt: weekEnd,
-        },
-      };
-    } else if (dateRange === "month") {
-      dateFilter = {
-        createdAt: {
-          gte: monthStart,
-          lt: monthEnd,
-        },
-      };
+    } else {
+      if (dateRange === "today") {
+        dateFilter = { createdAt: { gte: today, lt: tomorrow } };
+      } else if (dateRange === "week") {
+        dateFilter = { createdAt: { gte: weekStart, lt: weekEnd } };
+      } else if (dateRange === "month") {
+        dateFilter = { createdAt: { gte: monthStart, lt: monthEnd } };
+      }
     }
 
     // Build search filter
     let searchFilter: any = {};
     if (search) {
       searchFilter = {
-        OR: [
-          { customer: { name: { contains: search } } },
-          {
-            transactionItems: {
-              some: {
-                product: {
-                  OR: [
-                    { name: { contains: search } },
-                    { brand: { contains: search } },
-                    { model: { contains: search } },
-                  ],
-                },
-              },
+        transactionItems: {
+          some: {
+            product: {
+              OR: [
+                { name: { contains: search } },
+                { brand: { contains: search } },
+                { model: { contains: search } },
+              ],
             },
           },
-        ],
+        },
       };
     }
 
-    // Combine filters
     const where = {
       ...dateFilter,
       ...searchFilter,

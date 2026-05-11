@@ -19,54 +19,58 @@
           Tanggal: {{ formatDate(transaction.createdAt) }}
           {{ formatTime(transaction.createdAt) }}
         </p>
-        <p class="text-sm text-gray-600">
-          Pelanggan: {{ transaction.customer?.name || "Umum" }}
-        </p>
-        <p class="text-sm text-gray-600">
-          No. Telp: {{ transaction.customer?.phone || "Ga di isi" }}
-        </p>
-        <p class="text-sm text-gray-600">
-          Alamat: {{ transaction.customer?.address || "Ga di isi" }}
-        </p>
-
-        <table class="w-full mt-4 text-sm">
-          <thead class="text-left text-xs text-gray-600 border-b">
+        <table class="w-full mt-4 text-sm border-collapse">
+          <thead class="text-left text-xs text-gray-500 uppercase tracking-wider border-b-2 border-gray-300">
             <tr>
-              <th class="py-2">Produk</th>
-              <th class="py-2 text-right w-20">Qty</th>
-              <th class="py-2 text-right w-28">Harga</th>
-              <th class="py-2 text-right w-32">Subtotal</th>
+              <th class="py-3 px-2">Produk</th>
+              <th class="py-3 px-2 text-right w-16">Qty</th>
+              <th class="py-3 px-2 text-right w-24">Harga Jual</th>
+              <th class="py-3 px-2 text-right w-24">Subtotal</th>
+              <th class="py-3 px-2 text-right w-36">Untung</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="it in transaction.transactionItems"
               :key="it.id"
-              class="border-b last:border-b-0"
+              class="even:bg-orange-50/30 transition-colors border-b border-gray-100"
             >
-              <td class="py-2">{{ it.product?.name }}</td>
-              <td class="py-2 text-right">{{ it.quantity }}</td>
-              <td class="py-2 text-right">
+              <td class="py-3 px-2">
+                <p class="font-bold text-gray-900">{{ it.product?.name }}</p>
+                <p class="text-[10px] text-gray-400 uppercase tracking-tight">HPP: {{ formatCurrency(it.buyPrice) }}</p>
+              </td>
+              <td class="py-3 px-2 text-right font-bold text-gray-500">
+                {{ it.quantity }}
+              </td>
+              <td class="py-3 px-2 text-right text-gray-600 font-medium">
                 {{ formatCurrency(it.soldPrice) }}
               </td>
-              <td class="py-2 text-right">{{ formatCurrency(it.subtotal) }}</td>
+              <td class="py-3 px-2 text-right font-bold text-gray-900">
+                {{ formatCurrency(it.subtotal) }}
+              </td>
+              <td class="py-3 px-2 text-right">
+                <p class="font-black text-green-700 leading-none mb-1">{{ formatCurrency(it.totalProfit) }}</p>
+                <p class="text-[10px] text-gray-500 flex items-center justify-end gap-1">
+                  <span class="font-bold text-gray-700">{{ formatCurrency(it.profitPerItem) }}</span>
+                  <span class="text-green-600 font-bold">/ {{ calculateMargin(it) }}%</span>
+                </p>
+              </td>
             </tr>
           </tbody>
         </table>
 
-        <div class="mt-4 text-right">
-          <p>
-            Total:
-            <span class="font-bold">{{
-              formatCurrency(transaction.totalAmount)
-            }}</span>
-          </p>
-          <p>
-            Untung:
-            <span class="font-semibold text-green-600">{{
-              formatCurrency(transaction.totalProfit)
-            }}</span>
-          </p>
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500">Total Omset:</span>
+              <span class="font-bold text-gray-900 text-lg">{{ formatCurrency(transaction.totalAmount) }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-green-700">
+              <span class="text-xs font-bold uppercase tracking-wider">Total Untung:</span>
+              <span class="font-black text-xl">{{ formatCurrency(transaction.totalProfit) }}</span>
+              <span class="text-sm font-bold">/ {{ ((transaction.totalProfit / (transaction.totalAmount || 1)) * 100).toFixed(1) }}%</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -117,6 +121,11 @@ const formatTime = (s: string) =>
     hour: "2-digit",
     minute: "2-digit",
   });
+
+const calculateMargin = (it: any) => {
+  if (!it.soldPrice) return "0";
+  return ((it.profitPerItem / it.soldPrice) * 100).toFixed(1);
+};
 
 const close = () => emit("close");
 </script>

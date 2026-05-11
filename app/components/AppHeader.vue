@@ -50,6 +50,19 @@
             <Icon name="lucide:bar-chart-3" class="w-4 h-4" />
             <span class="hidden md:inline">Laporan</span>
           </NuxtLink>
+
+          <NuxtLink
+            to="/analytics"
+            :class="[
+              'px-3 lg:px-4 py-2 rounded-lg font-semibold text-sm lg:text-base transition flex items-center gap-2',
+              isActive('/analytics')
+                ? 'bg-white text-orange-600'
+                : 'hover:bg-orange-700 text-white',
+            ]"
+          >
+            <Icon name="lucide:pie-chart" class="w-4 h-4" />
+            <span class="hidden md:inline">Analitik</span>
+          </NuxtLink>
         </nav>
 
         <!-- Live Clock & Actions (Right) -->
