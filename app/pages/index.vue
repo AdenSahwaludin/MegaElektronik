@@ -86,7 +86,7 @@
         <!-- Products Grid -->
         <div class="flex-1 overflow-y-auto px-4 pb-4">
           <div
-            v-if="filteredProducts.length === 0"
+            v-if="!loading && filteredProducts.length === 0"
             class="flex flex-col items-center justify-center h-full text-center p-6"
           >
             <Icon
@@ -106,7 +106,15 @@
           </div>
 
           <div
-            v-show="filteredProducts.length > 0"
+            v-show="loading"
+            class="flex flex-col items-center justify-center h-full text-center p-6"
+          >
+            <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
+            <p class="text-orange-600 font-bold animate-pulse">Sabar ya, lagi ambil data...</p>
+          </div>
+
+          <div
+            v-show="!loading && filteredProducts.length > 0"
             class="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-max"
           >
             <button
@@ -613,7 +621,7 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
-import { watch, computed, ref } from "vue";
+import { watch, computed, ref, onActivated } from "vue";
 import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 
@@ -752,6 +760,10 @@ const showToast = (message: string) => {
 // Lifecycle
 onMounted(() => {
   startLiveClock();
+  fetchProducts();
+});
+
+onActivated(() => {
   fetchProducts();
 });
 

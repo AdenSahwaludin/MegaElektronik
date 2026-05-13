@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onActivated } from 'vue'
 import { useCurrency } from '../../composables/useCurrency'
 import RevenueTrendChart from '../components/charts/RevenueTrendChart.vue'
 import TopProductsChart from '../components/charts/TopProductsChart.vue'
@@ -18,11 +18,15 @@ const startDate = ref('')
 const endDate = ref('')
 const loading = ref(false)
 
-// Init dates with today for custom
 onMounted(() => {
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toISOString().slice(0, 10)
   startDate.value = today
   endDate.value = today
+  fetchAllAnalytics()
+})
+
+// Refresh when navigating back to this page (Keep-alive support)
+onActivated(() => {
   fetchAllAnalytics()
 })
 
@@ -82,7 +86,13 @@ watch(dateRange, () => {
     <AppHeader />
 
     <!-- Main Content -->
-    <div class="mt-3 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
+    <div class="mt-3 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24 relative">
+      <!-- Loading Overlay -->
+      <div v-if="loading && !summary" class="absolute inset-0 z-50 bg-orange-50/80 backdrop-blur-sm flex flex-col items-center justify-center">
+        <div class="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-orange-700 font-black text-xl animate-pulse">Menghitung Analitik...</p>
+      </div>
+
       <div class="max-w-7xl mx-auto">
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">

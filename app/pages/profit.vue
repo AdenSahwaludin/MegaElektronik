@@ -151,15 +151,24 @@
 
           <!-- Empty State -->
           <div
-            v-if="transactions.length === 0"
+            v-if="!loading && transactions.length === 0"
             class="flex items-center justify-center py-20"
           >
             <p class="text-gray-500">Belum ada transaksi di periode ini.</p>
           </div>
 
+          <!-- Loading State -->
+          <div
+            v-if="loading"
+            class="flex flex-col items-center justify-center py-32 text-center"
+          >
+            <div class="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-orange-600 font-bold animate-pulse">Lagi narik data transaksi...</p>
+          </div>
+
           <!-- Table Content -->
           <div 
-            v-show="transactions.length > 0" 
+            v-show="!loading && transactions.length > 0" 
             class="overflow-x-auto"
           >
             <table class="w-full text-sm text-left border-collapse min-w-[700px]">
@@ -301,7 +310,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, watch, computed, onActivated } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 import TransactionDetailModal from "../components/TransactionDetailModal.vue";
 
@@ -478,6 +487,10 @@ watch(currentPage, () => {
 
 // Lifecycle
 onMounted(() => {
+  fetchTransactions();
+});
+
+onActivated(() => {
   fetchTransactions();
 });
 </script>

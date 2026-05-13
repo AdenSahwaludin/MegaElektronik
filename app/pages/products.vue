@@ -237,7 +237,7 @@
 
           <!-- Empty State -->
           <div
-            v-if="products.length === 0"
+            v-if="!loading && products.length === 0"
             class="flex flex-col items-center justify-center py-20 text-center"
           >
             <div class="bg-orange-100 p-4 rounded-full mb-4">
@@ -259,9 +259,18 @@
             </button>
           </div>
 
+          <!-- Loading State -->
+          <div
+            v-if="loading"
+            class="flex flex-col items-center justify-center py-32 text-center"
+          >
+            <div class="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-orange-600 font-bold animate-pulse">Lagi nunggu data...</p>
+          </div>
+
           <!-- Table Content -->
           <div 
-            v-show="products.length > 0" 
+            v-show="!loading && products.length > 0" 
             class="overflow-x-auto"
           >
             <table class="w-full">
