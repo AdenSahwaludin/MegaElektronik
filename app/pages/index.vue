@@ -374,7 +374,7 @@
         <!-- Action Buttons -->
         <div class="border-t px-4 py-3 space-y-2">
           <button
-            @click="handleCheckout"
+            @click="openPaymentModal"
             :disabled="cartStore.items.length === 0 || cartStore.isProcessing"
             class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-lg rounded-lg transition"
           >
@@ -597,9 +597,10 @@
               </span>
             </div>
           </div>
+
           <div class="space-y-2 pt-4">
             <button
-              @click="handleCheckout"
+              @click="openPaymentModal"
               :disabled="cartStore.items.length === 0 || cartStore.isProcessing"
               class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
             >
@@ -613,6 +614,107 @@
               Kosongin Keranjang
             </button>
           </div>
+        </div>
+      </div>
+    </Transition>
+    <!-- Premium Payment Modal -->
+    <Transition
+      enter-active-class="transition-all duration-300 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition-all duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div v-if="showPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+          
+          <!-- Header -->
+          <div class="bg-orange-600 px-6 py-4 text-white flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <Icon name="lucide:banknote" class="w-6 h-6" />
+              <h3 class="font-bold text-lg">Pembayaran Kasir</h3>
+            </div>
+            <button @click="closePaymentModal" class="text-white/80 hover:text-white p-1 hover:bg-orange-700/50 rounded-full transition">
+              <Icon name="lucide:x" class="w-5 h-5" />
+            </button>
+          </div>
+
+          <!-- Content -->
+          <div class="p-6 space-y-6">
+            <!-- Total Tagihan -->
+            <div class="bg-orange-50 rounded-xl p-4 border border-orange-100 flex justify-between items-center">
+              <span class="text-sm font-semibold text-gray-600 uppercase tracking-wider">Total Tagihan</span>
+              <span class="text-2xl font-black text-orange-600">{{ formatCurrency(cartStore.totalRevenue) }}</span>
+            </div>
+
+            <!-- Input Pembayaran -->
+            <div class="space-y-2">
+              <label class="text-sm font-bold text-gray-700 block">Jumlah Uang Diterima:</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-black text-gray-500">Rp</span>
+                <input
+                  :value="paidAmountInput"
+                  @input="handlePaidAmountInput"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="Masukkan nominal bayar..."
+                  autofocus
+                  class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-right text-xl font-black text-gray-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 bg-gray-50/50 transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- Rekomendasi/Saran Pecahan Uang -->
+            <div class="space-y-2">
+              <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Saran Nominal Uang:</span>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="suggest in paymentSuggestions"
+                  :key="suggest.value"
+                  @click="selectSuggestion(suggest.value)"
+                  class="px-3.5 py-2 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 text-xs font-bold rounded-lg border border-gray-200 hover:border-orange-500 transition active:scale-95 flex items-center justify-center gap-1 shadow-sm"
+                >
+                  <Icon v-if="suggest.label === 'Uang Pas'" name="lucide:check-circle" class="w-3.5 h-3.5" />
+                  {{ suggest.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Kembalian Info -->
+            <div
+              v-if="changeAmount >= 0"
+              class="rounded-xl p-4 flex justify-between items-center transition-all animate-in slide-in-from-top-2 duration-300"
+              :class="changeAmount === 0 ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-blue-50 border border-blue-200 text-blue-800'"
+            >
+              <span class="text-sm font-bold uppercase tracking-wider">Kembalian</span>
+              <span class="text-xl font-black">{{ formatCurrency(changeAmount) }}</span>
+            </div>
+            
+            <div v-else-if="paidAmountValue > 0 && changeAmount < 0" class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-3 text-center text-xs font-bold flex items-center justify-center gap-2">
+              <Icon name="lucide:alert-circle" class="w-4 h-4 shrink-0" />
+              Uang kurang {{ formatCurrency(Math.abs(changeAmount)) }}!
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
+            <button
+              @click="closePaymentModal"
+              class="px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold rounded-xl transition active:scale-95 text-sm"
+            >
+              Batal
+            </button>
+            <button
+              @click="handleCheckout"
+              :disabled="cartStore.isProcessing || (paidAmountValue > 0 && changeAmount < 0)"
+              class="px-6 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition active:scale-95 text-sm flex items-center justify-center gap-2"
+            >
+              <Icon name="lucide:check-circle" class="w-4 h-4" />
+              Konfirmasi & Bayar
+            </button>
+          </div>
+
         </div>
       </div>
     </Transition>
@@ -642,6 +744,83 @@ const transactionDateTime = ref("");
 const isManualTime = ref(false);
 const showMobileCart = ref(false);
 const showCategories = ref(true);
+
+// Payment Config
+const paidAmountInput = ref("");
+const paidAmountValue = computed(() => parseFromDisplay(paidAmountInput.value));
+
+const changeAmount = computed(() => {
+  const paid = paidAmountValue.value;
+  if (!paid) return -1;
+  return paid - cartStore.totalRevenue;
+});
+
+const handlePaidAmountInput = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const value = parseFromDisplay(input.value);
+  paidAmountInput.value = value > 0 ? formatNumber(value) : "";
+};
+
+// Payment Modal Config
+const showPaymentModal = ref(false);
+
+const openPaymentModal = () => {
+  if (cartStore.items.length === 0) {
+    return;
+  }
+  paidAmountInput.value = "";
+  showPaymentModal.value = true;
+};
+
+const closePaymentModal = () => {
+  showPaymentModal.value = false;
+};
+
+const paymentSuggestions = computed(() => {
+  const total = cartStore.totalRevenue;
+  if (total <= 0) return [];
+
+  const suggestions = new Set<number>();
+  
+  // 1. Uang Pas
+  suggestions.add(total);
+
+  // 2. Pembulatan Terdekat ke Rp 10.000
+  const round10k = Math.ceil(total / 10000) * 10000;
+  if (round10k > total) suggestions.add(round10k);
+
+  // 3. Pembulatan Terdekat ke Rp 50.000
+  const round50k = Math.ceil(total / 50000) * 50000;
+  if (round50k > total) suggestions.add(round50k);
+
+  // 4. Pembulatan Terdekat ke Rp 100.000
+  const round100k = Math.ceil(total / 100000) * 100000;
+  if (round100k > total) suggestions.add(round100k);
+
+  // 5. Pecahan Lembar Uang Standar Besar
+  const standardDenominations = [50000, 100000, 150000, 200000, 300000, 500000];
+  for (const denom of standardDenominations) {
+    if (denom > total) {
+      suggestions.add(denom);
+    }
+  }
+
+  // Convert to sorted array of objects
+  return Array.from(suggestions)
+    .sort((a, b) => a - b)
+    .slice(0, 5) // Maksimal 5 saran agar tampilan rapi
+    .map((val) => {
+      let label = formatCurrency(val);
+      if (val === total) {
+        label = "Uang Pas";
+      }
+      return { value: val, label };
+    });
+});
+
+const selectSuggestion = (val: number) => {
+  paidAmountInput.value = formatNumber(val);
+};
 
 // Messages
 const showSuccessMessage = ref(false);
@@ -720,7 +899,10 @@ watch(searchQuery, async () => {
 const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") => {
   if (product.stock > 0) {
     const price = priceType === "service" ? product.servicePrice : product.askingPrice;
-    cartStore.addToCart({ ...product, askingPrice: price }, priceType);
+    const added = cartStore.addToCart({ ...product, askingPrice: price }, priceType);
+    if (!added) {
+      showToast("Stok maksimal sudah tercapai!");
+    }
   } else {
     showToast("Stok abis bos!");
   }
@@ -734,8 +916,16 @@ const handlePriceInput = (cartItemId: string, event: Event) => {
 
 const handleCheckout = async () => {
   try {
-    await cartStore.checkout(transactionDateTime.value);
+    let finalDateStr = undefined;
+    if (transactionDateTime.value) {
+      const localDate = new Date(transactionDateTime.value);
+      finalDateStr = localDate.toISOString();
+    }
+    
+    await cartStore.checkout(finalDateStr, paidAmountValue.value || null);
     showToast("✓ Mantap, transaksi berhasil!");
+    paidAmountInput.value = "";
+    closePaymentModal();
     startLiveClock();
     await fetchProducts(); 
   } catch (error: any) {

@@ -14,6 +14,7 @@ export interface CartItem {
   soldPrice: number; // editable price per unit - defaults to askingPrice
   stockType: "umum" | "service";
   servicePrice: number | null;
+  maxStock?: number;
 }
 
 interface CustomerData {
@@ -35,8 +36,13 @@ export const useCartStore = defineStore("cart", () => {
     );
 
     if (existingItem) {
+      if (existingItem.maxStock !== undefined && existingItem.quantity >= existingItem.maxStock) {
+        return false;
+      }
       existingItem.quantity += 1;
+      return true;
     } else {
+      if (product.stock <= 0) return false;
       const cartItem: CartItem = {
         id: `cart-${product.id}-${stockType}-${Date.now()}`,
         productId: product.id,
@@ -50,8 +56,10 @@ export const useCartStore = defineStore("cart", () => {
         soldPrice: product.askingPrice, // default to asking price
         stockType: stockType,
         servicePrice: product.servicePrice,
+        maxStock: product.stock,
       };
       items.value.push(cartItem);
+      return true;
     }
   };
 
@@ -62,7 +70,11 @@ export const useCartStore = defineStore("cart", () => {
       if (quantity <= 0) {
         removeFromCart(cartItemId);
       } else {
-        item.quantity = quantity;
+        if (item.maxStock !== undefined && quantity > item.maxStock) {
+          item.quantity = item.maxStock;
+        } else {
+          item.quantity = quantity;
+        }
       }
     }
   };
@@ -121,7 +133,7 @@ export const useCartStore = defineStore("cart", () => {
   }));
 
   // Checkout
-  const checkout = async (createdAt?: string) => {
+  const checkout = async (createdAt?: string, paidAmount?: number | null) => {
     if (items.value.length === 0) {
       throw new Error("Keranjang masih kosong nih");
     }
@@ -141,6 +153,7 @@ export const useCartStore = defineStore("cart", () => {
           })),
           totalAmount: totalRevenue.value,
           totalProfit: totalProfit.value,
+          paidAmount: paidAmount !== undefined ? paidAmount : null,
           createdAt: createdAt || null,
         },
       });

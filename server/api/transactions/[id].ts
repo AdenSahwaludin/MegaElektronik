@@ -98,6 +98,7 @@ export default defineEventHandler(async (event) => {
         totalProfit,
         totalCost,
         itemCount,
+        paidAmount: transaction.paidAmount,
         transactionItems: items,
       };
     } catch (error: any) {

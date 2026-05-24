@@ -56,6 +56,7 @@ export default defineEventHandler(async (event) => {
           customerId: body.customerId || null,
           totalAmount: body.totalAmount,
           totalProfit: body.totalProfit,
+          paidAmount: body.paidAmount !== undefined ? body.paidAmount : null,
           createdAt: createdAt,
           transactionItems: {
             create: body.items.map((item: any) => ({

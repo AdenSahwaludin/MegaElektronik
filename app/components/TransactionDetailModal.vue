@@ -59,7 +59,7 @@
           </tbody>
         </table>
 
-        <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 flex flex-col gap-4">
           <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-500">Total Omset:</span>
@@ -69,6 +69,16 @@
               <span class="text-xs font-bold uppercase tracking-wider">Total Untung:</span>
               <span class="font-black text-xl">{{ formatCurrency(transaction.totalProfit) }}</span>
               <span class="text-sm font-bold">/ {{ ((transaction.totalProfit / (transaction.totalAmount || 1)) * 100).toFixed(1) }}%</span>
+            </div>
+          </div>
+          <div v-if="transaction.paidAmount != null" class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-200">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500">Jumlah Bayar:</span>
+              <span class="font-bold text-gray-900 text-lg">{{ formatCurrency(transaction.paidAmount) }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-orange-600">
+              <span class="text-xs font-bold uppercase tracking-wider">Kembalian:</span>
+              <span class="font-black text-xl">{{ formatCurrency(transaction.paidAmount - transaction.totalAmount) }}</span>
             </div>
           </div>
         </div>

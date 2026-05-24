@@ -53,6 +53,7 @@ model Transaction {
   customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   totalAmount  Int     // Total revenue in cents/smallest unit
   totalProfit  Int     // Net profit in cents/smallest unit
+  paidAmount   Int?    // Amount paid by customer in Rupiah/cents (nullable)
   createdAt    DateTime @default(now())
 
   // Relations
