@@ -5,9 +5,12 @@
         <!-- Logo & Brand (Left) -->
         <div class="flex items-center gap-2 lg:gap-3 shrink-0">
           <AppLogo class="h-12 lg:h-16 w-auto rounded-full" />
-          <h1 class="text-lg lg:text-2xl font-bold hidden sm:block">
-            Mega Elektronik
-          </h1>
+          <div class="hidden sm:flex items-center gap-2">
+            <h1 class="text-lg lg:text-2xl font-bold">
+              Mega Elektronik
+            </h1>
+            <span class="text-[10px] bg-orange-700 text-orange-100 border border-orange-500/50 px-1.5 py-0.5 rounded-md font-mono mt-0.5" title="Versi Aplikasi">v{{ pkg.version }}</span>
+          </div>
         </div>
 
         <!-- Navigation Menu (Center) -->
@@ -90,6 +93,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import pkg from "../../package.json";
 
 const route = useRoute();
 
