@@ -1,14 +1,14 @@
 <template>
-  <div class="h-[100dvh] w-full bg-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
+  <div class="fixed inset-0 w-full bg-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
     <!-- App Header with Navigation -->
     <AppHeader />
 
     <!-- Main Content - Split Layout (iPad Optimized, Responsive) -->
     <div
-      class="mt-3 flex flex-1 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
+      class="mt-3 flex flex-1 min-h-0 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
     >
       <!-- Left Panel: Products Grid (Full width on mobile, flex-1 on desktop) -->
-      <div class="flex-1 flex flex-col bg-white rounded-lg shadow">
+      <div class="flex-1 flex flex-col min-h-0 bg-white rounded-lg shadow">
         <div class="px-4 pt-4 pb-2">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-xl font-bold text-gray-800">Produk</h2>
@@ -183,7 +183,7 @@
 
       <!-- Right Panel: Cart -->
       <div
-        class="w-72 lg:w-96 flex flex-col bg-white rounded-lg shadow-lg overflow-hidden hidden md:flex"
+        class="w-72 lg:w-96 flex flex-col min-h-0 bg-white rounded-lg shadow-lg overflow-hidden hidden md:flex"
       >
         <!-- Cart Header -->
         <div class="bg-orange-600 text-white px-4 py-3">
