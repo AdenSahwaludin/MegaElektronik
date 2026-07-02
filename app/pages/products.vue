@@ -422,14 +422,6 @@
                         <span class="hidden sm:inline">Edit</span>
                       </button>
                       <button
-                        @click="printProductPrice(product)"
-                        class="p-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded transition flex items-center gap-1 text-sm"
-                        title="Cetak Harga"
-                      >
-                        <Icon name="lucide:printer" class="w-4 h-4" />
-                        <span class="hidden sm:inline">Cetak</span>
-                      </button>
-                      <button
                         @click="deleteProduct(product.id)"
                         class="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded transition flex items-center gap-1 text-sm"
                       >
@@ -656,6 +648,11 @@ definePageMeta({
 
 const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
 
+const toTitleCase = (str: string | null | undefined) => {
+  if (!str) return str;
+  return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+};
+
 // State
 const products: Ref<any[]> = ref([]);
 const loading = ref(false);
@@ -758,9 +755,9 @@ const addProduct = async () => {
     const response = await $fetch<any>("/api/products", {
       method: "POST",
       body: {
-        name: newProduct.name,
-        brand: newProduct.brand || null,
-        model: newProduct.model || null,
+        name: toTitleCase(newProduct.name),
+        brand: newProduct.brand ? toTitleCase(newProduct.brand) : null,
+        model: newProduct.model ? toTitleCase(newProduct.model) : null,
         stock: newProduct.stock,
         servicePrice: newProduct.servicePrice,
         buyPrice: newProduct.buyPrice,
@@ -797,9 +794,9 @@ const saveProduct = async () => {
     const response = await $fetch<any>(`/api/products/${editingProduct.id}`, {
       method: "PUT",
       body: {
-        name: editingProduct.name,
-        brand: editingProduct.brand,
-        model: editingProduct.model,
+        name: toTitleCase(editingProduct.name),
+        brand: editingProduct.brand ? toTitleCase(editingProduct.brand) : null,
+        model: editingProduct.model ? toTitleCase(editingProduct.model) : null,
         stock: editingProduct.stock,
         servicePrice: editingProduct.servicePrice,
         buyPrice: editingProduct.buyPrice,
@@ -872,7 +869,7 @@ const printProductList = async () => {
     sortedCategories.forEach((category) => {
       tableRows += `
         <tr>
-          <td colspan="4" style="padding: 10px 12px; background-color: #f3f4f6; font-size: 16px; font-weight: bold; border: 1px solid #000; text-align: left;">
+          <td colspan="5" style="padding: 10px 12px; background-color: #f3f4f6; font-size: 16px; font-weight: bold; border: 1px solid #000; text-align: left;">
             Kategori: ${category}
           </td>
         </tr>
@@ -884,7 +881,8 @@ const printProductList = async () => {
         const isEven = index % 2 === 0;
         const rowStyle = isEven ? "background-color: #ffffff;" : "background-color: #f9fafb;";
         
-        const productName = p.brand ? `${p.name} (${p.brand})` : p.name;
+        const productName = p.name;
+        const brand = p.brand ? p.brand : "-";
         const askingPrice = formatCurrency(p.askingPrice);
         const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";
         const stock = p.stock;
@@ -892,6 +890,7 @@ const printProductList = async () => {
         tableRows += `
           <tr style="${rowStyle}">
             <td style="padding: 8px 12px; border: 1px solid #000; font-size: 15px;">${productName}</td>
+            <td style="padding: 8px 12px; border: 1px solid #000; font-size: 15px; text-align: center;">${brand}</td>
             <td style="padding: 8px 12px; border: 1px solid #000; text-align: center; font-size: 15px; font-weight: bold;">${stock}</td>
             <td style="padding: 8px 12px; border: 1px solid #000; text-align: right; font-size: 15px;">${askingPrice}</td>
             <td style="padding: 8px 12px; border: 1px solid #000; text-align: right; font-size: 16px; font-weight: bold;">${fixedPrice}</td>
@@ -981,7 +980,8 @@ const printProductList = async () => {
           <table>
             <thead>
               <tr>
-                <th>Nama Produk & Merk</th>
+                <th>Nama Produk</th>
+                <th>Merk/Brand</th>
                 <th>Sisa Stok</th>
                 <th>Harga Tawar</th>
                 <th>Harga Pas (Net)</th>
