@@ -16,6 +16,8 @@ const { formatCurrency } = useCurrency()
 const dateRange = ref('month')
 const startDate = ref('')
 const endDate = ref('')
+const startMonth = ref('')
+const endMonth = ref('')
 const loading = ref(false)
 
 onMounted(() => {
@@ -46,6 +48,15 @@ const fetchAllAnalytics = async () => {
     if (dateRange.value === 'custom') {
       params.startDate = startDate.value
       params.endDate = endDate.value
+    } else if (dateRange.value === 'custom_month') {
+      if (startMonth.value) {
+        params.startDate = `${startMonth.value}-01`;
+      }
+      if (endMonth.value) {
+        const [year, month] = endMonth.value.split("-");
+        const lastDay = new Date(Number(year), Number(month), 0).getDate();
+        params.endDate = `${endMonth.value}-${lastDay}`;
+      }
     }
     
     const [s, t, p, pd, m, h, pp] = await Promise.all([
@@ -74,7 +85,7 @@ const fetchAllAnalytics = async () => {
 
 // Watch dateRange
 watch(dateRange, () => {
-  if (dateRange.value !== 'custom') {
+  if (dateRange.value !== 'custom' && dateRange.value !== 'custom_month') {
     fetchAllAnalytics()
   }
 })
@@ -107,12 +118,11 @@ watch(dateRange, () => {
                 v-model="dateRange"
                 class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white font-semibold"
               >
-                <option value="today">Hari Ini</option>
-                <option value="week">Minggu Ini</option>
-                <option value="month">Bulan Ini</option>
-                <option value="quarter">3 Bulan</option>
-                <option value="custom">Rentang Kustom</option>
                 <option value="all">Semua Waktu</option>
+                <option value="month">Bulan Ini</option>
+                <option value="last_month">Bulan Kemarin</option>
+                <option value="custom_month">Custom Bulan</option>
+                <option value="custom">Custom Tanggal</option>
               </select>
             </div>
 
@@ -126,6 +136,26 @@ watch(dateRange, () => {
               <input 
                 type="date" 
                 v-model="endDate" 
+                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold"
+              />
+              <button 
+                @click="fetchAllAnalytics"
+                class="px-4 py-2 bg-orange-600 text-white rounded-lg font-bold text-sm hover:bg-orange-700 transition"
+              >
+                Terapkan
+              </button>
+            </div>
+
+            <div v-else-if="dateRange === 'custom_month'" class="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-300">
+              <input 
+                type="month" 
+                v-model="startMonth" 
+                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold"
+              />
+              <span class="text-gray-400">s/d</span>
+              <input 
+                type="month" 
+                v-model="endMonth" 
                 class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold"
               />
               <button 

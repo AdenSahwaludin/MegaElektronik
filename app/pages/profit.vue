@@ -84,6 +84,7 @@
                 >
                   <option value="all">Semua Waktu</option>
                   <option value="month">Bulan Ini</option>
+                  <option value="last_month">Bulan Kemarin</option>
                   <option value="custom_month">Custom Bulan</option>
                   <option value="custom">Custom Tanggal</option>
                 </select>

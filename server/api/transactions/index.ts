@@ -48,6 +48,10 @@ export default defineEventHandler(async (event) => {
         dateFilter = { createdAt: { gte: weekStart, lt: weekEnd } };
       } else if (dateRange === "month") {
         dateFilter = { createdAt: { gte: monthStart, lt: monthEnd } };
+      } else if (dateRange === "last_month") {
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
+        dateFilter = { createdAt: { gte: lastMonthStart, lt: lastMonthEnd } };
       }
     }
 

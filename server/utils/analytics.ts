@@ -29,6 +29,12 @@ export const getDateFilter = (dateRange: string, startDate?: string, endDate?: s
     filter = { createdAt: { gte: monthStart, lt: tomorrow } };
     const diffTime = Math.abs(tomorrow.getTime() - monthStart.getTime());
     days = Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1);
+  } else if (dateRange === "last_month") {
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
+    filter = { createdAt: { gte: lastMonthStart, lt: lastMonthEnd } };
+    const diffTime = Math.abs(lastMonthEnd.getTime() - lastMonthStart.getTime());
+    days = Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1);
   } else if (dateRange === "quarter") {
     const quarterStart = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3), 1);
     filter = { createdAt: { gte: quarterStart, lt: tomorrow } };
