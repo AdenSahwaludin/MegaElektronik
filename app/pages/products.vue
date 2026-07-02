@@ -163,11 +163,19 @@
 
         <!-- Products Table -->
         <div class="bg-white rounded-lg shadow overflow-hidden min-h-[600px]">
-          <div class="px-6 py-4 bg-orange-600 text-white">
+          <div class="px-6 py-4 bg-orange-600 text-white flex justify-between items-center">
             <h2 class="text-lg lg:text-xl font-bold flex items-center gap-2">
               <Icon name="lucide:list" class="w-6 h-6" />
               Daftar Produk ({{ totalItems }})
             </h2>
+            <button
+              @click="printProductList"
+              class="px-4 py-2 bg-white text-orange-700 hover:bg-orange-50 font-bold rounded-lg shadow-sm transition flex items-center gap-2 text-sm"
+              title="Cetak Semua Daftar Harga"
+            >
+              <Icon name="lucide:printer" class="w-5 h-5" />
+              <span class="hidden sm:inline">Cetak Semua Harga</span>
+            </button>
           </div>
 
           <!-- Search and Pagination Controls -->
@@ -412,6 +420,14 @@
                       >
                         <Icon name="lucide:edit" class="w-4 h-4" />
                         <span class="hidden sm:inline">Edit</span>
+                      </button>
+                      <button
+                        @click="printProductPrice(product)"
+                        class="p-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded transition flex items-center gap-1 text-sm"
+                        title="Cetak Harga"
+                      >
+                        <Icon name="lucide:printer" class="w-4 h-4" />
+                        <span class="hidden sm:inline">Cetak</span>
                       </button>
                       <button
                         @click="deleteProduct(product.id)"
@@ -817,6 +833,332 @@ const deleteProduct = async (productId: string) => {
   } catch (error: any) {
     showToast(error.message || "Waduh, gagal hapus produk");
   }
+};
+
+const printProductList = async () => {
+  try {
+    showToast("Menyiapkan dokumen cetak...");
+    const response = await $fetch<any>('/api/products?limit=1000&activeOnly=true');
+    const allProducts = response.products || [];
+
+    if (allProducts.length === 0) {
+      showToast("Tidak ada produk untuk dicetak.");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      showToast("Gagal membuka jendela cetak. Pastikan pop-up diperbolehkan.");
+      return;
+    }
+
+    const dateOptions: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    };
+    const printDate = new Date().toLocaleDateString('id-ID', dateOptions);
+
+    const groupedProducts: Record<string, any[]> = {};
+    allProducts.forEach((p: any) => {
+      const firstWord = p.name ? p.name.split(' ')[0].toUpperCase() : 'LAIN-LAIN';
+      if (!groupedProducts[firstWord]) {
+        groupedProducts[firstWord] = [];
+      }
+      groupedProducts[firstWord].push(p);
+    });
+
+    const sortedCategories = Object.keys(groupedProducts).sort();
+
+    let tableRows = "";
+    sortedCategories.forEach((category) => {
+      tableRows += `
+        <tr>
+          <td colspan="4" style="padding: 10px 12px; background-color: #f3f4f6; font-size: 16px; font-weight: bold; border: 1px solid #000; text-align: left;">
+            Kategori: ${category}
+          </td>
+        </tr>
+      `;
+      
+      const productsInCategory = groupedProducts[category].sort((a: any, b: any) => a.name.localeCompare(b.name));
+      
+      productsInCategory.forEach((p: any, index: number) => {
+        const isEven = index % 2 === 0;
+        const rowStyle = isEven ? "background-color: #ffffff;" : "background-color: #f9fafb;";
+        
+        const productName = p.brand ? `${p.name} (${p.brand})` : p.name;
+        const askingPrice = formatCurrency(p.askingPrice);
+        const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";
+        const stock = p.stock;
+
+        tableRows += `
+          <tr style="${rowStyle}">
+            <td style="padding: 8px 12px; border: 1px solid #000; font-size: 15px;">${productName}</td>
+            <td style="padding: 8px 12px; border: 1px solid #000; text-align: center; font-size: 15px; font-weight: bold;">${stock}</td>
+            <td style="padding: 8px 12px; border: 1px solid #000; text-align: right; font-size: 15px;">${askingPrice}</td>
+            <td style="padding: 8px 12px; border: 1px solid #000; text-align: right; font-size: 16px; font-weight: bold;">${fixedPrice}</td>
+          </tr>
+        `;
+      });
+    });
+
+    const logoUrl = `${window.location.origin}/Logo%20Mega%20Elektronik%20Bongas%20Merah%20no-bg1.png`;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Daftar Harga - Mega Elektronik</title>
+          <style>
+            @media print {
+              @page { margin: 0mm; size: auto; }
+              body { margin: 15mm; }
+              table { page-break-inside: auto; }
+              tr { page-break-inside: avoid; page-break-after: auto; }
+              thead { display: table-header-group; }
+              tfoot { display: table-footer-group; }
+            }
+            body {
+              font-family: 'Arial', sans-serif;
+              color: #000;
+              line-height: 1.4;
+              margin: 20px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 20px;
+              border-bottom: 3px double #000;
+              padding-bottom: 15px;
+            }
+            .logo {
+              height: 60px;
+              margin-bottom: 10px;
+              object-fit: contain;
+            }
+            .store-name {
+              font-size: 24px;
+              font-weight: 900;
+              text-transform: uppercase;
+              margin-bottom: 5px;
+            }
+            .title {
+              font-size: 18px;
+              font-weight: bold;
+            }
+            .date-info {
+              font-size: 14px;
+              color: #444;
+              margin-top: 5px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              border: 2px solid #000;
+            }
+            th {
+              background-color: #e5e7eb;
+              color: #000;
+              font-size: 16px;
+              font-weight: bold;
+              padding: 10px 12px;
+              border: 2px solid #000;
+              text-align: center;
+            }
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              font-size: 14px;
+              font-style: italic;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img src="${logoUrl}" class="logo" alt="Logo Mega Elektronik" onerror="this.style.display='none'" />
+            <div class="store-name">MEGA ELEKTRONIK & TEKNIK</div>
+            <div class="title">DAFTAR HARGA PRODUK</div>
+            <div class="date-info">Dicetak pada: ${printDate}</div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Nama Produk & Merk</th>
+                <th>Sisa Stok</th>
+                <th>Harga Tawar</th>
+                <th>Harga Pas (Net)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            * Daftar harga ini dicetak pada ${printDate} dan dapat berubah sewaktu-waktu.
+          </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 500);
+            };
+          <\/script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  } catch (error) {
+    showToast("Gagal mengambil data produk untuk dicetak.");
+  }
+};
+
+const printProductPrice = (product: any) => {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    showToast("Gagal membuka jendela cetak. Pastikan pop-up diperbolehkan.");
+    return;
+  }
+
+  const name = product.name || "-";
+  const brand = product.brand || "";
+  const model = product.model || "";
+  const brandModel = [brand, model].filter(Boolean).join(" - ") || "";
+
+  const askingPriceFormatted = formatCurrency(product.askingPrice);
+  const fixedPriceFormatted = product.fixedPrice ? formatCurrency(product.fixedPrice) : null;
+  const showBothPrices = fixedPriceFormatted && product.askingPrice !== product.fixedPrice;
+
+  let priceHtml = "";
+  if (showBothPrices) {
+    priceHtml = `
+      <div class="price-container">
+        <div class="price-box">
+          <div class="price-label">HARGA TAWAR</div>
+          <div class="price-value">${askingPriceFormatted}</div>
+        </div>
+        <div class="price-box highlighted">
+          <div class="price-label">HARGA PAS</div>
+          <div class="price-value">${fixedPriceFormatted}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    priceHtml = `
+      <div class="price-box single">
+        <div class="price-label">HARGA JUAL</div>
+        <div class="price-value">${askingPriceFormatted}</div>
+      </div>
+    `;
+  }
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Cetak Harga - ${name}</title>
+        <style>
+          @media print {
+            body { margin: 0; padding: 0; }
+          }
+          body {
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            color: #000;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+          }
+          .tag-card {
+            border: 6px dashed #000;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            box-sizing: border-box;
+          }
+          .store-name {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            border-bottom: 3px double #000;
+            padding-bottom: 10px;
+          }
+          .product-name {
+            font-size: 46px;
+            font-weight: 800;
+            margin: 15px 0 5px 0;
+            text-transform: uppercase;
+            line-height: 1.2;
+          }
+          .product-details {
+            font-size: 26px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+          }
+          .price-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+          }
+          .price-box {
+            flex: 1;
+            border: 3px solid #000;
+            border-radius: 10px;
+            padding: 20px 10px;
+            background-color: #fff;
+          }
+          .price-box.highlighted {
+            background-color: #000;
+            color: #fff;
+          }
+          .price-box.single {
+            max-width: 600px;
+            margin: 0 auto;
+            border-width: 4px;
+          }
+          .price-label {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+          }
+          .price-value {
+            font-size: 54px;
+            font-weight: 900;
+            white-space: nowrap;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="tag-card">
+          <div class="store-name">MEGA ELEKTRONIK & TEKNIK</div>
+          <div class="product-name">${name}</div>
+          ${brandModel ? `<div class="product-details">${brandModel}</div>` : '<div style="margin-bottom: 30px;"></div>'}
+          
+          ${priceHtml}
+          
+        </div>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() {
+              window.close();
+            }, 500);
+          };
+        <\/script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
 };
 
 const resetForm = () => {
