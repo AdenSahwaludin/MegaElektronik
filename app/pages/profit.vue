@@ -83,9 +83,8 @@
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-semibold"
                 >
                   <option value="all">Semua Waktu</option>
-                  <option value="today">Hari Ini</option>
-                  <option value="week">Minggu Ini</option>
                   <option value="month">Bulan Ini</option>
+                  <option value="custom_month">Custom Bulan</option>
                   <option value="custom">Custom Tanggal</option>
                 </select>
               </div>
@@ -122,6 +121,43 @@
               </div>
               <button 
                 @click="startDate = ''; endDate = ''; dateRange = 'all'"
+                class="text-xs font-bold text-red-600 hover:text-red-700 px-4 py-2.5 bg-white border border-red-200 rounded-lg flex items-center gap-2 shadow-sm transition-all hover:bg-red-50 active:scale-95 shrink-0"
+              >
+                <Icon name="lucide:x" class="w-4 h-4" />
+                Batal
+              </button>
+            </div>
+            
+            <div 
+              v-else-if="dateRange === 'custom_month'"
+              class="flex flex-col lg:flex-row gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 animate-in fade-in slide-in-from-top-2 duration-300"
+            >
+              <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                <div>
+                  <label class="flex items-center gap-2 text-[11px] uppercase font-bold text-gray-500 mb-1.5">
+                    <Icon name="lucide:calendar-range" class="w-3 h-3 text-orange-600" />
+                    Dari Bulan
+                  </label>
+                  <input
+                    v-model="startMonth"
+                    type="month"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-orange-500 shadow-sm transition-all"
+                  />
+                </div>
+                <div>
+                  <label class="flex items-center gap-2 text-[11px] uppercase font-bold text-gray-500 mb-1.5">
+                    <Icon name="lucide:calendar-check" class="w-3 h-3 text-orange-600" />
+                    Sampai Bulan
+                  </label>
+                  <input
+                    v-model="endMonth"
+                    type="month"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-orange-500 shadow-sm transition-all"
+                  />
+                </div>
+              </div>
+              <button 
+                @click="startMonth = ''; endMonth = ''; dateRange = 'all'"
                 class="text-xs font-bold text-red-600 hover:text-red-700 px-4 py-2.5 bg-white border border-red-200 rounded-lg flex items-center gap-2 shadow-sm transition-all hover:bg-red-50 active:scale-95 shrink-0"
               >
                 <Icon name="lucide:x" class="w-4 h-4" />
@@ -337,6 +373,8 @@ const totalPages = ref(1);
 const dateRange = ref("month");
 const startDate = ref("");
 const endDate = ref("");
+const startMonth = ref("");
+const endMonth = ref("");
 const searchQuery = ref("");
 const modalVisible = ref(false);
 const selectedTransactionId = ref<number | null>(null);
@@ -377,12 +415,26 @@ const groupedTransactions = computed(() => {
 const fetchTransactions = async () => {
   loading.value = true;
   try {
+    let finalStartDate = startDate.value;
+    let finalEndDate = endDate.value;
+
+    if (dateRange.value === "custom_month") {
+      if (startMonth.value) {
+        finalStartDate = `${startMonth.value}-01`;
+      }
+      if (endMonth.value) {
+        const [year, month] = endMonth.value.split("-");
+        const lastDay = new Date(Number(year), Number(month), 0).getDate();
+        finalEndDate = `${endMonth.value}-${lastDay}`;
+      }
+    }
+
     const params = new URLSearchParams({
       page: currentPage.value.toString(),
       limit: "10",
       dateRange: dateRange.value,
-      startDate: startDate.value,
-      endDate: endDate.value,
+      startDate: finalStartDate,
+      endDate: finalEndDate,
       search: searchQuery.value,
     });
 
@@ -476,7 +528,7 @@ const deleteTransaction = async (transactionId: string) => {
 };
 
 // Watchers
-watch([searchQuery, dateRange, startDate, endDate], () => {
+watch([searchQuery, dateRange, startDate, endDate, startMonth, endMonth], () => {
   currentPage.value = 1;
   fetchTransactions();
 });

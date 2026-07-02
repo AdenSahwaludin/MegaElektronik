@@ -875,7 +875,7 @@ const printProductList = async () => {
         </tr>
       `;
       
-      const productsInCategory = groupedProducts[category].sort((a: any, b: any) => a.name.localeCompare(b.name));
+      const productsInCategory = (groupedProducts[category] || []).sort((a: any, b: any) => a.name.localeCompare(b.name));
       
       productsInCategory.forEach((p: any, index: number) => {
         const isEven = index % 2 === 0;
