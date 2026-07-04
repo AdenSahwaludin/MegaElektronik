@@ -16,6 +16,7 @@ model Product {
   name         String
   brand        String
   model        String
+  otherName    String?  // Nama lain untuk pencarian (opsional)
   buyPrice     Int     // Cost to business in cents/smallest unit
   askingPrice  Int     // Initial asking price
   fixedPrice   Int     // Fixed/list price
@@ -27,6 +28,7 @@ model Product {
 
   // Relations
   transactionItems TransactionItem[]
+  productArrivals  ProductArrival[]
 
   @@index([name])
   @@index([brand])
@@ -77,4 +79,21 @@ model TransactionItem {
 
   @@index([transactionId])
   @@index([productId])
+}
+
+model ProductArrival {
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity     Int
+  supplier     String?
+  buyPrice     Int?     // to keep track if they entered a price, can be null
+  askingPrice  Int?
+  fixedPrice   Int?
+  servicePrice Int?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
 }

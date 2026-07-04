@@ -20,7 +20,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Nama Produk *</label
+                >Nama Produk <span class="text-red-500">*</span></label
               >
               <input
                 v-model="newProduct.name"
@@ -56,7 +56,19 @@
 
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Stok *</label
+                >Nama Lain <span class="text-xs font-normal text-gray-500">Opsional</span></label
+              >
+              <input
+                v-model="newProduct.otherName"
+                type="text"
+                placeholder="Alias untuk pencarian"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Stok <span class="text-red-500">*</span></label
               >
               <input
                 :value="newProduct.stock !== undefined ? formatNumber(newProduct.stock) : ''"
@@ -85,7 +97,7 @@
             
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Tawar (Rp) *</label
+                >Harga Tawar (Rp) <span class="text-red-500">*</span></label
               >
               <input
                 :value="newProduct.askingPrice ? formatNumber(newProduct.askingPrice) : ''"
@@ -112,7 +124,7 @@
             </div>
 <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Beli (Rp) *</label
+                >Harga Beli (Rp) <span class="text-red-500">*</span></label
               >
               <input
                 :value="newProduct.buyPrice ? formatNumber(newProduct.buyPrice) : ''"
@@ -168,14 +180,24 @@
               <Icon name="lucide:list" class="w-6 h-6" />
               Daftar Produk ({{ totalItems }})
             </h2>
-            <button
-              @click="printProductList"
-              class="px-4 py-2 bg-white text-orange-700 hover:bg-orange-50 font-bold rounded-lg shadow-sm transition flex items-center gap-2 text-sm"
-              title="Cetak Semua Daftar Harga"
-            >
-              <Icon name="lucide:printer" class="w-5 h-5" />
-              <span class="hidden sm:inline">Cetak Semua Harga</span>
-            </button>
+            <div class="flex gap-2">
+              <button
+                @click="showArrivalModal = true"
+                class="px-4 py-2 bg-white text-green-700 hover:bg-green-50 font-bold rounded-lg shadow-sm transition flex items-center gap-2 text-sm"
+                title="Catat Barang Datang"
+              >
+                <Icon name="lucide:truck" class="w-5 h-5" />
+                <span class="hidden sm:inline">Barang Datang</span>
+              </button>
+              <button
+                @click="printProductList"
+                class="px-4 py-2 bg-white text-orange-700 hover:bg-orange-50 font-bold rounded-lg shadow-sm transition flex items-center gap-2 text-sm"
+                title="Cetak Semua Daftar Harga"
+              >
+                <Icon name="lucide:printer" class="w-5 h-5" />
+                <span class="hidden sm:inline">Cetak Semua Harga</span>
+              </button>
+            </div>
           </div>
 
           <!-- Search and Pagination Controls -->
@@ -528,6 +550,17 @@
               />
             </div>
 
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Nama Lain</label
+              >
+              <input
+                v-model="editingProduct.otherName"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
@@ -623,6 +656,326 @@
       </div>
     </Transition>
 
+    <!-- History Modal -->
+    <Transition name="fade">
+      <div
+        v-if="showHistoryModal"
+        class="fixed inset-0 bg-black/50 z-[60] flex items-start justify-center p-4 overflow-y-auto py-10"
+      >
+        <div class="bg-white rounded-xl max-w-5xl w-full p-6 shadow-2xl my-auto border border-gray-100">
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <button
+                @click="closeHistoryAndGoBackToArrival"
+                class="p-2 hover:bg-gray-100 rounded-full transition text-gray-500 hover:text-gray-700 flex items-center justify-center"
+                title="Kembali ke Form Barang Datang"
+              >
+                <Icon name="lucide:arrow-left" class="w-5 h-5" />
+              </button>
+              <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Icon name="lucide:history" class="w-6 h-6 text-blue-600" />
+                Riwayat Kedatangan Barang
+              </h3>
+            </div>
+            <button
+              @click="showHistoryModal = false"
+              class="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-full transition flex items-center justify-center"
+            >
+              <Icon name="lucide:x" class="w-6 h-6" />
+            </button>
+          </div>
+
+          <!-- Loading state -->
+          <div v-if="loadingHistory" class="flex flex-col items-center justify-center p-12">
+            <Icon name="lucide:loader-2" class="w-10 h-10 animate-spin text-blue-500" />
+            <span class="text-sm text-gray-500 mt-3 font-semibold">Memuat riwayat...</span>
+          </div>
+
+          <!-- Empty state -->
+          <div v-else-if="arrivalHistory.length === 0" class="text-center p-12 bg-gray-50 rounded-xl border border-dashed">
+            <Icon name="lucide:archive-x" class="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p class="text-gray-500 font-medium">Belum ada riwayat kedatangan barang.</p>
+          </div>
+
+          <!-- Table Content -->
+          <div v-else class="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
+            <div class="overflow-x-auto max-h-[55vh]">
+              <table class="w-full text-left border-collapse min-w-[900px]">
+                <thead class="sticky top-0 bg-gray-50 z-10 border-b border-gray-200">
+                  <tr class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    <th class="p-4">Tanggal</th>
+                    <th class="p-4">Produk</th>
+                    <th class="p-4 text-center">Jumlah</th>
+                    <th class="p-4 text-right">Harga Modal</th>
+                    <th class="p-4 text-right">Harga Tawar</th>
+                    <th class="p-4 text-right">Harga Pas</th>
+                    <th class="p-4 text-right">Harga Service</th>
+                    <th class="p-4">Supplier & Catatan</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr 
+                    v-for="item in arrivalHistory" 
+                    :key="item.id" 
+                    class="hover:bg-blue-50/20 transition-colors text-sm"
+                  >
+                    <td class="p-4 whitespace-nowrap text-gray-500 font-medium">
+                      {{ new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
+                    </td>
+                    <td class="p-4">
+                      <div class="font-semibold text-gray-900 leading-tight">
+                        {{ item.product?.name || 'Produk Dihapus' }}
+                      </div>
+                      <div class="text-xs text-gray-400 mt-1 font-mono">
+                        {{ item.product?.brand || '-' }} / {{ item.product?.model || '-' }}
+                      </div>
+                    </td>
+                    <td class="p-4 text-center whitespace-nowrap">
+                      <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                        +{{ item.quantity }}
+                      </span>
+                    </td>
+                    <td class="p-4 text-right whitespace-nowrap font-semibold">
+                      <span v-if="item.buyPrice" class="font-mono text-gray-900">{{ formatCurrency(item.buyPrice) }}</span>
+                      <span v-else class="text-gray-400 font-sans">-</span>
+                    </td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                      <span v-if="item.askingPrice" class="font-mono text-gray-600">{{ formatCurrency(item.askingPrice) }}</span>
+                      <span v-else class="text-gray-400">-</span>
+                    </td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                      <span v-if="item.fixedPrice" class="font-mono text-gray-600">{{ formatCurrency(item.fixedPrice) }}</span>
+                      <span v-else class="text-gray-400">-</span>
+                    </td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                      <span v-if="item.servicePrice" class="font-mono text-gray-600">{{ formatCurrency(item.servicePrice) }}</span>
+                      <span v-else class="text-gray-400">-</span>
+                    </td>
+                    <td class="p-4 max-w-xs truncate">
+                      <div v-if="item.supplier" class="font-medium text-gray-800 flex items-center gap-1">
+                        <Icon name="lucide:user" class="w-3.5 h-3.5 text-gray-400" />
+                        {{ item.supplier }}
+                      </div>
+                      <div v-if="item.notes" class="text-xs text-gray-500 mt-1 flex items-center gap-1 italic">
+                        <Icon name="lucide:info" class="w-3 h-3 text-gray-400" />
+                        {{ item.notes }}
+                      </div>
+                      <span v-if="!item.supplier && !item.notes" class="text-gray-400">-</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Modal Footer Actions -->
+          <div class="mt-6 pt-4 border-t border-gray-100 flex justify-end gap-3">
+            <button
+              @click="closeHistoryAndGoBackToArrival"
+              class="px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition text-sm flex items-center gap-2"
+            >
+              <Icon name="lucide:arrow-left" class="w-4 h-4" />
+              Kembali ke Form
+            </button>
+            <button
+              @click="showHistoryModal = false"
+              class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition text-sm shadow-sm hover:shadow"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Arrival Modal -->
+    <Transition name="fade">
+      <div
+        v-if="showArrivalModal"
+        class="fixed inset-0 bg-black/50 z-[60] flex items-start justify-center p-4 overflow-y-auto py-10"
+      >
+        <div class="bg-white rounded-lg max-w-4xl w-full p-6 shadow-xl my-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Icon name="lucide:truck" class="w-6 h-6 text-green-600" />
+              Catat Barang Datang
+            </h3>
+            <div class="flex items-center gap-2">
+              <button
+                @click="fetchArrivalHistory"
+                class="text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-md text-sm font-semibold flex items-center gap-1 transition"
+                title="Lihat Riwayat"
+              >
+                <Icon name="lucide:history" class="w-4 h-4" />
+                Riwayat
+              </button>
+              <button
+                @click="showArrivalModal = false"
+                class="text-gray-500 hover:text-gray-700 p-1"
+              >
+                <Icon name="lucide:x" class="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div v-for="(item, index) in arrivalForm.items" :key="item.id" class="p-4 border border-gray-200 rounded-lg relative bg-gray-50">
+              <!-- Delete button if more than 1 -->
+              <button 
+                v-if="arrivalForm.items.length > 1" 
+                @click="removeArrivalItem(index)"
+                class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                title="Hapus Produk Ini"
+              >
+                <Icon name="lucide:trash-2" class="w-5 h-5" />
+              </button>
+
+              <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Produk #{{ index + 1 }}</h4>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Product Search -->
+                <div class="relative lg:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Cari & Pilih Produk <span class="text-red-500">*</span></label>
+                  <input
+                    v-model="item.searchQuery"
+                    @focus="item.showDropdown = true"
+                    @blur="hideDropdown(item)"
+                    type="text"
+                    placeholder="Ketik nama produk..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                  <!-- Selected indicator -->
+                  <div v-if="item.productId" class="mt-1 text-xs text-green-600 font-semibold flex items-center gap-1">
+                    <Icon name="lucide:check-circle" class="w-3 h-3" /> Terpilih: {{ getProductName(item.productId) }}
+                  </div>
+                  <div v-if="item.showDropdown && filteredProducts(item.searchQuery).length > 0" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1">
+                    <div 
+                      v-for="product in filteredProducts(item.searchQuery)" 
+                      :key="product.id" 
+                      @mousedown.prevent="selectProduct(item, product)"
+                      class="px-4 py-2 hover:bg-green-50 cursor-pointer border-b last:border-0 text-sm"
+                    >
+                      <div class="font-semibold">{{ product.name }}</div>
+                      <div class="text-xs text-gray-500">{{ product.brand || 'No Brand' }} - Stok: {{ product.stock }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quantity -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Masuk <span class="text-red-500">*</span></label>
+                  <input
+                    :value="item.quantity ? formatNumber(Number(item.quantity)) : ''"
+                    @input="item.quantity = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="0"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+
+                <!-- Buy Price -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Modal Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
+                  <input
+                    :value="item.buyPrice ? formatNumber(Number(item.buyPrice)) : ''"
+                    @input="item.buyPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Biarkan kosong jika sama"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+
+                <!-- Asking Price -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Tawar Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
+                  <input
+                    :value="item.askingPrice ? formatNumber(Number(item.askingPrice)) : ''"
+                    @input="item.askingPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Harga Jual Normal"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+
+                <!-- Fixed Price -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Pas Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
+                  <input
+                    :value="item.fixedPrice ? formatNumber(Number(item.fixedPrice)) : ''"
+                    @input="item.fixedPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Harga Net/Pas"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+
+                <!-- Service Price -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Hrga Service Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
+                  <input
+                    :value="item.servicePrice ? formatNumber(Number(item.servicePrice)) : ''"
+                    @input="item.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Harga u/ Teknisi"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+
+                <!-- Supplier -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Supplier <span class="text-xs font-normal text-gray-500">Opsional</span></label>
+                  <input
+                    v-model="item.supplier"
+                    type="text"
+                    placeholder="Nama Toko/Suplier"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+
+                <!-- Notes -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Catatan <span class="text-xs font-normal text-gray-500">Opsional</span></label>
+                  <input
+                    v-model="item.notes"
+                    type="text"
+                    placeholder="Keterangan..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Add More Button -->
+            <button
+              @click="addArrivalItem"
+              class="w-full py-3 border-2 border-dashed border-green-300 text-green-600 rounded-lg font-semibold hover:bg-green-50 hover:border-green-400 transition flex items-center justify-center gap-2"
+            >
+              <Icon name="lucide:plus" class="w-5 h-5" />
+              Tambah Produk Lain
+            </button>
+
+            <!-- Save Action -->
+            <div class="flex gap-4 pt-4 border-t">
+              <button
+                @click="saveArrival"
+                :disabled="!isArrivalFormValid"
+                class="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition flex items-center justify-center gap-2"
+              >
+                <Icon name="lucide:save" class="w-5 h-5" />
+                Simpan & Tambah Stok ({{ arrivalForm.items.length }} Item)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Success Toast -->
     <Transition name="fade">
       <div
@@ -657,8 +1010,90 @@ const toTitleCase = (str: string | null | undefined) => {
 const products: Ref<any[]> = ref([]);
 const loading = ref(false);
 const showEditModal = ref(false);
+const showArrivalModal = ref(false);
+const showHistoryModal = ref(false);
+const arrivalHistory = ref<any[]>([]);
+const loadingHistory = ref(false);
 const showMessage = ref(false);
 const message = ref("");
+const allProductsForSelect = ref<any[]>([]);
+
+interface ArrivalItem {
+  id: string;
+  productId: string;
+  searchQuery: string;
+  showDropdown: boolean;
+  quantity: number | string;
+  supplier: string;
+  buyPrice: number | string | null;
+  askingPrice: number | string | null;
+  fixedPrice: number | string | null;
+  servicePrice: number | string | null;
+  notes: string;
+}
+
+const createEmptyArrivalItem = (): ArrivalItem => ({
+  id: Math.random().toString(36).substring(2, 9),
+  productId: "",
+  searchQuery: "",
+  showDropdown: false,
+  quantity: "",
+  supplier: "",
+  buyPrice: null,
+  askingPrice: null,
+  fixedPrice: null,
+  servicePrice: null,
+  notes: "",
+});
+
+const arrivalForm = reactive({
+  items: [createEmptyArrivalItem()]
+});
+
+const isArrivalFormValid = computed(() => {
+  return arrivalForm.items.every(item => item.productId && item.quantity);
+});
+
+const addArrivalItem = () => {
+  const lastSupplier = arrivalForm.items[arrivalForm.items.length - 1]?.supplier ?? "";
+  const newItem = createEmptyArrivalItem();
+  newItem.supplier = lastSupplier;
+  arrivalForm.items.push(newItem);
+};
+
+const removeArrivalItem = (index: number) => {
+  if (arrivalForm.items.length > 1) {
+    arrivalForm.items.splice(index, 1);
+  }
+};
+
+const filteredProducts = (query: string) => {
+  if (!query) return allProductsForSelect.value.slice(0, 50);
+  const q = query.toLowerCase();
+  return allProductsForSelect.value.filter(p => 
+    p.name.toLowerCase().includes(q) || 
+    (p.brand && p.brand.toLowerCase().includes(q)) || 
+    (p.model && p.model.toLowerCase().includes(q))
+  ).slice(0, 50);
+};
+
+const getProductName = (id: string) => {
+  if (!id) return '';
+  const p = allProductsForSelect.value.find(p => p.id === parseInt(id));
+  return p ? p.name : '';
+};
+
+const selectProduct = (item: ArrivalItem, product: any) => {
+  item.productId = product.id.toString();
+  item.searchQuery = product.name;
+  item.showDropdown = false;
+};
+
+const hideDropdown = (item: ArrivalItem) => {
+  setTimeout(() => {
+    item.showDropdown = false;
+  }, 200);
+};
 
 // Search and Pagination State
 const searchQuery = ref("");
@@ -683,6 +1118,7 @@ const newProduct = reactive({
   name: "",
   brand: "",
   model: "",
+  otherName: "",
   stock: 0,
   servicePrice: null as number | null,
   buyPrice: 0,
@@ -696,6 +1132,7 @@ const editingProduct = reactive({
   name: "",
   brand: "",
   model: "",
+  otherName: "",
   stock: 0,
   servicePrice: null as number | null,
   buyPrice: 0,
@@ -757,7 +1194,8 @@ const addProduct = async () => {
       body: {
         name: toTitleCase(newProduct.name),
         brand: newProduct.brand ? toTitleCase(newProduct.brand) : null,
-        model: newProduct.model ? toTitleCase(newProduct.model) : null,
+        model: newProduct.model ? newProduct.model.toUpperCase() : null,
+        otherName: newProduct.otherName || null,
         stock: newProduct.stock,
         servicePrice: newProduct.servicePrice,
         buyPrice: newProduct.buyPrice,
@@ -780,6 +1218,7 @@ const editProduct = (product: any) => {
   editingProduct.name = product.name;
   editingProduct.brand = product.brand;
   editingProduct.model = product.model;
+  editingProduct.otherName = product.otherName;
   editingProduct.stock = product.stock;
   editingProduct.servicePrice = product.servicePrice;
   editingProduct.buyPrice = product.buyPrice;
@@ -796,7 +1235,8 @@ const saveProduct = async () => {
       body: {
         name: toTitleCase(editingProduct.name),
         brand: editingProduct.brand ? toTitleCase(editingProduct.brand) : null,
-        model: editingProduct.model ? toTitleCase(editingProduct.model) : null,
+        model: editingProduct.model ? editingProduct.model.toUpperCase() : null,
+        otherName: editingProduct.otherName || null,
         stock: editingProduct.stock,
         servicePrice: editingProduct.servicePrice,
         buyPrice: editingProduct.buyPrice,
@@ -831,6 +1271,68 @@ const deleteProduct = async (productId: string) => {
     showToast(error.message || "Waduh, gagal hapus produk");
   }
 };
+
+const fetchArrivalHistory = async () => {
+  loadingHistory.value = true;
+  showArrivalModal.value = false;
+  showHistoryModal.value = true;
+  try {
+    const response = await $fetch<any>('/api/arrivals?limit=50');
+    arrivalHistory.value = response.arrivals || [];
+  } catch (error) {
+    showToast("Gagal memuat riwayat kedatangan");
+  } finally {
+    loadingHistory.value = false;
+  }
+};
+
+const closeHistoryAndGoBackToArrival = () => {
+  showHistoryModal.value = false;
+  showArrivalModal.value = true;
+};
+
+const saveArrival = async () => {
+  if (!isArrivalFormValid.value) {
+    showToast("Pilih produk dan isi jumlahnya untuk semua baris ya.");
+    return;
+  }
+  try {
+    const itemsToSave = arrivalForm.items.map(item => ({
+      productId: item.productId,
+      quantity: typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity,
+      supplier: item.supplier,
+      buyPrice: item.buyPrice,
+      askingPrice: item.askingPrice,
+      fixedPrice: item.fixedPrice,
+      servicePrice: item.servicePrice,
+      notes: item.notes,
+    }));
+
+    await $fetch("/api/arrivals", {
+      method: "POST",
+      body: { items: itemsToSave }
+    });
+    
+    showArrivalModal.value = false;
+    arrivalForm.items = [createEmptyArrivalItem()];
+    
+    showToast(`Kedatangan ${itemsToSave.length} barang berhasil dicatat.`);
+    fetchProducts();
+  } catch (error: any) {
+    showToast(error.message || "Gagal mencatat kedatangan barang.");
+  }
+};
+
+watch(showArrivalModal, async (val) => {
+  if (val && allProductsForSelect.value.length === 0) {
+    try {
+      const response = await $fetch<any>('/api/products?limit=1000&activeOnly=true');
+      allProductsForSelect.value = (response.products || []).sort((a: any, b: any) => a.name.localeCompare(b.name));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+});
 
 const printProductList = async () => {
   try {

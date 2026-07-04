@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
       const name = body.name?.trim();
       const brand = body.brand?.trim() || "Tidak ada";
       const model = body.model?.trim() || "Standar";
+      const otherName = body.otherName?.trim() || null;
       const stock = parseInt(String(body.stock), 10) || 0;
       const servicePrice = (body.servicePrice !== undefined && body.servicePrice !== null && body.servicePrice !== "") ? parseInt(String(body.servicePrice), 10) : null;
       const buyPrice = parseInt(String(body.buyPrice), 10) || 0;
@@ -39,6 +40,7 @@ export default defineEventHandler(async (event) => {
           name,
           brand,
           model,
+          otherName,
           stock,
           servicePrice,
           buyPrice,

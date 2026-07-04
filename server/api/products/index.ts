@@ -36,6 +36,7 @@ export default defineEventHandler(async (event) => {
                 name: product.name.trim(),
                 brand: product.brand.trim(),
                 model: product.model.trim(),
+                otherName: product.otherName ? product.otherName.trim() : null,
                 buyPrice: parseInt(product.buyPrice, 10),
                 askingPrice: parseInt(product.askingPrice, 10),
                 fixedPrice: product.fixedPrice
@@ -88,6 +89,7 @@ export default defineEventHandler(async (event) => {
             name: body.name.trim(),
             brand: body.brand?.trim() || "Unbranded",
             model: body.model?.trim() || "Standard",
+            otherName: body.otherName?.trim() || null,
             stock: parseInt(String(body.stock), 10) || 0,
             servicePrice: (body.servicePrice !== undefined && body.servicePrice !== null && body.servicePrice !== "") ? parseInt(String(body.servicePrice), 10) : null,
             buyPrice: parseInt(String(body.buyPrice), 10) || 0,
@@ -140,6 +142,7 @@ export default defineEventHandler(async (event) => {
               { name: { contains: keyword } },
               { brand: { contains: keyword } },
               { model: { contains: keyword } },
+              { otherName: { contains: keyword } },
             ],
           }));
 
@@ -167,6 +170,7 @@ export default defineEventHandler(async (event) => {
           name: true,
           brand: true,
           model: true,
+          otherName: true,
           buyPrice: true,
           askingPrice: true,
           fixedPrice: true,
