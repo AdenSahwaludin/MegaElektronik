@@ -1003,6 +1003,10 @@ const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
 
 const toTitleCase = (str: string | null | undefined) => {
   if (!str) return str;
+  // Hanya ubah ke Title Case kalau semua huruf kecil
+  // Kalau sudah ada huruf besar (misal "AC AQUA 1 PK"), biarkan apa adanya
+  const isAllLowerCase = str === str.toLowerCase();
+  if (!isAllLowerCase) return str;
   return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };
 
@@ -1069,11 +1073,18 @@ const removeArrivalItem = (index: number) => {
 
 const filteredProducts = (query: string) => {
   if (!query) return allProductsForSelect.value.slice(0, 50);
-  const q = query.toLowerCase();
+  // Split query jadi beberapa keyword, semua keyword harus match
+  // Keyword angka pendek (1-2 char) tidak dicari di model agar tidak false match
+  const keywords = query.toLowerCase().trim().split(/\s+/).filter(k => k.length > 0);
+  if (keywords.length === 0) return allProductsForSelect.value.slice(0, 50);
   return allProductsForSelect.value.filter(p => 
-    p.name.toLowerCase().includes(q) || 
-    (p.brand && p.brand.toLowerCase().includes(q)) || 
-    (p.model && p.model.toLowerCase().includes(q))
+    keywords.every(keyword => {
+      const isShortNumeric = keyword.length <= 2 && /^\d+$/.test(keyword);
+      return p.name.toLowerCase().includes(keyword) || 
+        (p.brand && p.brand.toLowerCase().includes(keyword)) || 
+        (!isShortNumeric && p.model && p.model.toLowerCase().includes(keyword)) ||
+        (p.otherName && p.otherName.toLowerCase().includes(keyword));
+    })
   ).slice(0, 50);
 };
 

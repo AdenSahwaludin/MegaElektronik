@@ -229,9 +229,15 @@
                         <Icon name="lucide:calendar" class="w-4 h-4 text-orange-600" />
                         <span class="font-bold text-gray-900">{{ date }}</span>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase">Keuntungan {{ date }} :</span>
-                        <span class="font-bold text-green-700">{{ formatCurrency(dailyProfits[date] || 0) }}</span>
+                      <div class="flex items-center gap-4 flex-wrap">
+                        <div class="flex items-center gap-2">
+                          <span class="text-[10px] font-bold text-gray-500 uppercase">Omset {{ date }} :</span>
+                          <span class="font-bold text-orange-700">{{ formatCurrency(dailyRevenues[date] || 0) }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-[10px] font-bold text-gray-500 uppercase">Keuntungan {{ date }} :</span>
+                          <span class="font-bold text-green-700">{{ formatCurrency(dailyProfits[date] || 0) }}</span>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -360,6 +366,7 @@ const { formatCurrency } = useCurrency();
 // State
 const transactions = ref<any[]>([]);
 const dailyProfits = ref<Record<string, number>>({});
+const dailyRevenues = ref<Record<string, number>>({});
 const totalCount = ref(0);
 const summary = ref({
   totalRevenue: 0,
@@ -444,6 +451,7 @@ const fetchTransactions = async () => {
     );
     transactions.value = response.transactions;
     dailyProfits.value = response.dailyProfits || {};
+    dailyRevenues.value = response.dailyRevenues || {};
     summary.value = response.summary;
     totalCount.value = response.pagination.totalCount;
     totalPages.value = response.pagination.totalPages;

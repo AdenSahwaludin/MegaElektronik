@@ -136,15 +136,21 @@ export default defineEventHandler(async (event) => {
           .filter((k) => k.length > 0);
 
         if (keywords.length > 0) {
-          // Every keyword must match name, brand, or model
-          const searchConditions = keywords.map((keyword) => ({
-            OR: [
+          // Every keyword must match name, brand, model, or otherName
+          // For short numeric keywords (1-2 chars like "7"), skip model field
+          // to avoid false matches from model numbers like "PWM 1076Y"
+          const searchConditions = keywords.map((keyword) => {
+            const isShortNumeric = keyword.length <= 2 && /^\d+$/.test(keyword);
+            const fields: any[] = [
               { name: { contains: keyword } },
               { brand: { contains: keyword } },
-              { model: { contains: keyword } },
               { otherName: { contains: keyword } },
-            ],
-          }));
+            ];
+            if (!isShortNumeric) {
+              fields.push({ model: { contains: keyword } });
+            }
+            return { OR: fields };
+          });
 
           andConditions.push(...searchConditions);
         }
