@@ -196,16 +196,15 @@
 
           <!-- Loading State -->
           <div
-            v-if="loading"
+            v-if="showDelayedLoading"
             class="flex flex-col items-center justify-center py-32 text-center"
           >
-            <div class="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-orange-600 font-bold animate-pulse">Lagi narik data transaksi...</p>
+            <div class="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
 
           <!-- Table Content -->
           <div 
-            v-show="!loading && transactions.length > 0" 
+            v-show="!showDelayedLoading && transactions.length > 0" 
             class="overflow-x-auto"
           >
             <table class="w-full text-sm text-left border-collapse min-w-[700px]">
@@ -305,7 +304,7 @@
           </div>
 
           <div
-            v-if="!loading && transactions.length > 0"
+            v-if="!showDelayedLoading && transactions.length > 0"
             class="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50"
           >
             <button
@@ -376,6 +375,8 @@ const summary = ref({
   transactionCount: 0,
 });
 const loading = ref(false);
+const showDelayedLoading = ref(false);
+let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 const currentPage = ref(1);
 const totalPages = ref(1);
 const dateRange = ref("month");
@@ -422,6 +423,12 @@ const groupedTransactions = computed(() => {
 // Methods
 const fetchTransactions = async () => {
   loading.value = true;
+  showDelayedLoading.value = false;
+  if (loadingTimer) clearTimeout(loadingTimer);
+  loadingTimer = setTimeout(() => {
+    showDelayedLoading.value = true;
+  }, 3000);
+  
   try {
     let finalStartDate = startDate.value;
     let finalEndDate = endDate.value;
@@ -470,6 +477,8 @@ const fetchTransactions = async () => {
     console.error("Error loading transactions:", error);
   } finally {
     loading.value = false;
+    showDelayedLoading.value = false;
+    if (loadingTimer) clearTimeout(loadingTimer);
   }
 };
 

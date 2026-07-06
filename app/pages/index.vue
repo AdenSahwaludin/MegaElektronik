@@ -106,15 +106,14 @@
           </div>
 
           <div
-            v-show="loading"
+            v-show="showDelayedLoading"
             class="flex flex-col items-center justify-center h-full text-center p-6"
           >
-            <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
-            <p class="text-orange-600 font-bold animate-pulse">Sabar ya, lagi ambil data...</p>
+            <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
           </div>
 
           <div
-            v-show="!loading && filteredProducts.length > 0"
+            v-show="!showDelayedLoading && filteredProducts.length > 0"
             class="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-max"
           >
             <button
@@ -751,6 +750,8 @@ const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
 // Products
 const products: Ref<any[]> = ref([]);
 const loading = ref(false);
+const showDelayedLoading = ref(false);
+let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 const searchQuery = ref("");
 
 // Transaction Config
@@ -887,7 +888,14 @@ const stopLiveClock = () => {
 
 // Methods
 const fetchProducts = async (silent = false) => {
-  if (!silent) loading.value = true;
+  if (!silent) {
+    loading.value = true;
+    showDelayedLoading.value = false;
+    if (loadingTimer) clearTimeout(loadingTimer);
+    loadingTimer = setTimeout(() => {
+      showDelayedLoading.value = true;
+    }, 3000);
+  }
   try {
     const params = new URLSearchParams();
     if (searchQuery.value.trim()) {
@@ -903,7 +911,11 @@ const fetchProducts = async (silent = false) => {
     console.error("Error loading products:", error);
     showToast("Yah, gagal muat produk nih");
   } finally {
-    if (!silent) loading.value = false;
+    if (!silent) {
+      loading.value = false;
+      showDelayedLoading.value = false;
+      if (loadingTimer) clearTimeout(loadingTimer);
+    }
   }
 };
 
