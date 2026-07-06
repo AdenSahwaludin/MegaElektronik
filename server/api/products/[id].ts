@@ -17,8 +17,8 @@ export default defineEventHandler(async (event) => {
     try {
       const body = await readBody(event);
       const name = body.name?.trim();
-      const brand = body.brand?.trim() || "Tidak ada";
-      const model = body.model?.trim() || "Standar";
+      const brand = body.brand?.trim() || " ";
+      const model = body.model?.trim() || " ";
       const otherName = body.otherName?.trim() || null;
       const stock = parseInt(String(body.stock), 10) || 0;
       const servicePrice = (body.servicePrice !== undefined && body.servicePrice !== null && body.servicePrice !== "") ? parseInt(String(body.servicePrice), 10) : null;

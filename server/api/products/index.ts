@@ -87,8 +87,8 @@ export default defineEventHandler(async (event) => {
         const product = await (prisma.product as any).create({
           data: {
             name: body.name.trim(),
-            brand: body.brand?.trim() || "Unbranded",
-            model: body.model?.trim() || "Standard",
+            brand: body.brand?.trim() || " ",
+            model: body.model?.trim() || " ",
             otherName: body.otherName?.trim() || null,
             stock: parseInt(String(body.stock), 10) || 0,
             servicePrice: (body.servicePrice !== undefined && body.servicePrice !== null && body.servicePrice !== "") ? parseInt(String(body.servicePrice), 10) : null,

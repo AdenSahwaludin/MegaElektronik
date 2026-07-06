@@ -130,9 +130,12 @@
               ]"
             >
               <div class="text-left flex flex-col h-full w-full">
-                <div class="min-h-10">
-                  <p class="font-bold text-sm line-clamp-2 group-hover:text-orange-700 transition-colors mb-2">
+                <div class="min-h-12 flex flex-col justify-start">
+                  <p class="font-bold text-sm line-clamp-2 group-hover:text-orange-700 transition-colors">
                     {{ getProductDisplayName(product) }}
+                  </p>
+                  <p v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'" class="text-[11px] text-gray-500 font-semibold mt-0.5 line-clamp-1">
+                    {{ product.model }}
                   </p>
                 </div>
                 
@@ -840,15 +843,11 @@ const successMessage = ref("");
 const getProductDisplayName = (product: any) => {
   if (!product) return '';
   let name = product.name || '';
-  if (product.brand && product.brand !== 'No Brand') {
+  if (product.brand && product.brand !== 'No Brand' && product.brand.trim() !== '') {
     name += ` ${product.brand}`;
   }
-  if (product.model && product.model !== 'Standard' && product.model !== 'Portable') {
-    name += ` ${product.model}`;
-  }
-  if (product.otherName) {
-    name += ` (${product.otherName})`;
-  }
+  // Model is intentionally omitted from the display name to be shown separately
+  // otherName is intentionally omitted from the display name
   return name.trim();
 };
 

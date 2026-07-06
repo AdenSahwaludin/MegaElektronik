@@ -1155,15 +1155,11 @@ const editingProduct = reactive({
 const getProductDisplayName = (product: any) => {
   if (!product) return '';
   let name = product.name || '';
-  if (product.brand && product.brand !== 'No Brand') {
+  if (product.brand && product.brand !== 'No Brand' && product.brand.trim() !== '') {
     name += ` ${product.brand}`;
   }
-  if (product.model && product.model !== 'Standard' && product.model !== 'Portable') {
-    name += ` ${product.model}`;
-  }
-  if (product.otherName) {
-    name += ` (${product.otherName})`;
-  }
+  // Model is intentionally omitted from the display name
+  // otherName is intentionally omitted from the display name
   return name.trim();
 };
 

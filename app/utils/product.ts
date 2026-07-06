@@ -6,9 +6,7 @@ export function getProductDisplayName(product: { name: string; brand?: string | 
     parts.push(product.brand);
   }
   
-  if (product.model && product.model !== 'Standard' && product.model !== 'Portable') {
-    parts.push(product.model);
-  }
+  // Model is intentionally omitted from the display name to be shown separately
   
   return parts.join(' ');
 }
