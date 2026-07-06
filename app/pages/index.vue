@@ -877,8 +877,8 @@ const stopLiveClock = () => {
 };
 
 // Methods
-const fetchProducts = async () => {
-  loading.value = true;
+const fetchProducts = async (silent = false) => {
+  if (!silent) loading.value = true;
   try {
     const params = new URLSearchParams();
     if (searchQuery.value.trim()) {
@@ -894,7 +894,7 @@ const fetchProducts = async () => {
     console.error("Error loading products:", error);
     showToast("Yah, gagal muat produk nih");
   } finally {
-    loading.value = false;
+    if (!silent) loading.value = false;
   }
 };
 
@@ -908,8 +908,8 @@ let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 watch(searchQuery, async () => {
   if (searchTimeout) clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async () => {
-    await fetchProducts();
-  }, 300);
+    await fetchProducts(true); // silent fetch for real-time feel
+  }, 150);
 });
 
 const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") => {
