@@ -426,14 +426,25 @@ const fetchTransactions = async () => {
     let finalStartDate = startDate.value;
     let finalEndDate = endDate.value;
 
-    if (dateRange.value === "custom_month") {
-      if (startMonth.value) {
-        finalStartDate = `${startMonth.value}-01`;
+    if (dateRange.value === "custom") {
+      // If user only picks start date, assume they want just that one day
+      if (finalStartDate && !finalEndDate) {
+        finalEndDate = finalStartDate;
       }
-      if (endMonth.value) {
-        const [year, month] = endMonth.value.split("-");
+    }
+
+    if (dateRange.value === "custom_month") {
+      const effectiveStartMonth = startMonth.value;
+      // If user only picks start month, assume they want just that one month
+      const effectiveEndMonth = endMonth.value || startMonth.value;
+
+      if (effectiveStartMonth) {
+        finalStartDate = `${effectiveStartMonth}-01`;
+      }
+      if (effectiveEndMonth) {
+        const [year, month] = effectiveEndMonth.split("-");
         const lastDay = new Date(Number(year), Number(month), 0).getDate();
-        finalEndDate = `${endMonth.value}-${lastDay}`;
+        finalEndDate = `${effectiveEndMonth}-${lastDay}`;
       }
     }
 

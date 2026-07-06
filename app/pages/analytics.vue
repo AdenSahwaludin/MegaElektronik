@@ -47,15 +47,17 @@ const fetchAllAnalytics = async () => {
     const params: any = { dateRange: dateRange.value }
     if (dateRange.value === 'custom') {
       params.startDate = startDate.value
-      params.endDate = endDate.value
+      params.endDate = endDate.value || startDate.value
     } else if (dateRange.value === 'custom_month') {
-      if (startMonth.value) {
-        params.startDate = `${startMonth.value}-01`;
+      const effectiveStartMonth = startMonth.value;
+      const effectiveEndMonth = endMonth.value || startMonth.value;
+      if (effectiveStartMonth) {
+        params.startDate = `${effectiveStartMonth}-01`;
       }
-      if (endMonth.value) {
-        const [year, month] = endMonth.value.split("-");
+      if (effectiveEndMonth) {
+        const [year, month] = effectiveEndMonth.split("-");
         const lastDay = new Date(Number(year), Number(month), 0).getDate();
-        params.endDate = `${endMonth.value}-${lastDay}`;
+        params.endDate = `${effectiveEndMonth}-${lastDay}`;
       }
     }
     
@@ -83,11 +85,9 @@ const fetchAllAnalytics = async () => {
   }
 }
 
-// Watch dateRange
-watch(dateRange, () => {
-  if (dateRange.value !== 'custom' && dateRange.value !== 'custom_month') {
-    fetchAllAnalytics()
-  }
+// Watch all date parameters
+watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
+  fetchAllAnalytics()
 })
 </script>
 
@@ -138,12 +138,6 @@ watch(dateRange, () => {
                 v-model="endDate" 
                 class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold"
               />
-              <button 
-                @click="fetchAllAnalytics"
-                class="px-4 py-2 bg-orange-600 text-white rounded-lg font-bold text-sm hover:bg-orange-700 transition"
-              >
-                Terapkan
-              </button>
             </div>
 
             <div v-else-if="dateRange === 'custom_month'" class="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-300">
@@ -158,12 +152,6 @@ watch(dateRange, () => {
                 v-model="endMonth" 
                 class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold"
               />
-              <button 
-                @click="fetchAllAnalytics"
-                class="px-4 py-2 bg-orange-600 text-white rounded-lg font-bold text-sm hover:bg-orange-700 transition"
-              >
-                Terapkan
-              </button>
             </div>
 
             <button 

@@ -1,4 +1,5 @@
 import { getPrismaClient } from "../../utils/prisma";
+import { getDateFilter } from "../../utils/analytics";
 
 const prisma = getPrismaClient();
 
@@ -13,47 +14,9 @@ export default defineEventHandler(async (event) => {
     const endDate = (query.endDate as string) || "";
     const search = (query.search as string) || "";
 
-    // Calculate date boundaries for quick filters
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay());
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-    // Build WHERE clause
-    let dateFilter: any = {};
-
-    if (startDate || endDate) {
-      const start = startDate ? new Date(startDate) : new Date(0);
-      const end = endDate ? new Date(endDate) : new Date();
-      end.setHours(23, 59, 59, 999);
-      
-      dateFilter = {
-        createdAt: {
-          gte: start,
-          lte: end,
-        },
-      };
-    } else {
-      if (dateRange === "today") {
-        dateFilter = { createdAt: { gte: today, lt: tomorrow } };
-      } else if (dateRange === "week") {
-        dateFilter = { createdAt: { gte: weekStart, lt: weekEnd } };
-      } else if (dateRange === "month") {
-        dateFilter = { createdAt: { gte: monthStart, lt: monthEnd } };
-      } else if (dateRange === "last_month") {
-        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
-        dateFilter = { createdAt: { gte: lastMonthStart, lt: lastMonthEnd } };
-      }
-    }
+    // Build WHERE clause using the shared getDateFilter to ensure WIB timezone consistency
+    const { filter: dateFilter } = getDateFilter(dateRange, startDate, endDate);
+    console.log("DATE FILTER for", dateRange, ":", dateFilter);
 
     // Build search filter
     let searchFilter: any = {};
@@ -154,6 +117,7 @@ export default defineEventHandler(async (event) => {
         day: "2-digit",
         month: "long",
         year: "numeric",
+        timeZone: "Asia/Jakarta",
       });
       dailyProfits[dateKey] = (dailyProfits[dateKey] || 0) + (transaction.totalProfit || 0);
       dailyRevenues[dateKey] = (dailyRevenues[dateKey] || 0) + (transaction.totalAmount || 0);

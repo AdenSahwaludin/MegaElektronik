@@ -3,11 +3,15 @@ import { getDateFilter } from "../../utils/analytics";
 
 const prisma = getPrismaClient();
 
-// Helper to get YYYY-MM-DD in local time
-const toLocalDateString = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+// WIB = UTC+7
+const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+// Helper to get YYYY-MM-DD in WIB timezone
+const toWibDateString = (date: Date) => {
+  const wibDate = new Date(date.getTime() + WIB_OFFSET_MS);
+  const year = wibDate.getUTCFullYear();
+  const month = String(wibDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(wibDate.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
@@ -19,37 +23,40 @@ export default defineEventHandler(async (event) => {
   
   const { filter: where } = getDateFilter(dateRange, startDate, endDate);
   
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
-  let start = new Date(today);
-  let end = new Date(today);
+  // getDateFilter already returns WIB-adjusted dates
+  // We need start/end for generating date series
+  let start: Date;
+  let end: Date;
 
   if (where.createdAt) {
-    if (where.createdAt.gte) {
-      start = new Date(where.createdAt.gte);
-      start.setHours(0, 0, 0, 0);
-    }
-    
+    start = where.createdAt.gte ? new Date(where.createdAt.gte) : new Date();
     if (where.createdAt.lt) {
-      const ltDate = new Date(where.createdAt.lt);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      end = ltDate > tomorrow ? new Date(today) : new Date(ltDate.getTime() - 1000);
+      // lt is midnight of next day in WIB, so end = lt - 1ms
+      end = new Date(where.createdAt.lt.getTime() - 1);
     } else if (where.createdAt.lte) {
-      const lteDate = new Date(where.createdAt.lte);
-      end = lteDate > today ? new Date(today) : lteDate;
+      end = new Date(where.createdAt.lte);
+    } else {
+      end = new Date();
     }
+  } else {
+    // "all" range — fetch first and last transaction
+    const firstTx = await prisma.transaction.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } });
+    const lastTx = await prisma.transaction.findFirst({ orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
+    start = firstTx ? new Date(firstTx.createdAt) : new Date();
+    end = lastTx ? new Date(lastTx.createdAt) : new Date();
   }
 
-  end.setHours(23, 59, 59, 999);
-
-  // Generate date series using local time
+  // Generate date series using WIB dates
   const dates: string[] = [];
+  const startDateStr = toWibDateString(start);
+  const endDateStr = toWibDateString(end);
+  // Walk day-by-day using the start date
   const curr = new Date(start);
-  while (curr <= end) {
-    dates.push(toLocalDateString(curr));
+  let safety = 0;
+  while (toWibDateString(curr) <= endDateStr && safety < 366) {
+    dates.push(toWibDateString(curr));
     curr.setDate(curr.getDate() + 1);
+    safety++;
   }
 
   const transactions = await prisma.transaction.findMany({
@@ -73,7 +80,7 @@ export default defineEventHandler(async (event) => {
 
   transactions.forEach(t => {
     // Group using local time
-    const date = toLocalDateString(new Date(t.createdAt));
+    const date = toWibDateString(new Date(t.createdAt));
     if (trend[date]) {
       trend[date].revenue += t.totalAmount;
       trend[date].profit += t.totalProfit;
