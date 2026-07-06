@@ -31,16 +31,16 @@ export const getDateFilter = (dateRange: string, startDate?: string, endDate?: s
   if ((dateRange === "custom" || dateRange === "custom_month") && startDate) {
     // startDate/endDate are "YYYY-MM-DD" strings, treat them as WIB dates
     const [sy, sm, sd] = startDate.split('-').map(Number);
-    const start = wibMidnight(sy, sm - 1, sd);
-    
+    const start = wibMidnight(sy!, sm! - 1, sd!);
+
     let end: Date;
     if (endDate) {
       const [ey, em, ed] = endDate.split('-').map(Number);
-      end = wibMidnight(ey, em - 1, ed + 1); // End of that day = midnight next day
+      end = wibMidnight(ey!, em! - 1, ed! + 1); // End of that day = midnight next day
     } else {
       end = tomorrow;
     }
-    
+
     filter = { createdAt: { gte: start, lt: end } };
     const diffTime = Math.abs(end.getTime() - start.getTime());
     days = Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1);
@@ -72,6 +72,6 @@ export const getDateFilter = (dateRange: string, startDate?: string, endDate?: s
     filter = {};
     days = 0; // Will be handled in summary API by fetching first tx
   }
-  
+
   return { filter, days };
 };

@@ -4,7 +4,7 @@
     <AppHeader />
 
     <!-- Main Content -->
-    <div class="mt-3 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24">
+    <div class="mt-3 flex-1 overflow-y-auto p-4 lg:p-6">
       <div class="max-w-7xl mx-auto">
         <h1
           class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"

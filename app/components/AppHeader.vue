@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-orange-600 text-white shadow-lg fixed w-full top-0 z-50 pt-[env(safe-area-inset-top)]">
+  <header class="bg-orange-600 text-white shadow-lg sticky top-0 z-50 shrink-0 w-full pt-[env(safe-area-inset-top)]">
     <div class="px-4 lg:px-6 py-4">
       <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
         <!-- Logo & Brand (Left) -->

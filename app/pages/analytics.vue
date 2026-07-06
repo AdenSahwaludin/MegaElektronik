@@ -97,7 +97,7 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
     <AppHeader />
 
     <!-- Main Content -->
-    <div class="mt-3 flex-1 overflow-y-auto p-4 lg:p-6 pt-20 lg:pt-24 relative">
+    <div class="mt-3 flex-1 overflow-y-auto p-4 lg:p-6 relative">
       <!-- Loading Overlay -->
       <div v-if="loading && !summary" class="absolute inset-0 z-50 bg-orange-50/80 backdrop-blur-sm flex flex-col items-center justify-center">
         <div class="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mb-4"></div>

@@ -4,9 +4,7 @@
     <AppHeader />
 
     <!-- Main Content - Split Layout (iPad Optimized, Responsive) -->
-    <div
-      class="mt-3 flex flex-1 min-h-0 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden pt-20 lg:pt-24"
-    >
+    <div class="mt-3 flex flex-1 min-h-0 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden">
       <!-- Left Panel: Products Grid (Full width on mobile, flex-1 on desktop) -->
       <div class="flex-1 flex flex-col min-h-0 overflow-hidden bg-white rounded-lg shadow">
         <div class="px-4 pt-4 pb-2 shrink-0">
