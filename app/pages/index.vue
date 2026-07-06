@@ -26,6 +26,8 @@
             <div class="flex gap-2">
               <div class="relative flex-1">
                 <input
+                  id="searchQueryInput"
+                  name="searchQuery"
                   v-model="searchQuery"
                   type="text"
                   placeholder="Cari produk..."
@@ -200,6 +202,8 @@
              </span>
           </div>
           <input
+            id="transactionDateTimeDesktop"
+            name="transactionDateTimeDesktop"
             v-model="transactionDateTime"
             type="datetime-local"
             @input="stopLiveClock"
@@ -244,6 +248,8 @@
                   −
                 </button>
                 <input
+                  :id="'qty-desktop-' + item.id"
+                  name="quantity"
                   :value="item.quantity"
                   @input="
                     (e: any) =>
@@ -281,6 +287,8 @@
                   >Rp</span
                 >
                 <input
+                  :id="'price-desktop-' + item.id"
+                  name="price"
                   :value="item.soldPrice ? formatNumber(item.soldPrice) : ''"
                   @input="handlePriceInput(item.id, $event)"
                   type="text"
@@ -440,6 +448,8 @@
               </span>
             </div>
             <input
+              id="transactionDateTimeMobile"
+              name="transactionDateTimeMobile"
               v-model="transactionDateTime"
               type="datetime-local"
               @input="stopLiveClock"
@@ -482,6 +492,8 @@
                     −
                   </button>
                   <input
+                    :id="'qty-mobile-' + item.id"
+                    name="quantity"
                     :value="item.quantity"
                     @input="
                       (e: any) =>
@@ -519,6 +531,8 @@
                     >Rp</span
                   >
                   <input
+                    :id="'price-mobile-' + item.id"
+                    name="price"
                     :value="item.soldPrice ? formatNumber(item.soldPrice) : ''"
                     @input="handlePriceInput(item.id, $event)"
                     type="text"
@@ -654,6 +668,8 @@
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-black text-gray-500">Rp</span>
                 <input
+                  id="paidAmountInput"
+                  name="paidAmount"
                   :value="paidAmountInput"
                   @input="handlePaidAmountInput"
                   type="text"

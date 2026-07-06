@@ -70,12 +70,14 @@
 
         <!-- Live Clock & Actions (Right) -->
         <div class="flex items-center gap-4 shrink-0">
-          <div class="text-right hidden sm:block">
-            <p class="text-xs lg:text-sm opacity-90">{{ formattedDate }}</p>
-            <p class="text-sm lg:text-base font-semibold font-mono">
-              {{ formattedTime }}
-            </p>
-          </div>
+          <ClientOnly>
+            <div class="text-right hidden sm:block">
+              <p class="text-xs lg:text-sm opacity-90">{{ formattedDate }}</p>
+              <p class="text-sm lg:text-base font-semibold font-mono">
+                {{ formattedTime }}
+              </p>
+            </div>
+          </ClientOnly>
           
           <!-- Tombol Logout -->
           <button
