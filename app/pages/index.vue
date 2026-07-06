@@ -131,11 +131,8 @@
             >
               <div class="text-left flex flex-col h-full w-full">
                 <div class="min-h-10">
-                  <p class="font-bold text-sm line-clamp-2 group-hover:text-orange-700 transition-colors">
-                    {{ product.name }}
-                  </p>
-                  <p class="text-[10px] text-gray-500 truncate mb-2">
-                    {{ product.brand }} - {{ product.model }}
+                  <p class="font-bold text-sm line-clamp-2 group-hover:text-orange-700 transition-colors mb-2">
+                    {{ getProductDisplayName(product) }}
                   </p>
                 </div>
                 
@@ -839,6 +836,21 @@ const selectSuggestion = (val: number) => {
 // Messages
 const showSuccessMessage = ref(false);
 const successMessage = ref("");
+
+const getProductDisplayName = (product: any) => {
+  if (!product) return '';
+  let name = product.name || '';
+  if (product.brand && product.brand !== 'No Brand') {
+    name += ` ${product.brand}`;
+  }
+  if (product.model && product.model !== 'Standard' && product.model !== 'Portable') {
+    name += ` ${product.model}`;
+  }
+  if (product.otherName) {
+    name += ` (${product.otherName})`;
+  }
+  return name.trim();
+};
 
 // Computed
 const filteredProducts = computed(() => {

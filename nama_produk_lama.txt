@@ -1,0 +1,310 @@
+injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+[UPDATE] ID 4:
+  - Lama : Mesin Cuci Polytron 2 Tabung 7 KG | Merk: Polytron
+  - Baru : Mesin Cuci 2 Tabung 7 KG | Merk: Polytron
+[UPDATE] ID 5:
+  - Lama : Mesin Cuci Polytron 2 Tabung 8 KG | Merk: Polytron
+  - Baru : Mesin Cuci 2 Tabung 8 KG | Merk: Polytron
+[UPDATE] ID 6:
+  - Lama : Mesin Cuci Polytron 2 Tabung 9 KG | Merk: Polytron
+  - Baru : Mesin Cuci 2 Tabung 9 KG | Merk: Polytron
+[UPDATE] ID 7:
+  - Lama : Mesin Cuci Polytron 2 Tabung 10 KG | Merk: Polytron
+  - Baru : Mesin Cuci 2 Tabung 10 KG | Merk: Polytron
+[UPDATE] ID 8:
+  - Lama : Mesin Cuci Sharp 2 Tabung 7 KG | Merk: Sharp
+  - Baru : Mesin Cuci 2 Tabung 7 KG | Merk: Sharp
+[UPDATE] ID 9:
+  - Lama : Mesin Cuci Sharp 2 Tabung 8 KG | Merk: Sharp
+  - Baru : Mesin Cuci 2 Tabung 8 KG | Merk: Sharp
+[UPDATE] ID 10:
+  - Lama : Mesin Cuci Sharp 2 Tabung 9 KG | Merk: Sharp
+  - Baru : Mesin Cuci 2 Tabung 9 KG | Merk: Sharp
+[UPDATE] ID 11:
+  - Lama : Mesin Cuci Sharp 2 Tabung 10 KG | Merk: Sharp
+  - Baru : Mesin Cuci 2 Tabung 10 KG | Merk: Sharp
+[UPDATE] ID 12:
+  - Lama : Mesin Cuci 1 Tabung Sharp ES-M8000P-GG | Merk: Sharp
+  - Baru : Mesin Cuci 1 Tabung | Merk: Sharp
+[UPDATE] ID 13:
+  - Lama : Kulkas 1 Pintu Polytron PRB-177lb | Merk: Polytron
+  - Baru : Kulkas 1 Pintu lb | Merk: Polytron
+[UPDATE] ID 14:
+  - Lama : Kulkas 1 Pintu Polytron PRB-189 | Merk: Polytron
+  - Baru : Kulkas 1 Pintu | Merk: Polytron
+[UPDATE] ID 15:
+  - Lama : Kulkas 1 Pintu Sharp 192 | Merk: Sharp
+  - Baru : Kulkas 1 Pintu 192 | Merk: Sharp
+[UPDATE] ID 16:
+  - Lama : Kulkas 1 Pintu Sharp 182 | Merk: Sharp
+  - Baru : Kulkas 1 Pintu 182 | Merk: Sharp
+[UPDATE] ID 17:
+  - Lama : Kulkas 2 Pintu Polytron PRB-219-B/R | Merk: Polytron
+  - Baru : Kulkas 2 Pintu | Merk: Polytron
+[UPDATE] ID 18:
+  - Lama : Kulkas 2 Pintu Polytron PRW-23MN | Merk: Polytron
+  - Baru : Kulkas 2 Pintu | Merk: Polytron
+[UPDATE] ID 19:
+  - Lama : Kulkas 2 Pintu Sharp 236 | Merk: Sharp
+  - Baru : Kulkas 2 Pintu 236 | Merk: Sharp
+[UPDATE] ID 20:
+  - Lama : Kulkas 2 Pintu Sharp 317 | Merk: Sharp
+  - Baru : Kulkas 2 Pintu 317 | Merk: Sharp
+[UPDATE] ID 22:
+  - Lama : Setrika Philips Kecil Seri 500 | Merk: Philips
+  - Baru : Setrika Kecil | Merk: Philips
+[UPDATE] ID 23:
+  - Lama : Setrika Philips Classic Ungu | Merk: Philips
+  - Baru : Setrika | Merk: Philips
+[UPDATE] ID 24:
+  - Lama : Setrika Philips Classic Putih | Merk: Philips
+  - Baru : Setrika | Merk: Philips
+[UPDATE] ID 25:
+  - Lama : Setrika Maspion EX-100 | Merk: Maspion
+  - Baru : Setrika | Merk: Maspion
+[UPDATE] ID 26:
+  - Lama : Setrika Sanex Ceramic | Merk: Sanex
+  - Baru : Setrika | Merk: Sanex
+[UPDATE] ID 27:
+  - Lama : Kipas Sanex Dinding 16 Inci | Merk: Sanex
+  - Baru : Kipas Dinding 16 Inci | Merk: Sanex
+[UPDATE] ID 28:
+  - Lama : Kipas Sanex Dinding 12 Inci | Merk: Sanex
+  - Baru : Kipas Dinding 12 Inci | Merk: Sanex
+[UPDATE] ID 29:
+  - Lama : Kipas Sanex Berdiri 16 Inci | Merk: Sanex
+  - Baru : Kipas Berdiri 16 Inci | Merk: Sanex
+[UPDATE] ID 30:
+  - Lama : Kipas Sanex Dinding 18 Inci | Merk: Sanex
+  - Baru : Kipas Dinding 18 Inci | Merk: Sanex
+[UPDATE] ID 31:
+  - Lama : Kipas Sanex Meja 12 Inci | Merk: Sanex
+  - Baru : Kipas Meja 12 Inci | Merk: Sanex
+[UPDATE] ID 32:
+  - Lama : Kipas Sanex Meja 10 Inci | Merk: Sanex
+  - Baru : Kipas Meja 10 Inci | Merk: Sanex
+[UPDATE] ID 33:
+  - Lama : Kipas Sanex Meja Kotak | Merk: Sanex
+  - Baru : Kipas | Merk: Sanex
+[UPDATE] ID 35:
+  - Lama : Kipas Sanex Karakter | Merk: Sanex
+  - Baru : Kipas | Merk: Sanex
+[UPDATE] ID 36:
+  - Lama : Kipas Panasonic | Merk: Panasonic
+  - Baru : Kipas | Merk: Panasonic
+[UPDATE] ID 37:
+  - Lama : Kipas Besi Biasa | Merk: No Brand
+  - Baru : Kipas | Merk: No Brand
+[UPDATE] ID 52:
+  - Lama : Kipas Sonus Dinding 12 Inci | Merk: Sonus
+  - Baru : Kipas Dinding 12 Inci | Merk: Sonus
+[UPDATE] ID 53:
+  - Lama : Kipas Sonus Berdiri 16 Inci | Merk: Sonus
+  - Baru : Kipas Berdiri 16 Inci | Merk: Sonus
+[UPDATE] ID 54:
+  - Lama : Kipas Sonus Japit 12 Inci | Merk: Sonus
+  - Baru : Kipas Japit 12 Inci | Merk: Sonus
+[UPDATE] ID 55:
+  - Lama : Kipas Sonus Japit 16 Inci | Merk: Sonus
+  - Baru : Kipas Japit 16 Inci | Merk: Sonus
+[UPDATE] ID 56:
+  - Lama : Kipas Sonus Japit 18 Inci | Merk: Sonus
+  - Baru : Kipas Japit 18 Inci | Merk: Sonus
+[UPDATE] ID 57:
+  - Lama : Dispenser Sanex | Merk: Sanex
+  - Baru : Dispenser | Merk: Sanex
+[UPDATE] ID 58:
+  - Lama : Dispenser Miyako WD-189H | Merk: Miyako
+  - Baru : Dispenser | Merk: Miyako
+[UPDATE] ID 59:
+  - Lama : Dispenser Miyako WDP-300 | Merk: Miyako
+  - Baru : Dispenser | Merk: Miyako
+[UPDATE] ID 61:
+  - Lama : Teko Listrik 2 Liter | Merk: Hemat
+  - Baru : Teko Listrik | Merk: Hemat
+[UPDATE] ID 62:
+  - Lama : Exhaust Fan 12 Inci | Merk: yasaka
+  - Baru : Exhaust Fan 12 Inci | Merk: Yasaka
+[UPDATE] ID 63:
+  - Lama : Exhaust Fan 10 Inci | Merk: yasaka
+  - Baru : Exhaust Fan 10 Inci | Merk: Yasaka
+[UPDATE] ID 67:
+  - Lama : Rice Cooker Miyako MCM-606 B | Merk: Miyako
+  - Baru : Rice Cooker | Merk: Miyako
+[UPDATE] ID 71:
+  - Lama : Rice Cooker Cosmos 0.6 Liter | Merk: Cosmos
+  - Baru : Rice Cooker | Merk: Cosmos
+[UPDATE] ID 72:
+  - Lama : Kompor Miyako ML 288 | Merk: Miyako
+  - Baru : Kompor | Merk: Miyako
+[UPDATE] ID 73:
+  - Lama : Kompor Sanex 1 Tungku | Merk: Sanex
+  - Baru : Kompor | Merk: Sanex
+[UPDATE] ID 74:
+  - Lama : Kompor Mawar Cor Sanex Kecil | Merk: Sanex
+  - Baru : Kompor Mawar Cor Kecil | Merk: Sanex
+[UPDATE] ID 75:
+  - Lama : Kompor Mawar Cor Sanex Besar | Merk: Sanex
+  - Baru : Kompor Mawar Cor Besar | Merk: Sanex
+[UPDATE] ID 76:
+  - Lama : Kompor Sanex 2 Tungku | Merk: Sanex
+  - Baru : Kompor | Merk: Sanex
+[UPDATE] ID 77:
+  - Lama : Kompor Gas Portable 883 | Merk: No Brand
+  - Baru : Kompor Gas Portable | Merk: No Brand
+[UPDATE] ID 78:
+  - Lama : Kompor Gas Portable 885 | Merk: No Brand
+  - Baru : Kompor Gas Portable | Merk: No Brand
+[UPDATE] ID 80:
+  - Lama : Kompor Mawar Cor Rinnai | Merk: Rinnai
+  - Baru : Kompor | Merk: Rinnai
+[UPDATE] ID 81:
+  - Lama : Kompor Rinnai 2 Tungku 202 S | Merk: Rinnai
+  - Baru : Kompor 2 Tungku | Merk: Rinnai
+[UPDATE] ID 82:
+  - Lama : Kompor Rinnai 2 Tungku 522 E | Merk: Rinnai
+  - Baru : Kompor 2 Tungku | Merk: Rinnai
+[UPDATE] ID 83:
+  - Lama : Kompor Rinnai 1 Tungku 511 C | Merk: Rinnai
+  - Baru : Kompor 1 Tungku | Merk: Rinnai
+[UPDATE] ID 84:
+  - Lama : Kompor Rinnai 1 Tungku 511 E | Merk: Rinnai
+  - Baru : Kompor 1 Tungku | Merk: Rinnai
+[UPDATE] ID 85:
+  - Lama : Blender Philips 2115 | Merk: Philips
+  - Baru : Blender | Merk: Philips
+[UPDATE] ID 86:
+  - Lama : Blender Philips 2116 | Merk: Philips
+  - Baru : Blender | Merk: Philips
+[UPDATE] ID 87:
+  - Lama : Blender Maspion | Merk: Maspion
+  - Baru : Blender | Merk: Maspion
+[UPDATE] ID 88:
+  - Lama : Blender Kaca Sanex | Merk: Sanex
+  - Baru : Blender | Merk: Sanex
+[UPDATE] ID 89:
+  - Lama : Blender Miyako gelas 2 BL-101 kaca | Merk: Miyako
+  - Baru : Blender gelas 2 kaca | Merk: Miyako
+[UPDATE] ID 90:
+  - Lama : Blender Miyako gelas 3 BL-102 kaca | Merk: Miyako
+  - Baru : Blender gelas 3 kaca | Merk: Miyako
+[UPDATE] ID 93:
+  - Lama : Blender Miyako Plastik Gelas 2 BL-151 PF | Merk: Miyako
+  - Baru : Blender Plastik Gelas 2 | Merk: Miyako
+[UPDATE] ID 94:
+  - Lama : Blender Miyako Plastik Gelas 3 BL-152 PF | Merk: Miyako
+  - Baru : Blender Plastik Gelas 3 | Merk: Miyako
+[UPDATE] ID 97:
+  - Lama : Blender Cosmos Gelas 3 CB-282P | Merk: Cosmos
+  - Baru : Blender Gelas 3 | Merk: Cosmos
+[UPDATE] ID 100:
+  - Lama : AC Sharp 0,5 PK | Merk: Sharp
+  - Baru : AC 0,5 PK | Merk: Sharp
+[UPDATE] ID 101:
+  - Lama : AC Sharp 1 PK | Merk: Sharp
+  - Baru : AC 1 PK | Merk: Sharp
+[UPDATE] ID 104:
+  - Lama : AC Polytron 0.5 PK | Merk: Polytron
+  - Baru : AC 0.5 PK | Merk: Polytron
+[UPDATE] ID 105:
+  - Lama : AC Polytron 1 PK | Merk: Polytron
+  - Baru : AC 1 PK | Merk: Polytron
+[UPDATE] ID 108:
+  - Lama : AC LG 0,5 PK | Merk: LG
+  - Baru : AC 0,5 PK | Merk: LG
+[UPDATE] ID 109:
+  - Lama : AC LG 1 PK | Merk: LG
+  - Baru : AC 1 PK | Merk: LG
+[UPDATE] ID 110:
+  - Lama : AC AQUA 0,5 PK | Merk: AQUA
+  - Baru : AC 0,5 PK | Merk: AQUA
+[UPDATE] ID 111:
+  - Lama : AC AQUA 1 PK | Merk: AQUA
+  - Baru : AC 1 PK | Merk: AQUA
+[UPDATE] ID 112:
+  - Lama : Kompor Rinnai 2 Tungku RI 712A | Merk: Rinnai
+  - Baru : Kompor 2 Tungku | Merk: Rinnai
+[UPDATE] ID 113:
+  - Lama : Rice Cooker Miyako MCM-512 1.2 Liter | Merk: Miyako
+  - Baru : Rice Cooker 1.2 Liter | Merk: Miyako
+[UPDATE] ID 114:
+  - Lama : Rice Cooker Miyako MCM-558 SBC 2 Liter | Merk: Miyako
+  - Baru : Rice Cooker 2 Liter | Merk: Miyako
+[UPDATE] ID 115:
+  - Lama : Rice Cooker Miyako MCM-509 1.8 Liter | Merk: Miyako
+  - Baru : Rice Cooker 1.8 Liter | Merk: Miyako
+[UPDATE] ID 116:
+  - Lama : Rice Cooker Miyako MCM-606 0.6 Liter | Merk: Miyako
+  - Baru : Rice Cooker 0.6 Liter | Merk: Miyako
+[UPDATE] ID 117:
+  - Lama : Rice Cooker Cosmos 1.2 Liter | Merk: Cosmos
+  - Baru : Rice Cooker 1.2 Liter | Merk: Cosmos
+[UPDATE] ID 118:
+  - Lama : Rice Cooker Sanex 1 Liter | Merk: Sanex
+  - Baru : Rice Cooker | Merk: Sanex
+[UPDATE] ID 119:
+  - Lama : Rice Cooker Sanex 1.8 Liter | Merk: Sanex
+  - Baru : Rice Cooker | Merk: Sanex
+[UPDATE] ID 122:
+  - Lama : Kipas Maspion Dinding 16 inchi | Merk: Maspion
+  - Baru : Kipas Dinding 16 inchi | Merk: Maspion
+[UPDATE] ID 123:
+  - Lama : Kipas Maspion Berdiri 16 Inchi | Merk: Maspion
+  - Baru : Kipas Berdiri 16 Inchi | Merk: Maspion
+[UPDATE] ID 131:
+  - Lama : Exhaust Maspion | Merk: Maspion
+  - Baru : Exhaust | Merk: Maspion
+[UPDATE] ID 132:
+  - Lama : Kipas Cosmos XDC | Merk: Cosmos
+  - Baru : Kipas | Merk: Cosmos
+[UPDATE] ID 133:
+  - Lama : Kipas Angin Berdiri Cosmos Sdb | Merk: Cosmos
+  - Baru : Kipas Angin Berdiri | Merk: Cosmos
+[UPDATE] ID 134:
+  - Lama : Kipas Cosmos Dinding WFO | Merk: Cosmos
+  - Baru : Kipas Dinding | Merk: Cosmos
+[UPDATE] ID 135:
+  - Lama : Kipas Cosmos Dinding WFC | Merk: Cosmos
+  - Baru : Kipas Dinding | Merk: Cosmos
+[UPDATE] ID 137:
+  - Lama : Kipas Angin Miyoshi Berdiri | Merk: Miyoshi
+  - Baru : Kipas Angin Berdiri | Merk: Miyoshi
+[UPDATE] ID 138:
+  - Lama : Kipas Angin Miyoshi Dinding | Merk: Miyoshi
+  - Baru : Kipas Angin Dinding | Merk: Miyoshi
+[UPDATE] ID 141:
+  - Lama : Kulkas 1 Pintu Polytron 177TY | Merk: Polytron
+  - Baru : Kulkas 1 Pintu | Merk: Polytron
+[UPDATE] ID 143:
+  - Lama : Kipas Meja Cosmos | Merk: Cosmos
+  - Baru : Kipas Meja | Merk: Cosmos
+[UPDATE] ID 144:
+  - Lama : Freezer Box Gea 200 Liter | Merk: Gea
+  - Baru : Freezer Box 200 Liter | Merk: Gea
+[UPDATE] ID 146:
+  - Lama : Kompor Fukawa | Merk: Fukawa
+  - Baru : Kompor | Merk: Fukawa
+[UPDATE] ID 147:
+  - Lama : AC GREE 0,5 | Merk: GREE
+  - Baru : AC 0,5 | Merk: GREE
+[UPDATE] ID 149:
+  - Lama : Rice Cooker Cosmos 2 Liter | Merk: Cosmos
+  - Baru : Rice Cooker 2 Liter | Merk: Cosmos
+[UPDATE] ID 150:
+  - Lama : Rice Cooker Cosmos 1.2 Liter | Merk: Cosmos
+  - Baru : Rice Cooker 1.2 Liter | Merk: Cosmos
+[UPDATE] ID 151:
+  - Lama : Setrika Maspion 110 | Merk: Maspion
+  - Baru : Setrika | Merk: Maspion
+[UPDATE] ID 152:
+  - Lama : Setrika Maspion 365 | Merk: Maspion
+  - Baru : Setrika | Merk: Maspion
+[UPDATE] ID 153:
+  - Lama : Setrika Maspion 140 | Merk: Maspion
+  - Baru : Setrika | Merk: Maspion
+[UPDATE] ID 154:
+  - Lama : Magicom Miyako 508 Sbc | Merk: Miyako
+  - Baru : Magicom | Merk: Miyako
+
+Selesai! Berhasil memperbaiki 102 produk.
+PS D:\Mega Elektronik\MegaTeknik>

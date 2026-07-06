@@ -87,8 +87,8 @@ export default defineEventHandler(async (event) => {
     }
   });
 
-  const revenueData = dates.map(d => trend[d].revenue);
-  const profitData = dates.map(d => trend[d].profit);
+  const revenueData = dates.map(d => trend[d]?.revenue ?? 0);
+  const profitData = dates.map(d => trend[d]?.profit ?? 0);
 
   return {
     labels: dates,

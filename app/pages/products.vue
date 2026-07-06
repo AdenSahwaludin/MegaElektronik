@@ -393,7 +393,7 @@
                   class="hover:bg-orange-50 transition"
                 >
                   <td class="px-4 py-3 text-sm font-semibold text-gray-800 wrap-break-words max-w-75">
-                    {{ product.name }}
+                    {{ getProductDisplayName(product) }}
                   </td>
                   <td
                     class="px-4 py-3 text-sm text-gray-700 hidden lg:table-cell"
@@ -856,8 +856,8 @@
                       @mousedown.prevent="selectProduct(item, product)"
                       class="px-4 py-2 hover:bg-green-50 cursor-pointer border-b last:border-0 text-sm"
                     >
-                      <div class="font-semibold">{{ product.name }}</div>
-                      <div class="text-xs text-gray-500">{{ product.brand || 'No Brand' }} - Stok: {{ product.stock }}</div>
+                      <div class="font-semibold">{{ getProductDisplayName(product) }}</div>
+                      <div class="text-xs text-gray-500">Stok: {{ product.stock }}</div>
                     </div>
                   </div>
                 </div>
@@ -1151,6 +1151,21 @@ const editingProduct = reactive({
   fixedPrice: 0,
   isActive: true,
 });
+
+const getProductDisplayName = (product: any) => {
+  if (!product) return '';
+  let name = product.name || '';
+  if (product.brand && product.brand !== 'No Brand') {
+    name += ` ${product.brand}`;
+  }
+  if (product.model && product.model !== 'Standard' && product.model !== 'Portable') {
+    name += ` ${product.model}`;
+  }
+  if (product.otherName) {
+    name += ` (${product.otherName})`;
+  }
+  return name.trim();
+};
 
 // Computed
 const totalStock = computed(() => {
