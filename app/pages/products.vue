@@ -1393,7 +1393,7 @@ const printProductList = async () => {
     sortedCategories.forEach((category) => {
       tableRows += `
         <tr>
-          <td colspan="5" style="padding: 10px 12px; background-color: #f3f4f6; font-size: 16px; font-weight: bold; border: 1px solid #000; text-align: left;">
+          <td colspan="4" style="padding: 4px 6px; background-color: #f3f4f6; font-size: 12px; font-weight: bold; border: 1px solid #000; text-align: left;">
             Kategori: ${category}
           </td>
         </tr>
@@ -1405,19 +1405,18 @@ const printProductList = async () => {
         const isEven = index % 2 === 0;
         const rowStyle = isEven ? "background-color: #ffffff;" : "background-color: #f9fafb;";
         
-        const productName = p.name;
-        const brand = p.brand ? p.brand : "-";
+        const brand = p.brand ? p.brand : "";
+        const productName = (p.name + (brand ? ` ${brand}` : "")).trim();
+        const model = p.model ? p.model : "-";
         const askingPrice = formatCurrency(p.askingPrice);
         const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";
-        const stock = p.stock;
 
         tableRows += `
           <tr style="${rowStyle}">
-            <td style="padding: 8px 12px; border: 1px solid #000; font-size: 15px;">${productName}</td>
-            <td style="padding: 8px 12px; border: 1px solid #000; font-size: 15px; text-align: center;">${brand}</td>
-            <td style="padding: 8px 12px; border: 1px solid #000; text-align: center; font-size: 15px; font-weight: bold;">${stock}</td>
-            <td style="padding: 8px 12px; border: 1px solid #000; text-align: right; font-size: 15px;">${askingPrice}</td>
-            <td style="padding: 8px 12px; border: 1px solid #000; text-align: right; font-size: 16px; font-weight: bold;">${fixedPrice}</td>
+            <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px;">${productName}</td>
+            <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px; text-align: center;">${model}</td>
+            <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 12px; font-weight: bold;">${askingPrice}</td>
+            <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 11px;">${fixedPrice}</td>
           </tr>
         `;
       });
@@ -1447,48 +1446,48 @@ const printProductList = async () => {
             }
             .header {
               text-align: center;
-              margin-bottom: 20px;
-              border-bottom: 3px double #000;
-              padding-bottom: 15px;
+              margin-bottom: 10px;
+              border-bottom: 2px double #000;
+              padding-bottom: 5px;
             }
             .logo {
-              height: 60px;
-              margin-bottom: 10px;
+              height: 40px;
+              margin-bottom: 5px;
               object-fit: contain;
             }
             .store-name {
-              font-size: 24px;
+              font-size: 18px;
               font-weight: 900;
               text-transform: uppercase;
-              margin-bottom: 5px;
+              margin-bottom: 3px;
             }
             .title {
-              font-size: 18px;
+              font-size: 14px;
               font-weight: bold;
             }
             .date-info {
-              font-size: 14px;
+              font-size: 11px;
               color: #444;
-              margin-top: 5px;
+              margin-top: 3px;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              border: 2px solid #000;
+              border: 1px solid #000;
             }
             th {
               background-color: #e5e7eb;
               color: #000;
-              font-size: 16px;
+              font-size: 12px;
               font-weight: bold;
-              padding: 10px 12px;
-              border: 2px solid #000;
+              padding: 4px 6px;
+              border: 1px solid #000;
               text-align: center;
             }
             .footer {
-              margin-top: 30px;
+              margin-top: 15px;
               text-align: center;
-              font-size: 14px;
+              font-size: 10px;
               font-style: italic;
             }
           </style>
@@ -1505,8 +1504,7 @@ const printProductList = async () => {
             <thead>
               <tr>
                 <th>Nama Produk</th>
-                <th>Merk/Brand</th>
-                <th>Sisa Stok</th>
+                <th>Model</th>
                 <th>Harga Tawar</th>
                 <th>Harga Pas (Net)</th>
               </tr>
