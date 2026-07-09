@@ -854,7 +854,15 @@ const getProductDisplayName = (product: any) => {
 
 // Computed
 const filteredProducts = computed(() => {
-  return [...products.value].sort((a, b) => 
+  let result = products.value;
+  if (searchQuery.value.trim()) {
+    const keywords = searchQuery.value.toLowerCase().trim().split(/\s+/);
+    result = result.filter(p => {
+      const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+      return keywords.every(k => searchStr.includes(k));
+    });
+  }
+  return [...result].sort((a, b) => 
     a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
   );
 });
