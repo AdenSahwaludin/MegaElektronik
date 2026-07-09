@@ -677,7 +677,15 @@ const getProductDisplayName = (product: any) => {
 
 // Computed
 const filteredProducts = computed(() => {
-  return [...products.value].sort((a, b) => 
+  let result = products.value;
+  if (searchQuery.value.trim()) {
+    const keywords = searchQuery.value.toLowerCase().trim().split(/\s+/);
+    result = result.filter(p => {
+      const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+      return keywords.every(k => searchStr.includes(k));
+    });
+  }
+  return [...result].sort((a, b) => 
     a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
   );
 });
@@ -721,10 +729,7 @@ const fetchProducts = async (silent = false) => {
   }
   try {
     const params = new URLSearchParams();
-    if (searchQuery.value.trim()) {
-      params.append("search", searchQuery.value);
-    }
-    params.append("limit", "100");
+    params.append("limit", "1000"); // fetch more items for local search
     params.append("activeOnly", "true");
 
     const url = `/api/products?${params.toString()}`;
@@ -747,14 +752,7 @@ const refreshProducts = async () => {
   showToast("Sip, produk udah refresh");
 };
 
-// Watch for search query changes with debounce
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
-watch(searchQuery, async () => {
-  if (searchTimeout) clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(async () => {
-    await fetchProducts(true); // silent fetch for real-time feel
-  }, 150);
-});
+// (Removed server-side search fetch on searchQuery watch for client-side filtering)
 
 const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") => {
   if (product.stock > 0) {
