@@ -29,6 +29,19 @@
           </NuxtLink>
 
           <NuxtLink
+            to="/pos-new"
+            :class="[
+              'px-3 lg:px-4 py-2 rounded-lg font-semibold text-sm lg:text-base transition flex items-center gap-2',
+              isActive('/pos-new')
+                ? 'bg-white text-orange-600'
+                : 'hover:bg-orange-700 text-white',
+            ]"
+          >
+            <Icon name="lucide:sparkles" class="w-4 h-4" />
+            <span class="hidden md:inline">Penjualan (New)</span>
+          </NuxtLink>
+
+          <NuxtLink
             to="/products"
             :class="[
               'px-3 lg:px-4 py-2 rounded-lg font-semibold text-sm lg:text-base transition flex items-center gap-2',

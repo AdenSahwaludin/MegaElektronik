@@ -7,6 +7,9 @@ export default defineNuxtConfig({
   ui: {
     colorMode: false,
   },
+  icon: {
+    mode: "svg"
+  },
   devtools: {
     enabled: true,
   },
