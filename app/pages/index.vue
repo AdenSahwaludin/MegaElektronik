@@ -906,10 +906,7 @@ const fetchProducts = async (silent = false) => {
   }
   try {
     const params = new URLSearchParams();
-    if (searchQuery.value.trim()) {
-      params.append("search", searchQuery.value);
-    }
-    params.append("limit", "100");
+    params.append("limit", "1000"); // Load up to 1000 products for fast client-side search
     params.append("activeOnly", "true");
 
     const url = `/api/products?${params.toString()}`;
@@ -932,14 +929,7 @@ const refreshProducts = async () => {
   showToast("Sip, produk udah refresh");
 };
 
-// Watch for search query changes with debounce
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
-watch(searchQuery, async () => {
-  if (searchTimeout) clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(async () => {
-    await fetchProducts(true); // silent fetch for real-time feel
-  }, 150);
-});
+// (Removed server-side search fetch on searchQuery watch for client-side filtering)
 
 const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") => {
   if (product.stock > 0) {

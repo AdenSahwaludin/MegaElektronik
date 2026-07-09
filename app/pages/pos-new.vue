@@ -11,7 +11,7 @@
         <!-- Search Bar -->
         <div class="flex gap-2">
           <div class="relative flex-1">
-            <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
             <input
               id="searchQueryInput"
               name="searchQuery"
