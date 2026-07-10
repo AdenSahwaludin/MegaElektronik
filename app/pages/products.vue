@@ -1358,18 +1358,21 @@ watch(showArrivalModal, async (val) => {
 
 const printProductList = async () => {
   try {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      showToast("Gagal membuka jendela cetak. Pastikan pop-up diperbolehkan (khususnya di Safari/iPad).");
+      return;
+    }
+    
+    printWindow.document.write("<html><body style='font-family: sans-serif; text-align: center; padding-top: 50px;'><h2>Menyiapkan dokumen cetak... Mohon tunggu.</h2></body></html>");
+
     showToast("Menyiapkan dokumen cetak...");
     const response = await $fetch<any>('/api/products?limit=10000&activeOnly=true');
     const allProducts = response.products || [];
 
     if (allProducts.length === 0) {
+      printWindow.close();
       showToast("Tidak ada produk untuk dicetak.");
-      return;
-    }
-
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      showToast("Gagal membuka jendela cetak. Pastikan pop-up diperbolehkan.");
       return;
     }
 
@@ -1424,6 +1427,7 @@ const printProductList = async () => {
 
     const logoUrl = `${window.location.origin}/Logo%20Mega%20Elektronik%20Bongas%20Merah%20no-bg1.png`;
 
+    printWindow.document.open();
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
