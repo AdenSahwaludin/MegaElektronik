@@ -2,7 +2,7 @@ export default defineNuxtRouteMiddleware((to) => {
   // Hanya gunakan cookie ini di client-side atau saat rendering awal di server
   // useCookie otomatis sinkron dengan header Set-Cookie di response server
   const token = useCookie("auth_token", {
-    maxAge: 60 * 60 * 24, // 24 jam
+    maxAge: 60 * 60 * 48, // 48 jam
     path: "/",
     sameSite: "lax",
   });
