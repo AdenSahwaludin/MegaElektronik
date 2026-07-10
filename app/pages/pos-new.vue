@@ -1,8 +1,5 @@
 <template>
-  <div
-    :style="containerStyle"
-    class="fixed inset-0 w-full bg-gradient-to-br from-orange-50 via-amber-50/50 to-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]"
-  >
+  <div class="fixed inset-0 w-full bg-gradient-to-br from-orange-50 via-amber-50/50 to-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
     <!-- App Header -->
     <AppHeader />
 
@@ -13,7 +10,7 @@
       <!-- Products Grid - Full Width -->
       <div
         class="flex-1 overflow-y-auto px-3 lg:px-5 pt-3 overscroll-contain touch-pan-y"
-        :class="cartStore.items.length > 0 ? 'pb-64' : 'pb-40'"
+        :style="{ paddingBottom: `${(cartStore.items.length > 0 ? 256 : 160) + keyboardHeight}px` }"
       >
         <!-- Empty State -->
         <div
@@ -117,12 +114,16 @@
     <!-- Gradient Fade to prevent product cards from clashing with search bar when scrolling -->
     <div
       class="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-orange-50 via-orange-50/90 to-transparent pointer-events-none z-30"
+      :style="{ transform: `translateY(-${keyboardHeight}px)` }"
     />
 
     <!-- ═══════════════ Floating Bottom Controls ═══════════════ -->
     <div
       class="absolute bottom-0 left-0 right-0 z-40 px-3 lg:px-5 pb-3 pointer-events-none"
-      style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));"
+      :style="{ 
+        transform: `translateY(-${keyboardHeight}px)`,
+        paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))'
+      }"
     >
       <div class="max-w-5xl mx-auto w-full flex flex-col gap-2.5 pointer-events-auto">
 
@@ -255,6 +256,7 @@
       <div
         v-if="showCartDrawer"
         class="absolute right-0 top-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col"
+        :style="{ bottom: `${keyboardHeight}px` }"
       >
         <!-- Drawer Header -->
         <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-4 flex items-center justify-between shrink-0 pt-[calc(1rem+env(safe-area-inset-top))]">
@@ -446,7 +448,10 @@
       <div
         v-if="showSuccessMessage"
         class="absolute left-4 right-4 sm:left-6 sm:right-auto z-[60] flex items-center gap-2 px-5 py-3 bg-gray-800 text-white rounded-xl shadow-2xl font-semibold text-sm"
-        style="bottom: calc(1.5rem + env(safe-area-inset-bottom));"
+        :style="{ 
+          transform: `translateY(-${keyboardHeight}px)`,
+          bottom: 'calc(1.5rem + env(safe-area-inset-bottom))'
+        }"
       >
         <Icon name="lucide:check-circle" class="w-4 h-4 text-green-400 shrink-0" />
         {{ successMessage }}
@@ -463,7 +468,10 @@
       leave-to-class="opacity-0 scale-95"
     >
       <div v-if="showPaymentModal" class="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+        <div 
+          class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+          :style="{ transform: `translateY(-${keyboardHeight / 2}px)` }"
+        >
 
           <!-- Header -->
           <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 text-white flex justify-between items-center">
@@ -806,23 +814,18 @@ const showToast = (message: string) => {
 };
 
 // Visual Viewport Handler to prevent keyboard pushing layout out of view on iOS/mobile
-const containerStyle = ref<{ height?: string; top?: string }>({});
-let lastHeight = 0;
-let lastOffsetTop = 0;
+const keyboardHeight = ref(0);
 
 const updateViewport = () => {
   if (typeof window !== 'undefined' && window.visualViewport) {
-    const height = Math.round(window.visualViewport.height);
-    const offsetTop = Math.round(window.visualViewport.offsetTop);
+    const activeEl = document.activeElement;
+    const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
     
-    // Only update styles if layout dimensions actually changed to prevent flashing/blinking
-    if (height !== lastHeight || offsetTop !== lastOffsetTop) {
-      lastHeight = height;
-      lastOffsetTop = offsetTop;
-      containerStyle.value = {
-        height: `${height}px`,
-        top: `${offsetTop}px`
-      };
+    if (isInputFocused) {
+      const heightDiff = window.innerHeight - window.visualViewport.height;
+      keyboardHeight.value = Math.max(0, heightDiff);
+    } else {
+      keyboardHeight.value = 0;
     }
   }
 };
@@ -833,11 +836,23 @@ const handleWindowScroll = () => {
   }
 };
 
+const handleFocusIn = () => {
+  updateViewport();
+};
+
+const handleFocusOut = () => {
+  setTimeout(() => {
+    updateViewport();
+  }, 50);
+};
+
 let listenersActive = false;
 
 const addViewportListeners = () => {
   if (typeof window === 'undefined' || listenersActive) return;
   window.addEventListener('scroll', handleWindowScroll);
+  window.addEventListener('focusin', handleFocusIn);
+  window.addEventListener('focusout', handleFocusOut);
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateViewport);
     window.visualViewport.addEventListener('scroll', updateViewport);
@@ -849,6 +864,8 @@ const addViewportListeners = () => {
 const removeViewportListeners = () => {
   if (typeof window === 'undefined' || !listenersActive) return;
   window.removeEventListener('scroll', handleWindowScroll);
+  window.removeEventListener('focusin', handleFocusIn);
+  window.removeEventListener('focusout', handleFocusOut);
   if (window.visualViewport) {
     window.visualViewport.removeEventListener('resize', updateViewport);
     window.visualViewport.removeEventListener('scroll', updateViewport);
