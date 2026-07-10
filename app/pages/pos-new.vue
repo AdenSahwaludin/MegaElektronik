@@ -6,79 +6,11 @@
     <!-- Main Content - Full Width -->
     <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
 
-      <!-- Search & Categories Toolbar -->
-      <div class="shrink-0 px-3 lg:px-5 pt-3 space-y-2.5">
-        <!-- Search Bar -->
-        <div class="flex gap-2">
-          <div class="relative flex-1">
-            <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
-            <input
-              id="searchQueryInput"
-              name="searchQuery"
-              v-model="searchQuery"
-              type="text"
-              placeholder="Cari produk..."
-              class="w-full pl-10 pr-10 py-2.5 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl shadow-sm text-sm font-medium text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent focus:bg-white transition-all"
-            />
-            <button
-              v-if="searchQuery"
-              @click="searchQuery = ''"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-0.5"
-            >
-              <Icon name="lucide:x-circle" class="w-4 h-4" />
-            </button>
-          </div>
-          <button
-            @click="refreshProducts"
-            class="px-3 py-2.5 bg-white/70 backdrop-blur-sm border border-white/80 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-sm transition-all active:scale-95"
-            title="Refresh produk"
-          >
-            <Icon name="lucide:refresh-cw" class="w-4 h-4" />
-          </button>
-        </div>
-
-        <!-- Quick Categories - Horizontal Scroll -->
-        <div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-3 px-3 lg:-mx-5 lg:px-5">
-          <button
-            @click="searchQuery = ''"
-            :class="[
-              'px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95',
-              !searchQuery
-                ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/30'
-                : 'bg-white/60 text-gray-500 hover:bg-white hover:text-orange-600 border border-white/80'
-            ]"
-          >
-            Semua
-          </button>
-          <button
-            v-for="cat in categories"
-            :key="cat"
-            @click="searchQuery = cat"
-            :class="[
-              'px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95',
-              searchQuery === cat
-                ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/30'
-                : 'bg-white/60 text-gray-500 hover:bg-white hover:text-orange-600 border border-white/80'
-            ]"
-          >
-            {{ cat }}
-          </button>
-        </div>
-
-        <!-- Low Stock Warning -->
-        <div
-          v-if="lowStockProducts.length > 0"
-          class="bg-amber-50/80 backdrop-blur-sm border border-amber-200/60 rounded-xl p-2.5 text-xs text-amber-700 flex items-center gap-2 font-semibold"
-        >
-          <Icon name="lucide:alert-triangle" class="w-4 h-4 shrink-0" />
-          {{ lowStockProducts.length }} produk stok habis
-        </div>
-      </div>
 
       <!-- Products Grid - Full Width -->
       <div
         class="flex-1 overflow-y-auto px-3 lg:px-5 pt-3 overscroll-contain touch-pan-y"
-        :class="cartStore.items.length > 0 ? 'pb-28' : 'pb-4'"
+        :class="cartStore.items.length > 0 ? 'pb-64' : 'pb-40'"
       >
         <!-- Empty State -->
         <div
@@ -118,7 +50,7 @@
             :disabled="product.stock === 0"
             @click="addProductToCart(product, 'umum')"
             :class="[
-              'group bg-white rounded-2xl shadow-sm transition-all duration-200 overflow-hidden flex flex-col relative text-left',
+              'group bg-white rounded-2xl border border-gray-200/70 hover:border-orange-300 shadow-sm transition-all duration-200 overflow-hidden flex flex-col relative text-left',
               product.stock === 0
                 ? 'opacity-40 cursor-not-allowed grayscale'
                 : 'hover:shadow-lg hover:-translate-y-0.5 cursor-pointer active:scale-[0.97]',
@@ -179,53 +111,122 @@
       </div>
     </div>
 
-    <!-- ═══════════════ Floating Cart Bar ═══════════════ -->
-    <Transition
-      enter-active-class="transition-all duration-300 ease-out"
-      enter-from-class="translate-y-full opacity-0"
-      enter-to-class="translate-y-0 opacity-100"
-      leave-active-class="transition-all duration-200 ease-in"
-      leave-from-class="translate-y-0 opacity-100"
-      leave-to-class="translate-y-full opacity-0"
+    <!-- Gradient Fade to prevent product cards from clashing with search bar when scrolling -->
+    <div
+      class="fixed bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-orange-50 via-orange-50/90 to-transparent pointer-events-none z-30"
+    />
+
+    <!-- ═══════════════ Floating Bottom Controls ═══════════════ -->
+    <div
+      class="fixed bottom-0 left-0 right-0 z-40 px-3 lg:px-5 pb-3 pointer-events-none"
+      style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));"
     >
-      <div
-        v-if="cartStore.items.length > 0"
-        class="fixed bottom-0 left-0 right-0 z-40 px-3 lg:px-5 pb-3"
-        style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));"
-      >
-        <div class="bg-white/85 backdrop-blur-xl rounded-2xl shadow-[0_-2px_25px_rgba(0,0,0,0.08)] border border-white/60 px-4 py-3">
-          <div class="flex items-center justify-between gap-3">
-            <!-- Left: Cart Info -->
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="bg-orange-100 text-orange-600 rounded-xl p-2 shrink-0">
-                <Icon name="lucide:shopping-bag" class="w-5 h-5" />
+      <div class="max-w-5xl mx-auto w-full flex flex-col gap-2.5 pointer-events-auto">
+
+        <!-- Quick Categories - Horizontal Scroll -->
+        <div class="flex gap-1.5 overflow-x-auto py-1 scrollbar-hide">
+          <button
+            @click="searchQuery = ''"
+            :class="[
+              'px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95 shadow-md border',
+              !searchQuery
+                ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/20'
+                : 'bg-white/90 backdrop-blur-md text-gray-600 hover:text-orange-600 border-white/80'
+            ]"
+          >
+            Semua
+          </button>
+          <button
+            v-for="cat in categories"
+            :key="cat"
+            @click="searchQuery = cat"
+            :class="[
+              'px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95 shadow-md border',
+              searchQuery === cat
+                ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/20'
+                : 'bg-white/90 backdrop-blur-md text-gray-600 hover:text-orange-600 border-white/80'
+            ]"
+          >
+            {{ cat }}
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+            <input
+              id="searchQueryInput"
+              name="searchQuery"
+              v-model="searchQuery"
+              type="text"
+              placeholder="Cari produk..."
+              class="w-full pl-10 pr-10 py-2.5 bg-white/95 backdrop-blur-md border border-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-sm font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent focus:bg-white transition-all duration-200"
+            />
+            <button
+              v-if="searchQuery"
+              @click="searchQuery = ''"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-0.5"
+            >
+              <Icon name="lucide:x-circle" class="w-4 h-4" />
+            </button>
+          </div>
+          <button
+            @click="refreshProducts"
+            class="px-3 py-2.5 bg-white/95 backdrop-blur-md border border-white hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all active:scale-95 flex items-center justify-center"
+            title="Refresh produk"
+          >
+            <Icon name="lucide:refresh-cw" class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- Floating Cart Bar -->
+        <Transition
+          enter-active-class="transition-all duration-300 ease-out"
+          enter-from-class="translate-y-4 opacity-0"
+          enter-to-class="translate-y-0 opacity-100"
+          leave-active-class="transition-all duration-200 ease-in"
+          leave-from-class="translate-y-0 opacity-100"
+          leave-to-class="translate-y-4 opacity-0"
+        >
+          <div
+            v-if="cartStore.items.length > 0"
+            class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_-2px_25px_rgba(0,0,0,0.08)] border border-white/60 px-4 py-3"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <!-- Left: Cart Info -->
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="bg-orange-100 text-orange-600 rounded-xl p-2 shrink-0">
+                  <Icon name="lucide:shopping-bag" class="w-5 h-5" />
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wide">{{ cartStore.totalItems }} item</p>
+                  <p class="text-lg font-black text-gray-800 truncate leading-tight">{{ formatCurrency(cartStore.totalRevenue) }}</p>
+                </div>
               </div>
-              <div class="min-w-0">
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wide">{{ cartStore.totalItems }} item</p>
-                <p class="text-lg font-black text-gray-800 truncate leading-tight">{{ formatCurrency(cartStore.totalRevenue) }}</p>
+              <!-- Right: Actions -->
+              <div class="flex items-center gap-2 shrink-0">
+                <button
+                  @click="showCartDrawer = true"
+                  class="px-3 lg:px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95"
+                >
+                  <Icon name="lucide:list" class="w-4 h-4 inline -mt-0.5 mr-1" />
+                  <span class="hidden sm:inline">Keranjang</span>
+                </button>
+                <button
+                  @click="openPaymentModal"
+                  :disabled="cartStore.isProcessing"
+                  class="px-4 lg:px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-xs lg:text-sm rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:cursor-not-allowed"
+                >
+                  {{ cartStore.isProcessing ? "Proses..." : "Bayar" }}
+                </button>
               </div>
-            </div>
-            <!-- Right: Actions -->
-            <div class="flex items-center gap-2 shrink-0">
-              <button
-                @click="showCartDrawer = true"
-                class="px-3 lg:px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95"
-              >
-                <Icon name="lucide:list" class="w-4 h-4 inline -mt-0.5 mr-1" />
-                <span class="hidden sm:inline">Keranjang</span>
-              </button>
-              <button
-                @click="openPaymentModal"
-                :disabled="cartStore.isProcessing"
-                class="px-4 lg:px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-xs lg:text-sm rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:cursor-not-allowed"
-              >
-                {{ cartStore.isProcessing ? "Proses..." : "Bayar" }}
-              </button>
             </div>
           </div>
-        </div>
+        </Transition>
+
       </div>
-    </Transition>
+    </div>
 
     <!-- ═══════════════ Cart Drawer ═══════════════ -->
     <!-- Backdrop -->
@@ -690,9 +691,6 @@ const filteredProducts = computed(() => {
   );
 });
 
-const lowStockProducts = computed(() => {
-  return products.value.filter((p) => p.stock === 0);
-});
 
 let timeInterval: any = null;
 
@@ -793,9 +791,7 @@ const handleCheckout = async () => {
 };
 
 const handleClearCart = () => {
-  if (confirm("Mau kosongin keranjang?")) {
-    cartStore.clearCart();
-  }
+  cartStore.clearCart();
 };
 
 const showToast = (message: string) => {

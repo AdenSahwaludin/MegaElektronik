@@ -6,6 +6,29 @@
     <!-- Main Content -->
     <div class="mt-3 flex-1 overflow-y-auto p-4 lg:p-6">
       <div class="max-w-7xl mx-auto">
+        <!-- Low Stock Warning (Out of Stock Alert) -->
+        <Transition
+          enter-active-class="transition-all duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-4"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition-all duration-200 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-4"
+        >
+          <div
+            v-if="lowStockProducts.length > 0"
+            class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800 flex flex-col gap-1.5 shadow-sm"
+          >
+            <div class="flex items-center gap-2 font-bold text-amber-900">
+              <Icon name="lucide:alert-triangle" class="w-5 h-5 text-amber-600 shrink-0" />
+              <span>Ada {{ lowStockProducts.length }} produk stok habis!</span>
+            </div>
+            <div class="text-xs text-amber-700 font-medium pb-0.5">
+              Produk habis: {{ lowStockProducts.map(p => p.name + (p.brand && p.brand.trim() !== '' ? ' ' + p.brand : '')).join(', ') }}
+            </div>
+          </div>
+        </Transition>
+
         <!-- Add Product Section -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
           <div class="flex items-center justify-between mb-4">
@@ -1012,6 +1035,7 @@ const toTitleCase = (str: string | null | undefined) => {
 
 // State
 const products: Ref<any[]> = ref([]);
+const lowStockProducts = ref<any[]>([]);
 const loading = ref(false);
 const showEditModal = ref(false);
 const showArrivalModal = ref(false);
@@ -1199,6 +1223,15 @@ const fetchProducts = async () => {
   }
 };
 
+const fetchLowStockProducts = async () => {
+  try {
+    const response = await $fetch<any>('/api/products?limit=100&lowStockOnly=true');
+    lowStockProducts.value = response.products || [];
+  } catch (error) {
+    console.error("Error loading low stock products:", error);
+  }
+};
+
 const addProduct = async () => {
   if (
     !newProduct.name ||
@@ -1230,6 +1263,7 @@ const addProduct = async () => {
     products.value.push(response.product);
     resetForm();
     showToast("Sip, produk udah ditambah!");
+    fetchLowStockProducts();
   } catch (error: any) {
     showToast(error.message || "Yah, gagal nambahin produk");
   }
@@ -1274,6 +1308,7 @@ const saveProduct = async () => {
     }
     showEditModal.value = false;
     showToast("Sip, produk udah diupdate!");
+    fetchLowStockProducts();
   } catch (error: any) {
     showToast(error.message || "Yah, gagal update produk");
   }
@@ -1289,6 +1324,7 @@ const deleteProduct = async (productId: string) => {
 
     products.value = products.value.filter((p) => p.id !== productId);
     showToast("Oke, produk udah dihapus");
+    fetchLowStockProducts();
   } catch (error: any) {
     showToast(error.message || "Waduh, gagal hapus produk");
   }
@@ -1340,6 +1376,7 @@ const saveArrival = async () => {
     
     showToast(`Kedatangan ${itemsToSave.length} barang berhasil dicatat.`);
     fetchProducts();
+    fetchLowStockProducts();
   } catch (error: any) {
     showToast(error.message || "Gagal mencatat kedatangan barang.");
   }
@@ -1748,6 +1785,7 @@ watch(searchQuery, () => {
 // Lifecycle
 onMounted(() => {
   fetchProducts();
+  fetchLowStockProducts();
 });
 </script>
 

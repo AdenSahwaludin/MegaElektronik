@@ -73,14 +73,6 @@
             </div>
           </div>
 
-          <!-- Stock Status -->
-          <div
-            v-if="lowStockProducts.length > 0"
-            class="bg-yellow-50 border border-yellow-200 rounded p-2 mb-3 text-sm text-yellow-800 flex items-center gap-2"
-          >
-            <Icon name="lucide:alert-triangle" class="w-5 h-5 shrink-0" />
-            {{ lowStockProducts.length }} produk stok abis
-          </div>
         </div>
 
         <!-- Products Grid -->
@@ -867,9 +859,6 @@ const filteredProducts = computed(() => {
   );
 });
 
-const lowStockProducts = computed(() => {
-  return products.value.filter((p) => p.stock === 0);
-});
 
 let timeInterval: any = null;
 
@@ -969,9 +958,7 @@ const handleCheckout = async () => {
 };
 
 const handleClearCart = () => {
-  if (confirm("Mau kosongin keranjang?")) {
-    cartStore.clearCart();
-  }
+  cartStore.clearCart();
 };
 
 const showToast = (message: string) => {

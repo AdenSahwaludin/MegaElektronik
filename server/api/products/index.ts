@@ -118,6 +118,7 @@ export default defineEventHandler(async (event) => {
       const offset = (page - 1) * limit;
 
       const activeOnly = query.activeOnly === "true";
+      const lowStockOnly = query.lowStockOnly === "true";
 
       // Build WHERE clause
       let where: any = {};
@@ -125,6 +126,10 @@ export default defineEventHandler(async (event) => {
 
       if (activeOnly) {
         andConditions.push({ isActive: true });
+      }
+
+      if (lowStockOnly) {
+        andConditions.push({ stock: 0 });
       }
 
       // Advanced search: split by spaces and match ALL keywords
