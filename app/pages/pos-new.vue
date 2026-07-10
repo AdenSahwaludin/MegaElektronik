@@ -1,5 +1,8 @@
 <template>
-  <div class="fixed inset-0 w-full bg-gradient-to-br from-orange-50 via-amber-50/50 to-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
+  <div
+    :style="containerStyle"
+    class="fixed inset-0 w-full bg-gradient-to-br from-orange-50 via-amber-50/50 to-orange-50 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]"
+  >
     <!-- App Header -->
     <AppHeader />
 
@@ -113,12 +116,12 @@
 
     <!-- Gradient Fade to prevent product cards from clashing with search bar when scrolling -->
     <div
-      class="fixed bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-orange-50 via-orange-50/90 to-transparent pointer-events-none z-30"
+      class="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-orange-50 via-orange-50/90 to-transparent pointer-events-none z-30"
     />
 
     <!-- ═══════════════ Floating Bottom Controls ═══════════════ -->
     <div
-      class="fixed bottom-0 left-0 right-0 z-40 px-3 lg:px-5 pb-3 pointer-events-none"
+      class="absolute bottom-0 left-0 right-0 z-40 px-3 lg:px-5 pb-3 pointer-events-none"
       style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));"
     >
       <div class="max-w-5xl mx-auto w-full flex flex-col gap-2.5 pointer-events-auto">
@@ -239,7 +242,7 @@
       <div
         v-if="showCartDrawer"
         @click="showCartDrawer = false"
-        class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        class="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm"
       />
     </Transition>
     <!-- Panel -->
@@ -251,7 +254,7 @@
     >
       <div
         v-if="showCartDrawer"
-        class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col"
+        class="absolute right-0 top-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col"
       >
         <!-- Drawer Header -->
         <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-4 flex items-center justify-between shrink-0 pt-[calc(1rem+env(safe-area-inset-top))]">
@@ -442,7 +445,7 @@
     <Transition name="fade">
       <div
         v-if="showSuccessMessage"
-        class="fixed left-4 right-4 sm:left-6 sm:right-auto z-[60] flex items-center gap-2 px-5 py-3 bg-gray-800 text-white rounded-xl shadow-2xl font-semibold text-sm"
+        class="absolute left-4 right-4 sm:left-6 sm:right-auto z-[60] flex items-center gap-2 px-5 py-3 bg-gray-800 text-white rounded-xl shadow-2xl font-semibold text-sm"
         style="bottom: calc(1.5rem + env(safe-area-inset-bottom));"
       >
         <Icon name="lucide:check-circle" class="w-4 h-4 text-green-400 shrink-0" />
@@ -459,7 +462,7 @@
       leave-from-class="opacity-100 scale-100"
       leave-to-class="opacity-0 scale-95"
     >
-      <div v-if="showPaymentModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div v-if="showPaymentModal" class="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
 
           <!-- Header -->
@@ -557,7 +560,7 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
-import { watch, computed, ref, onActivated } from "vue";
+import { watch, computed, ref, onActivated, onDeactivated, onMounted, onUnmounted } from "vue";
 import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 
@@ -802,18 +805,66 @@ const showToast = (message: string) => {
   }, 3000);
 };
 
+// Visual Viewport Handler to prevent keyboard pushing layout out of view on iOS/mobile
+const containerStyle = ref<{ height?: string; top?: string }>({});
+
+const updateViewport = () => {
+  if (typeof window !== 'undefined' && window.visualViewport) {
+    containerStyle.value = {
+      height: `${window.visualViewport.height}px`,
+      top: `${window.visualViewport.offsetTop}px`
+    };
+  }
+};
+
+const handleWindowScroll = () => {
+  if (typeof window !== 'undefined' && window.scrollY !== 0) {
+    window.scrollTo(0, 0);
+  }
+};
+
+let listenersActive = false;
+
+const addViewportListeners = () => {
+  if (typeof window === 'undefined' || listenersActive) return;
+  window.addEventListener('scroll', handleWindowScroll);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateViewport);
+    window.visualViewport.addEventListener('scroll', updateViewport);
+    updateViewport();
+  }
+  listenersActive = true;
+};
+
+const removeViewportListeners = () => {
+  if (typeof window === 'undefined' || !listenersActive) return;
+  window.removeEventListener('scroll', handleWindowScroll);
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', updateViewport);
+    window.visualViewport.removeEventListener('scroll', updateViewport);
+  }
+  listenersActive = false;
+};
+
 // Lifecycle
 onMounted(() => {
   startLiveClock();
   fetchProducts();
+  addViewportListeners();
 });
 
 onActivated(() => {
   fetchProducts();
+  addViewportListeners();
+});
+
+onDeactivated(() => {
+  removeViewportListeners();
 });
 
 onUnmounted(() => {
   if (timeInterval) clearInterval(timeInterval);
+  removeViewportListeners();
 });
 </script>
 
