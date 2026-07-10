@@ -729,7 +729,7 @@ const fetchProducts = async (silent = false) => {
   }
   try {
     const params = new URLSearchParams();
-    params.append("limit", "1000"); // fetch more items for local search
+    params.append("limit", "10000"); // fetch all items for local search
     params.append("activeOnly", "true");
 
     const url = `/api/products?${params.toString()}`;

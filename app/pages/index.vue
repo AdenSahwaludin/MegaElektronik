@@ -906,7 +906,7 @@ const fetchProducts = async (silent = false) => {
   }
   try {
     const params = new URLSearchParams();
-    params.append("limit", "1000"); // Load up to 1000 products for fast client-side search
+    params.append("limit", "10000"); // Load all products for fast client-side search
     params.append("activeOnly", "true");
 
     const url = `/api/products?${params.toString()}`;

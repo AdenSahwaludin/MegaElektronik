@@ -114,7 +114,7 @@ export default defineEventHandler(async (event) => {
       const query = getQuery(event);
       const search = (query.search as string) || "";
       const page = parseInt(query.page as string) || 1;
-      const limit = Math.min(parseInt(query.limit as string) || 10, 100);
+      const limit = Math.min(parseInt(query.limit as string) || 10, 10000);
       const offset = (page - 1) * limit;
 
       const activeOnly = query.activeOnly === "true";

@@ -1348,7 +1348,7 @@ const saveArrival = async () => {
 watch(showArrivalModal, async (val) => {
   if (val && allProductsForSelect.value.length === 0) {
     try {
-      const response = await $fetch<any>('/api/products?limit=1000&activeOnly=true');
+      const response = await $fetch<any>('/api/products?limit=10000&activeOnly=true');
       allProductsForSelect.value = (response.products || []).sort((a: any, b: any) => a.name.localeCompare(b.name));
     } catch (e) {
       console.error(e);
@@ -1359,7 +1359,7 @@ watch(showArrivalModal, async (val) => {
 const printProductList = async () => {
   try {
     showToast("Menyiapkan dokumen cetak...");
-    const response = await $fetch<any>('/api/products?limit=1000&activeOnly=true');
+    const response = await $fetch<any>('/api/products?limit=10000&activeOnly=true');
     const allProducts = response.products || [];
 
     if (allProducts.length === 0) {
