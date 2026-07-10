@@ -807,13 +807,23 @@ const showToast = (message: string) => {
 
 // Visual Viewport Handler to prevent keyboard pushing layout out of view on iOS/mobile
 const containerStyle = ref<{ height?: string; top?: string }>({});
+let lastHeight = 0;
+let lastOffsetTop = 0;
 
 const updateViewport = () => {
   if (typeof window !== 'undefined' && window.visualViewport) {
-    containerStyle.value = {
-      height: `${window.visualViewport.height}px`,
-      top: `${window.visualViewport.offsetTop}px`
-    };
+    const height = Math.round(window.visualViewport.height);
+    const offsetTop = Math.round(window.visualViewport.offsetTop);
+    
+    // Only update styles if layout dimensions actually changed to prevent flashing/blinking
+    if (height !== lastHeight || offsetTop !== lastOffsetTop) {
+      lastHeight = height;
+      lastOffsetTop = offsetTop;
+      containerStyle.value = {
+        height: `${height}px`,
+        top: `${offsetTop}px`
+      };
+    }
   }
 };
 
