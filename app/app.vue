@@ -1,4 +1,14 @@
 <script setup>
+import { onMounted } from "vue";
+import { useDataCacheStore } from "./stores/data-cache";
+
+const dataCacheStore = useDataCacheStore();
+
+onMounted(() => {
+  // Load products cache immediately in the background on app load
+  dataCacheStore.fetchProducts();
+});
+
 useHead({
   meta: [
     { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=0" },

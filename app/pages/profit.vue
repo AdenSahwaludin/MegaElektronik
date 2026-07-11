@@ -355,12 +355,14 @@
 import { ref, onMounted, watch, computed, onActivated } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 import TransactionDetailModal from "../components/TransactionDetailModal.vue";
+import { useDataCacheStore } from "../stores/data-cache";
 
 definePageMeta({
   layout: "default",
 });
 
 const { formatCurrency } = useCurrency();
+const dataCacheStore = useDataCacheStore();
 
 // State
 const transactions = ref<any[]>([]);
@@ -422,51 +424,77 @@ const groupedTransactions = computed(() => {
 
 // Methods
 const fetchTransactions = async () => {
-  loading.value = true;
-  showDelayedLoading.value = false;
-  if (loadingTimer) clearTimeout(loadingTimer);
-  loadingTimer = setTimeout(() => {
-    showDelayedLoading.value = true;
-  }, 3000);
+  let finalStartDate = startDate.value;
+  let finalEndDate = endDate.value;
+
+  if (dateRange.value === "custom") {
+    // If user only picks start date, assume they want just that one day
+    if (finalStartDate && !finalEndDate) {
+      finalEndDate = finalStartDate;
+    }
+  }
+
+  if (dateRange.value === "custom_month") {
+    const effectiveStartMonth = startMonth.value;
+    // If user only picks start month, assume they want just that one month
+    const effectiveEndMonth = endMonth.value || startMonth.value;
+
+    if (effectiveStartMonth) {
+      finalStartDate = `${effectiveStartMonth}-01`;
+    }
+    if (effectiveEndMonth) {
+      const [year, month] = effectiveEndMonth.split("-");
+      const lastDay = new Date(Number(year), Number(month), 0).getDate();
+      finalEndDate = `${effectiveEndMonth}-${lastDay}`;
+    }
+  }
+
+  const params = new URLSearchParams({
+    page: currentPage.value.toString(),
+    limit: "10",
+    dateRange: dateRange.value,
+    startDate: finalStartDate,
+    endDate: finalEndDate,
+    search: searchQuery.value,
+  });
+  const cacheKey = params.toString();
+
+  // SWR: Load from cache instantly if available
+  const cached = dataCacheStore.getCachedTransactions(cacheKey);
+  if (cached) {
+    transactions.value = cached.transactions;
+    dailyProfits.value = cached.dailyProfits;
+    dailyRevenues.value = cached.dailyRevenues;
+    summary.value = cached.summary;
+    totalCount.value = cached.totalCount;
+    totalPages.value = cached.totalPages;
+    loading.value = false;
+    showDelayedLoading.value = false;
+  } else {
+    loading.value = true;
+    showDelayedLoading.value = false;
+    if (loadingTimer) clearTimeout(loadingTimer);
+    loadingTimer = setTimeout(() => {
+      showDelayedLoading.value = true;
+    }, 3000);
+  }
   
   try {
-    let finalStartDate = startDate.value;
-    let finalEndDate = endDate.value;
-
-    if (dateRange.value === "custom") {
-      // If user only picks start date, assume they want just that one day
-      if (finalStartDate && !finalEndDate) {
-        finalEndDate = finalStartDate;
-      }
-    }
-
-    if (dateRange.value === "custom_month") {
-      const effectiveStartMonth = startMonth.value;
-      // If user only picks start month, assume they want just that one month
-      const effectiveEndMonth = endMonth.value || startMonth.value;
-
-      if (effectiveStartMonth) {
-        finalStartDate = `${effectiveStartMonth}-01`;
-      }
-      if (effectiveEndMonth) {
-        const [year, month] = effectiveEndMonth.split("-");
-        const lastDay = new Date(Number(year), Number(month), 0).getDate();
-        finalEndDate = `${effectiveEndMonth}-${lastDay}`;
-      }
-    }
-
-    const params = new URLSearchParams({
-      page: currentPage.value.toString(),
-      limit: "10",
-      dateRange: dateRange.value,
-      startDate: finalStartDate,
-      endDate: finalEndDate,
-      search: searchQuery.value,
+    const response = await $fetch<any>(
+      `/api/transactions?${cacheKey}`,
+    );
+    
+    // Cache the fresh response
+    dataCacheStore.setCachedTransactions(cacheKey, {
+      transactions: response.transactions,
+      dailyProfits: response.dailyProfits || {},
+      dailyRevenues: response.dailyRevenues || {},
+      summary: response.summary,
+      totalCount: response.pagination.totalCount,
+      totalPages: response.pagination.totalPages,
     });
 
-    const response = await $fetch<any>(
-      `/api/transactions?${params.toString()}`,
-    );
+    // Update reactive values
     transactions.value = response.transactions;
     dailyProfits.value = response.dailyProfits || {};
     dailyRevenues.value = response.dailyRevenues || {};
@@ -546,6 +574,11 @@ const deleteTransaction = async (transactionId: string) => {
     await $fetch(`/api/transactions/${transactionId}`, {
       method: "DELETE",
     });
+    
+    // Invalidate all caches and force reload products stock
+    dataCacheStore.clearAllCaches();
+    dataCacheStore.fetchProducts(true);
+    
     await fetchTransactions();
     alert("Sip, transaksi udah diapus");
   } catch (error: any) {

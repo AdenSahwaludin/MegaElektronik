@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onActivated } from 'vue'
 import { useCurrency } from '../../composables/useCurrency'
+import { useDataCacheStore } from '../stores/data-cache'
 import RevenueTrendChart from '../components/charts/RevenueTrendChart.vue'
 import TopProductsChart from '../components/charts/TopProductsChart.vue'
 import PriceDistributionChart from '../components/charts/PriceDistributionChart.vue'
@@ -11,6 +12,7 @@ definePageMeta({
 });
 
 const { formatCurrency } = useCurrency()
+const dataCacheStore = useDataCacheStore()
 
 // State
 const dateRange = ref('month')
@@ -42,25 +44,42 @@ const heatmapData = ref<any>(null)
 const problemProducts = ref<any>(null)
 
 const fetchAllAnalytics = async () => {
-  loading.value = true
-  try {
-    const params: any = { dateRange: dateRange.value }
-    if (dateRange.value === 'custom') {
-      params.startDate = startDate.value
-      params.endDate = endDate.value || startDate.value
-    } else if (dateRange.value === 'custom_month') {
-      const effectiveStartMonth = startMonth.value;
-      const effectiveEndMonth = endMonth.value || startMonth.value;
-      if (effectiveStartMonth) {
-        params.startDate = `${effectiveStartMonth}-01`;
-      }
-      if (effectiveEndMonth) {
-        const [year, month] = effectiveEndMonth.split("-");
-        const lastDay = new Date(Number(year), Number(month), 0).getDate();
-        params.endDate = `${effectiveEndMonth}-${lastDay}`;
-      }
+  const params: any = { dateRange: dateRange.value }
+  if (dateRange.value === 'custom') {
+    params.startDate = startDate.value
+    params.endDate = endDate.value || startDate.value
+  } else if (dateRange.value === 'custom_month') {
+    const effectiveStartMonth = startMonth.value;
+    const effectiveEndMonth = endMonth.value || startMonth.value;
+    if (effectiveStartMonth) {
+      params.startDate = `${effectiveStartMonth}-01`;
     }
-    
+    if (effectiveEndMonth) {
+      const [year, month] = effectiveEndMonth.split("-");
+      const lastDay = new Date(Number(year), Number(month), 0).getDate();
+      params.endDate = `${effectiveEndMonth}-${lastDay}`;
+    }
+  }
+
+  // Create a unique cache key based on query parameters
+  const cacheKey = new URLSearchParams(params).toString();
+
+  // SWR: Load from cache instantly if available
+  const cached = dataCacheStore.getCachedAnalytics(cacheKey);
+  if (cached) {
+    summary.value = cached.summary;
+    trendData.value = cached.trendData;
+    topProductsData.value = cached.topProductsData;
+    priceDistData.value = cached.priceDistData;
+    marginData.value = cached.marginData;
+    heatmapData.value = cached.heatmapData;
+    problemProducts.value = cached.problemProducts;
+    loading.value = false;
+  } else {
+    loading.value = true;
+  }
+
+  try {
     const [s, t, p, pd, m, h, pp] = await Promise.all([
       $fetch('/api/analytics/summary', { params }),
       $fetch('/api/analytics/revenue-trend', { params }),
@@ -69,19 +88,33 @@ const fetchAllAnalytics = async () => {
       $fetch('/api/analytics/margin-by-product', { params }),
       $fetch('/api/analytics/transaction-heatmap', { params }),
       $fetch('/api/analytics/problem-products')
-    ])
+    ]);
 
-    summary.value = s
-    trendData.value = t
-    topProductsData.value = p
-    priceDistData.value = pd
-    marginData.value = m
-    heatmapData.value = h
-    problemProducts.value = pp
+    const freshData = {
+      summary: s,
+      trendData: t,
+      topProductsData: p,
+      priceDistData: pd,
+      marginData: m,
+      heatmapData: h,
+      problemProducts: pp
+    };
+
+    // Cache fresh data
+    dataCacheStore.setCachedAnalytics(cacheKey, freshData);
+
+    // Update reactive refs
+    summary.value = s;
+    trendData.value = t;
+    topProductsData.value = p;
+    priceDistData.value = pd;
+    marginData.value = m;
+    heatmapData.value = h;
+    problemProducts.value = pp;
   } catch (error) {
-    console.error('Error fetching analytics:', error)
+    console.error('Error fetching analytics:', error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 

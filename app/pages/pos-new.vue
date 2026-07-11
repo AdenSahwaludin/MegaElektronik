@@ -585,20 +585,24 @@ import type { Ref } from "vue";
 import { watch, computed, ref, onActivated, onDeactivated, onMounted, onUnmounted } from "vue";
 import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
+import { useDataCacheStore } from "../stores/data-cache";
 
 definePageMeta({
   layout: "default",
 });
 
 const cartStore = useCartStore();
+const dataCacheStore = useDataCacheStore();
 const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
 
 // Categories
 const categories = ['Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC', 'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko', 'Exhaust'];
 
-// Products
-const products: Ref<any[]> = ref([]);
-const loading = ref(false);
+// Products from cache store (filtered by isActive)
+const products = computed(() => {
+  return dataCacheStore.products.filter((p: any) => p.isActive !== false);
+});
+const loading = computed(() => dataCacheStore.loadingProducts);
 const showDelayedLoading = ref(false);
 let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 const searchQuery = ref("");
@@ -742,8 +746,7 @@ const stopLiveClock = () => {
 
 // Methods
 const fetchProducts = async (silent = false) => {
-  if (!silent) {
-    loading.value = true;
+  if (!silent && !dataCacheStore.isProductsLoaded) {
     showDelayedLoading.value = false;
     if (loadingTimer) clearTimeout(loadingTimer);
     loadingTimer = setTimeout(() => {
@@ -751,22 +754,14 @@ const fetchProducts = async (silent = false) => {
     }, 3000);
   }
   try {
-    const params = new URLSearchParams();
-    params.append("limit", "10000"); // fetch all items for local search
-    params.append("activeOnly", "true");
-
-    const url = `/api/products?${params.toString()}`;
-    const response = await $fetch<any>(url);
-    products.value = response.products || [];
+    // Call cache store to fetch in background
+    await dataCacheStore.fetchProducts(!silent);
   } catch (error) {
     console.error("Error loading products:", error);
     showToast("Yah, gagal muat produk nih");
   } finally {
-    if (!silent) {
-      loading.value = false;
-      showDelayedLoading.value = false;
-      if (loadingTimer) clearTimeout(loadingTimer);
-    }
+    showDelayedLoading.value = false;
+    if (loadingTimer) clearTimeout(loadingTimer);
   }
 };
 

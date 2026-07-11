@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { useDataCacheStore } from "./data-cache";
 
 export interface CartItem {
   id: string; // unique cart item ID (uuid or same as product id)
@@ -159,6 +160,16 @@ export const useCartStore = defineStore("cart", () => {
       });
 
       clearCart();
+      
+      // Clear reports/analytics caches and update products cache (stock changed)
+      try {
+        const dataCacheStore = useDataCacheStore();
+        dataCacheStore.clearAllCaches();
+        dataCacheStore.fetchProducts(true);
+      } catch (e) {
+        console.error("Failed to update cache on checkout:", e);
+      }
+
       return response;
     } finally {
       isProcessing.value = false;

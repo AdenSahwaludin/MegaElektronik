@@ -1015,8 +1015,9 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
-import { watch, computed, ref, reactive } from "vue";
+import { watch, computed, ref, reactive, onMounted } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
+import { useDataCacheStore } from "../stores/data-cache";
 
 definePageMeta({
   layout: "default",
@@ -1033,10 +1034,72 @@ const toTitleCase = (str: string | null | undefined) => {
   return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };
 
-// State
-const products: Ref<any[]> = ref([]);
-const lowStockProducts = ref<any[]>([]);
-const loading = ref(false);
+// State (using local computed filtering, sorting, and pagination on top of the cached store)
+const dataCacheStore = useDataCacheStore();
+
+const productsList = computed(() => {
+  let list = dataCacheStore.products;
+
+  // 1. Filter by search query
+  if (searchQuery.value.trim()) {
+    const keywords = searchQuery.value.toLowerCase().trim().split(/\s+/).filter((k) => k.length > 0);
+    if (keywords.length > 0) {
+      list = list.filter((p) => {
+        const name = (p.name || "").toLowerCase();
+        const brand = (p.brand || "").toLowerCase();
+        const model = (p.model || "").toLowerCase();
+        const otherName = (p.otherName || "").toLowerCase();
+
+        return keywords.every((k) => {
+          const isShortNumeric = k.length <= 2 && /^\d+$/.test(k);
+          if (isShortNumeric) {
+            return name.includes(k) || brand.includes(k) || otherName.includes(k);
+          } else {
+            return name.includes(k) || brand.includes(k) || model.includes(k) || otherName.includes(k);
+          }
+        });
+      });
+    }
+  }
+
+  // 2. Sort results
+  const field = sortBy.value;
+  const order = sortOrder.value === "desc" ? -1 : 1;
+  const sorted = [...list];
+  sorted.sort((a, b) => {
+    let valA = a[field];
+    let valB = b[field];
+
+    if (typeof valA === "string" && typeof valB === "string") {
+      return valA.localeCompare(valB, "id", { sensitivity: "base" }) * order;
+    }
+
+    if (valA === null || valA === undefined) return 1;
+    if (valB === null || valB === undefined) return -1;
+    return (valA < valB ? -1 : valA > valB ? 1 : 0) * order;
+  });
+
+  return sorted;
+});
+
+const products = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return productsList.value.slice(start, end);
+});
+
+const totalItems = computed(() => productsList.value.length);
+const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
+
+const lowStockProducts = computed(() => {
+  return dataCacheStore.products.filter((p) => p.stock === 0);
+});
+
+const allProductsForSelect = computed(() => {
+  return [...dataCacheStore.products].sort((a: any, b: any) => a.name.localeCompare(b.name));
+});
+
+const loading = computed(() => dataCacheStore.loadingProducts);
 const showEditModal = ref(false);
 const showArrivalModal = ref(false);
 const showHistoryModal = ref(false);
@@ -1044,7 +1107,6 @@ const arrivalHistory = ref<any[]>([]);
 const loadingHistory = ref(false);
 const showMessage = ref(false);
 const message = ref("");
-const allProductsForSelect = ref<any[]>([]);
 
 interface ArrivalItem {
   id: string;
@@ -1134,8 +1196,6 @@ const hideDropdown = (item: ArrivalItem) => {
 const searchQuery = ref("");
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
-const totalItems = ref(0);
-const totalPages = ref(0);
 const sortBy = ref("name");
 const sortOrder = ref("asc");
 
@@ -1146,7 +1206,6 @@ const toggleSort = (field: string) => {
     sortBy.value = field;
     sortOrder.value = "asc";
   }
-  fetchProducts();
 };
 
 const newProduct = reactive({
@@ -1197,39 +1256,16 @@ const canGoToNextPage = computed(() => currentPage.value < totalPages.value);
 
 // Methods
 const fetchProducts = async () => {
-  loading.value = true;
   try {
-    // Build query with search and pagination
-    const params = new URLSearchParams();
-    if (searchQuery.value.trim()) {
-      params.append("search", searchQuery.value);
-    }
-    params.append("page", currentPage.value.toString());
-    params.append("limit", itemsPerPage.value.toString());
-    params.append("sortBy", sortBy.value);
-    params.append("sortOrder", sortOrder.value);
-    params.append("activeOnly", "false"); // Fetch all for management page
-
-    const url = `/api/products?${params.toString()}`;
-    const response = await $fetch<any>(url);
-    products.value = response.products || [];
-    totalItems.value = response.total || 0;
-    totalPages.value = response.totalPages || 0;
+    await dataCacheStore.fetchProducts(true);
   } catch (error) {
     console.error("Error loading products:", error);
     showToast("Gagal muat data produk");
-  } finally {
-    loading.value = false;
   }
 };
 
 const fetchLowStockProducts = async () => {
-  try {
-    const response = await $fetch<any>('/api/products?limit=100&lowStockOnly=true');
-    lowStockProducts.value = response.products || [];
-  } catch (error) {
-    console.error("Error loading low stock products:", error);
-  }
+  // Low stock products is now a computed property locally!
 };
 
 const addProduct = async () => {
@@ -1260,10 +1296,9 @@ const addProduct = async () => {
       },
     });
 
-    products.value.push(response.product);
+    dataCacheStore.addLocalProduct(response.product);
     resetForm();
     showToast("Sip, produk udah ditambah!");
-    fetchLowStockProducts();
   } catch (error: any) {
     showToast(error.message || "Yah, gagal nambahin produk");
   }
@@ -1302,13 +1337,9 @@ const saveProduct = async () => {
       },
     });
 
-    const index = products.value.findIndex((p) => p.id === editingProduct.id);
-    if (index !== -1) {
-      products.value[index] = response.product;
-    }
+    dataCacheStore.updateLocalProduct(response.product);
     showEditModal.value = false;
     showToast("Sip, produk udah diupdate!");
-    fetchLowStockProducts();
   } catch (error: any) {
     showToast(error.message || "Yah, gagal update produk");
   }
@@ -1322,9 +1353,8 @@ const deleteProduct = async (productId: string) => {
       method: "DELETE",
     });
 
-    products.value = products.value.filter((p) => p.id !== productId);
+    dataCacheStore.deleteLocalProduct(Number(productId));
     showToast("Oke, produk udah dihapus");
-    fetchLowStockProducts();
   } catch (error: any) {
     showToast(error.message || "Waduh, gagal hapus produk");
   }
@@ -1382,16 +1412,7 @@ const saveArrival = async () => {
   }
 };
 
-watch(showArrivalModal, async (val) => {
-  if (val && allProductsForSelect.value.length === 0) {
-    try {
-      const response = await $fetch<any>('/api/products?limit=10000&activeOnly=true');
-      allProductsForSelect.value = (response.products || []).sort((a: any, b: any) => a.name.localeCompare(b.name));
-    } catch (e) {
-      console.error(e);
-    }
-  }
-});
+// (Removed server-side products dropdown fetch as it's now computed locally from cache store)
 
 const printProductList = async () => {
   try {
@@ -1404,8 +1425,7 @@ const printProductList = async () => {
     printWindow.document.write("<html><body style='font-family: sans-serif; text-align: center; padding-top: 50px;'><h2>Menyiapkan dokumen cetak... Mohon tunggu.</h2></body></html>");
 
     showToast("Menyiapkan dokumen cetak...");
-    const response = await $fetch<any>('/api/products?limit=10000&activeOnly=true');
-    const allProducts = response.products || [];
+    const allProducts = dataCacheStore.products.filter((p: any) => p.isActive !== false);
 
     if (allProducts.length === 0) {
       printWindow.close();
@@ -1745,47 +1765,37 @@ const showToast = (msg: string) => {
 };
 
 // Pagination Methods
-const goToPreviousPage = () => {
+const goToPrevPage = () => {
   if (canGoToPrevPage.value) {
     currentPage.value--;
-    fetchProducts();
   }
 };
 
 const goToNextPage = () => {
   if (canGoToNextPage.value) {
     currentPage.value++;
-    fetchProducts();
   }
 };
 
 const goToPage = (page: number) => {
   if (page > 0 && page <= totalPages.value) {
     currentPage.value = page;
-    fetchProducts();
   }
 };
 
 const changeItemsPerPage = (newLimit: number) => {
   itemsPerPage.value = newLimit;
   currentPage.value = 1; // Reset to first page
-  fetchProducts();
 };
 
-// Watch for search query changes with debounce
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+// Watch for search query changes to reset pagination
 watch(searchQuery, () => {
-  if (searchTimeout) clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(async () => {
-    currentPage.value = 1; // Reset to first page on search
-    await fetchProducts();
-  }, 300);
+  currentPage.value = 1;
 });
 
 // Lifecycle
 onMounted(() => {
-  fetchProducts();
-  fetchLowStockProducts();
+  dataCacheStore.fetchProducts();
 });
 </script>
 
