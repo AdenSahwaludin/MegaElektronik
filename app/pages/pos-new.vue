@@ -37,6 +37,16 @@
             >
               <Icon name="lucide:refresh-cw" class="w-4 h-4" />
             </button>
+            
+            <!-- Tombol kembali ke POS Biasa -->
+            <NuxtLink
+              to="/"
+              class="px-3 py-2.5 bg-white border border-gray-200 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1.5 shrink-0 text-xs font-bold"
+              title="Kembali ke POS Biasa"
+            >
+              <Icon name="lucide:arrow-left" class="w-4 h-4 text-orange-600" />
+              <span>POS Biasa</span>
+            </NuxtLink>
           </div>
 
           <!-- Quick Categories - Horizontal Scroll -->

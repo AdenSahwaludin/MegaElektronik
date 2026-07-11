@@ -256,6 +256,8 @@
                   <option :value="10">10</option>
                   <option :value="25">25</option>
                   <option :value="50">50</option>
+                  <option :value="100">100</option>
+                  <option :value="999999">Semua Item</option>
                 </select>
               </div>
 
@@ -1195,7 +1197,7 @@ const hideDropdown = (item: ArrivalItem) => {
 // Search and Pagination State
 const searchQuery = ref("");
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(25);
 const sortBy = ref("name");
 const sortOrder = ref("asc");
 
@@ -1285,7 +1287,7 @@ const addProduct = async () => {
       body: {
         name: toTitleCase(newProduct.name),
         brand: newProduct.brand ? toTitleCase(newProduct.brand) : null,
-        model: newProduct.model ? newProduct.model.toUpperCase() : null,
+        model: newProduct.model ? newProduct.model.trim() : null,
         otherName: newProduct.otherName || null,
         stock: newProduct.stock,
         servicePrice: newProduct.servicePrice,
@@ -1326,7 +1328,7 @@ const saveProduct = async () => {
       body: {
         name: toTitleCase(editingProduct.name),
         brand: editingProduct.brand ? toTitleCase(editingProduct.brand) : null,
-        model: editingProduct.model ? editingProduct.model.toUpperCase() : null,
+        model: editingProduct.model ? editingProduct.model.trim() : null,
         otherName: editingProduct.otherName || null,
         stock: editingProduct.stock,
         servicePrice: editingProduct.servicePrice,

@@ -590,13 +590,25 @@ const deleteTransaction = async (transactionId: string) => {
 };
 
 // Watchers
-watch([searchQuery, dateRange, startDate, endDate, startMonth, endMonth], () => {
+watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
   currentPage.value = 1;
   fetchTransactions();
 });
 
 watch(currentPage, () => {
   fetchTransactions();
+});
+
+// Watch for search query changes with debounce to prevent race conditions and flashing spinners
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(searchQuery, () => {
+  loading.value = true;
+  showDelayedLoading.value = false;
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1;
+    fetchTransactions();
+  }, 400);
 });
 
 // Lifecycle

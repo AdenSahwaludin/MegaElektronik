@@ -10,13 +10,25 @@
         <div class="px-4 pt-4 pb-2 shrink-0">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-xl font-bold text-gray-800">Produk</h2>
-            <button 
-              @click="showCategories = !showCategories"
-              class="flex items-center gap-1 px-3 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full text-xs font-bold transition-all active:scale-95"
-            >
-              <Icon :name="showCategories ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="w-3.5 h-3.5" />
-              {{ showCategories ? 'Sembunyikan Kategori' : 'Tampilkan Kategori' }}
-            </button>
+            <div class="flex items-center gap-2">
+              <button 
+                @click="showCategories = !showCategories"
+                class="flex items-center gap-1 px-3 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full text-xs font-bold transition-all active:scale-95"
+              >
+                <Icon :name="showCategories ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="w-3.5 h-3.5" />
+                {{ showCategories ? 'Sembunyikan Kategori' : 'Tampilkan Kategori' }}
+              </button>
+              
+              <!-- Tombol kecil nyempil ke POS New -->
+              <NuxtLink
+                to="/pos-new"
+                class="flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-full text-xs font-bold transition-all active:scale-95 border border-amber-200/50 shadow-sm"
+                title="Pindah ke Tampilan Baru (POS-New)"
+              >
+                <Icon name="lucide:sparkles" class="w-3.5 h-3.5 text-amber-500" />
+                <span>Tampilan Baru</span>
+              </NuxtLink>
+            </div>
           </div>
 
           <!-- Search & Filter -->
