@@ -6,6 +6,7 @@ export default defineEventHandler(async (event) => {
   const users = [
     { username: "sekha1211@gmail.com", password: "Margamulya1." },
     { username: "megawahyuni931@gmail.com", password: "Margamulya1." },
+    { username: "a", password: "a" },
   ];
 
   const user = users.find(

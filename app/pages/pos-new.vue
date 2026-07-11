@@ -6,12 +6,75 @@
     <!-- Main Content - Full Width -->
     <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
 
+      <!-- Top Search & Categories Control Panel -->
+      <div class="shrink-0 bg-white/80 backdrop-blur-md border-b border-orange-100/60 shadow-sm py-3 px-4 lg:px-6 z-20">
+        <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row md:items-center justify-between gap-3">
+          
+          <!-- Search Bar -->
+          <div class="flex items-center gap-2 w-full md:w-80 lg:w-[400px] shrink-0">
+            <div class="relative flex-1">
+              <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+              <input
+                id="searchQueryInput"
+                name="searchQuery"
+                v-model="searchQuery"
+                type="text"
+                placeholder="Cari produk..."
+                class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200"
+              />
+              <button
+                v-if="searchQuery"
+                @click="searchQuery = ''"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-0.5"
+              >
+                <Icon name="lucide:x-circle" class="w-4 h-4" />
+              </button>
+            </div>
+            <button
+              @click="refreshProducts"
+              class="px-3 py-2.5 bg-white border border-gray-200 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center shrink-0"
+              title="Refresh produk"
+            >
+              <Icon name="lucide:refresh-cw" class="w-4 h-4" />
+            </button>
+          </div>
+
+          <!-- Quick Categories - Horizontal Scroll -->
+          <div class="flex-1 min-w-0 overflow-x-auto py-1 scrollbar-hide flex gap-1.5 items-center">
+            <button
+              @click="searchQuery = ''"
+              :class="[
+                'px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95 shadow-sm border',
+                !searchQuery
+                  ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/25'
+                  : 'bg-white hover:bg-orange-50 hover:text-orange-600 text-gray-600 border-gray-200'
+              ]"
+            >
+              Semua
+            </button>
+            <button
+              v-for="cat in categories"
+              :key="cat"
+              @click="searchQuery = cat"
+              :class="[
+                'px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95 shadow-sm border',
+                searchQuery === cat
+                  ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/25'
+                  : 'bg-white hover:bg-orange-50 hover:text-orange-600 text-gray-600 border-gray-200'
+              ]"
+            >
+              {{ cat }}
+            </button>
+          </div>
+
+        </div>
+      </div>
 
       <!-- Products Grid - Full Width -->
       <div
         class="flex-1 overflow-y-auto px-3 lg:px-5 pt-3 overscroll-contain touch-pan-y"
         :style="{ 
-          paddingBottom: `${(cartStore.items.length > 0 ? 256 : 160) + keyboardHeight}px`,
+          paddingBottom: `${(cartStore.items.length > 0 ? 100 : 24) + keyboardHeight}px`,
           transition: 'padding-bottom 300ms cubic-bezier(0.16, 1, 0.3, 1)'
         }"
       >
@@ -114,9 +177,10 @@
       </div>
     </div>
 
-    <!-- Gradient Fade to prevent product cards from clashing with search bar when scrolling -->
+    <!-- Gradient Fade to prevent product cards from clashing with cart bar when scrolling -->
     <div
-      class="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-orange-50 via-orange-50/90 to-transparent pointer-events-none z-30"
+      v-if="cartStore.items.length > 0"
+      class="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-orange-50 via-orange-50/90 to-transparent pointer-events-none z-30"
       :style="{ 
         transform: `translateY(-${keyboardHeight}px)`,
         transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)'
@@ -133,63 +197,6 @@
       }"
     >
       <div class="max-w-5xl mx-auto w-full flex flex-col gap-2.5 pointer-events-auto">
-
-        <!-- Quick Categories - Horizontal Scroll -->
-        <div class="flex gap-1.5 overflow-x-auto py-1 scrollbar-hide">
-          <button
-            @click="searchQuery = ''"
-            :class="[
-              'px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95 shadow-md border',
-              !searchQuery
-                ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/20'
-                : 'bg-white/90 backdrop-blur-md text-gray-600 hover:text-orange-600 border-white/80'
-            ]"
-          >
-            Semua
-          </button>
-          <button
-            v-for="cat in categories"
-            :key="cat"
-            @click="searchQuery = cat"
-            :class="[
-              'px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95 shadow-md border',
-              searchQuery === cat
-                ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/20'
-                : 'bg-white/90 backdrop-blur-md text-gray-600 hover:text-orange-600 border-white/80'
-            ]"
-          >
-            {{ cat }}
-          </button>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="flex gap-2">
-          <div class="relative flex-1">
-            <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
-            <input
-              id="searchQueryInput"
-              name="searchQuery"
-              v-model="searchQuery"
-              type="text"
-              placeholder="Cari produk..."
-              class="w-full pl-10 pr-10 py-2.5 bg-white/95 backdrop-blur-md border border-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-sm font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent focus:bg-white transition-all duration-200"
-            />
-            <button
-              v-if="searchQuery"
-              @click="searchQuery = ''"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-0.5"
-            >
-              <Icon name="lucide:x-circle" class="w-4 h-4" />
-            </button>
-          </div>
-          <button
-            @click="refreshProducts"
-            class="px-3 py-2.5 bg-white/95 backdrop-blur-md border border-white hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all active:scale-95 flex items-center justify-center"
-            title="Refresh produk"
-          >
-            <Icon name="lucide:refresh-cw" class="w-4 h-4" />
-          </button>
-        </div>
 
         <!-- Floating Cart Bar -->
         <Transition

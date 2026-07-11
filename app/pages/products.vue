@@ -271,7 +271,7 @@
               <!-- Pagination Buttons -->
               <div class="flex items-center gap-2">
                 <button
-                  @click="goToPreviousPage"
+                  @click="goToPrevPage"
                   :disabled="!canGoToPrevPage"
                   class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition font-semibold"
                 >
@@ -497,7 +497,7 @@
             <!-- Bottom Pagination Controls -->
             <div class="flex items-center gap-2">
               <button
-                @click="goToPreviousPage"
+                @click="goToPrevPage"
                 :disabled="!canGoToPrevPage"
                 class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
               >
