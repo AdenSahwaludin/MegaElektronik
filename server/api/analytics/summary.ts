@@ -31,14 +31,15 @@ export default defineEventHandler(async (event) => {
       productId: true,
       quantity: true,
       profitPerItem: true,
-      product: { select: { name: true } }
+      product: { select: { name: true, brand: true, model: true } }
     }
   });
 
   const productStats: Record<number, { name: string, qty: number, profit: number }> = {};
   allItems.forEach(item => {
     if (!productStats[item.productId]) {
-      productStats[item.productId] = { name: item.product.name || 'Produk Terhapus', qty: 0, profit: 0 };
+      const productName = item.product ? `${item.product.name} ${item.product.brand} ${item.product.model}`.trim() : 'Produk Terhapus';
+      productStats[item.productId] = { name: productName, qty: 0, profit: 0 };
     }
     productStats[item.productId]!.qty += item.quantity;
     productStats[item.productId]!.profit += (item.profitPerItem * item.quantity);

@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
       productId: true,
       quantity: true,
       profitPerItem: true,
-      product: { select: { name: true } }
+      product: { select: { name: true, brand: true, model: true } }
     }
   });
 
@@ -27,7 +27,8 @@ export default defineEventHandler(async (event) => {
 
   items.forEach(item => {
     if (!productStats[item.productId]) {
-      productStats[item.productId] = { name: item.product.name, totalProfit: 0, soldCount: 0 };
+      const productName = item.product ? `${item.product.name} ${item.product.brand} ${item.product.model}`.trim() : 'Unknown Product';
+      productStats[item.productId] = { name: productName, totalProfit: 0, soldCount: 0 };
     }
     productStats[item.productId].totalProfit += (item.profitPerItem * item.quantity);
     productStats[item.productId].soldCount += item.quantity;
