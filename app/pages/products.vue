@@ -24,7 +24,12 @@
               <span>Ada {{ lowStockProducts.length }} produk stok habis!</span>
             </div>
             <div class="text-xs text-amber-700 font-medium pb-0.5">
-              Produk habis: {{ lowStockProducts.map(p => p.name + (p.brand && p.brand.trim() !== '' ? ' ' + p.brand : '')).join(', ') }}
+              Produk habis: {{ lowStockProducts.map(p => {
+                let str = p.name || '';
+                if (p.brand && p.brand.trim() !== '' && p.brand !== 'No Brand') str += ' ' + p.brand;
+                if (p.model && p.model.trim() !== '' && p.model !== '-' && p.model.toLowerCase() !== 'standar' && p.model.toLowerCase() !== 'standard') str += ' ' + p.model;
+                return str;
+              }).join(', ') }}
             </div>
           </div>
         </Transition>

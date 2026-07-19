@@ -82,7 +82,7 @@ const chartOptions = computed(() => {
       y: {
         position: 'left' as const,
         beginAtZero: true,
-        title: { display: true, text: 'Omset', color: '#ea580c', font: { size: 10, weight: 'bold' } },
+        title: { display: true, text: 'Omset', color: '#ea580c', font: { size: 10, weight: 'bold' as const } },
         grid: { color: 'rgba(0, 0, 0, 0.05)' },
         ticks: {
           font: { size: 10 },
@@ -95,7 +95,7 @@ const chartOptions = computed(() => {
         // Make Profit 3x more visible by setting its axis max to 1/3 of Revenue axis max
         // This makes Profit bars 3x taller than they would be on the same scale.
         suggestedMax: revenueMax / 3,
-        title: { display: true, text: 'Profit', color: '#10b981', font: { size: 10, weight: 'bold' } },
+        title: { display: true, text: 'Profit', color: '#10b981', font: { size: 10, weight: 'bold' as const } },
         grid: { drawOnChartArea: false },
         ticks: {
           font: { size: 10 },
@@ -107,7 +107,7 @@ const chartOptions = computed(() => {
         ticks: {
           autoSkip: true,
           maxTicksLimit: 12,
-          font: { size: 10, weight: 'bold' }
+          font: { size: 10, weight: 'bold' as const }
         }
       }
     }

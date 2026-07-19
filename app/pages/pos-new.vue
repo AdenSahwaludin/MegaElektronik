@@ -115,74 +115,131 @@
           <div class="w-10 h-10 border-[3px] border-orange-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
 
-        <!-- Product Grid -->
+        <!-- Product List View -->
         <div
           v-show="!showDelayedLoading && filteredProducts.length > 0"
-          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 lg:gap-3 auto-rows-max"
+          class="flex flex-col gap-2 max-w-7xl mx-auto w-full pb-2"
         >
-          <button
+          <div
             v-for="product in filteredProducts"
             :key="product.id"
-            :disabled="product.stock === 0"
-            @click="addProductToCart(product, 'umum')"
             :class="[
-              'group bg-white rounded-2xl border border-gray-200/70 hover:border-orange-300 shadow-sm transition-all duration-200 overflow-hidden flex flex-col relative text-left',
+              'group bg-white rounded-xl border border-gray-200/80 hover:border-orange-300/90 shadow-xs hover:shadow-md transition-all duration-150 p-3 lg:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left relative overflow-hidden',
               product.stock === 0
-                ? 'opacity-40 cursor-not-allowed grayscale'
-                : 'hover:shadow-lg hover:-translate-y-0.5 cursor-pointer active:scale-[0.97]',
+                ? 'opacity-50 cursor-not-allowed bg-gray-50/70 grayscale'
+                : 'hover:bg-orange-50/20 cursor-pointer active:scale-[0.995]'
             ]"
+            @click="product.stock > 0 && addProductToCart(product, 'umum')"
           >
-            <!-- Stock Badge -->
-            <div class="absolute top-2 right-2 z-10">
-              <span
+            <!-- Highlight bar on hover -->
+            <div
+              v-if="product.stock > 0"
+              class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-orange-500 transition-colors"
+            />
+
+            <!-- Left: Product Identity & Details -->
+            <div class="flex items-start gap-3 min-w-0 flex-1 pl-1">
+              <!-- Icon/Badge Indicator -->
+              <div
                 :class="[
-                  'text-[10px] font-black px-1.5 py-0.5 rounded-md',
+                  'w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold transition-colors',
                   product.stock === 0
-                    ? 'bg-red-100 text-red-600'
-                    : product.stock < 5
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-red-50 text-red-500 border border-red-100'
+                    : 'bg-orange-100/60 group-hover:bg-orange-500 text-orange-600 group-hover:text-white'
                 ]"
               >
-                {{ product.stock === 0 ? 'Habis' : product.stock }}
-              </span>
+                <Icon
+                  :name="product.stock === 0 ? 'lucide:package-x' : 'lucide:package'"
+                  class="w-4 h-4"
+                />
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <!-- Product Name -->
+                  <h3 class="font-bold text-sm text-gray-800 group-hover:text-orange-600 transition-colors leading-snug">
+                    {{ getProductDisplayName(product) }}
+                  </h3>
+                  <!-- Model next to name -->
+                  <span
+                    v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'"
+                    class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md shrink-0"
+                  >
+                    Model: {{ product.model }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2 mt-1 flex-wrap text-xs text-gray-400 font-semibold">
+                  <!-- Stock Status -->
+                  <span
+                    :class="[
+                      'inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md text-[11px]',
+                      product.stock === 0
+                        ? 'bg-red-100 text-red-700'
+                        : product.stock < 5
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-emerald-100 text-emerald-800'
+                    ]"
+                  >
+                    <span
+                      :class="[
+                        'w-1.5 h-1.5 rounded-full',
+                        product.stock === 0
+                          ? 'bg-red-500'
+                          : product.stock < 5
+                            ? 'bg-amber-500 animate-pulse'
+                            : 'bg-emerald-500'
+                      ]"
+                    />
+                    {{ product.stock === 0 ? 'Stok Habis' : `Stok: ${product.stock}` }}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <!-- Card Content -->
-            <div class="p-3 lg:p-3.5 flex flex-col flex-1">
-              <!-- Product Name -->
-              <p class="font-bold text-[13px] text-gray-800 line-clamp-2 group-hover:text-orange-600 transition-colors pr-10 leading-snug">
-                {{ getProductDisplayName(product) }}
-              </p>
-              <!-- Model -->
-              <p
-                v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'"
-                class="text-[10px] text-gray-400 font-semibold mt-0.5 line-clamp-1"
-              >
-                {{ product.model }}
-              </p>
-
-              <!-- Prices -->
-              <div class="mt-auto pt-2.5">
-                <p class="text-[15px] font-black text-orange-600 leading-tight">
+            <!-- Right: Pricing & Quick Action Buttons -->
+            <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 pl-1 sm:pl-0">
+              <!-- Prices Column -->
+              <div class="text-left sm:text-right">
+                <p class="text-base font-black text-orange-600 leading-tight">
                   {{ formatCurrency(product.askingPrice) }}
                 </p>
-                <p class="text-[10px] text-gray-400 font-medium mt-0.5">
-                  Pas: {{ formatCurrency(product.fixedPrice) }}
+                <p class="text-[11px] text-gray-400 font-semibold mt-0.5">
+                  Pas: <span class="text-gray-600 font-bold">{{ formatCurrency(product.fixedPrice) }}</span>
                 </p>
               </div>
 
-              <!-- Service Badge -->
-              <button
-                v-if="product.servicePrice"
-                @click.stop="addProductToCart(product, 'service')"
-                class="mt-2 self-start text-[9px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-lg transition-colors flex items-center gap-1 active:scale-95"
-              >
-                <Icon name="lucide:wrench" class="w-2.5 h-2.5" />
-                Svc {{ formatCurrency(product.servicePrice) }}
-              </button>
+              <!-- Action Buttons -->
+              <div class="flex items-center gap-1.5 shrink-0">
+                <!-- Service Button (Optional) -->
+                <button
+                  v-if="product.servicePrice"
+                  :disabled="product.stock === 0"
+                  @click.stop="addProductToCart(product, 'service')"
+                  class="px-2.5 py-2 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-xl transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                  title="Tambah Jasa Service"
+                >
+                  <Icon name="lucide:wrench" class="w-3.5 h-3.5" />
+                  <span>Svc {{ formatCurrency(product.servicePrice) }}</span>
+                </button>
+
+                <!-- Add to Cart Button -->
+                <button
+                  :disabled="product.stock === 0"
+                  @click.stop="addProductToCart(product, 'umum')"
+                  :class="[
+                    'px-3.5 py-2 text-xs font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 shadow-xs active:scale-95',
+                    product.stock === 0
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                      : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20 group-hover:shadow-md'
+                  ]"
+                >
+                  <Icon name="lucide:plus" class="w-4 h-4" />
+                  <span class="hidden sm:inline">Tambah</span>
+                </button>
+              </div>
             </div>
-          </button>
+          </div>
         </div>
       </div>
     </div>
