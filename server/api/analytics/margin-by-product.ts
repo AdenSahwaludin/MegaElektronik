@@ -30,8 +30,8 @@ export default defineEventHandler(async (event) => {
       const productName = item.product ? `${item.product.name} ${item.product.brand} ${item.product.model}`.trim() : 'Unknown Product';
       productStats[item.productId] = { name: productName, totalProfit: 0, soldCount: 0 };
     }
-    productStats[item.productId].totalProfit += (item.profitPerItem * item.quantity);
-    productStats[item.productId].soldCount += item.quantity;
+    productStats[item.productId]!.totalProfit += (item.profitPerItem * item.quantity);
+    productStats[item.productId]!.soldCount += item.quantity;
   });
 
   const result = Object.values(productStats)

@@ -11,7 +11,7 @@
         <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row md:items-center justify-between gap-3">
           
           <!-- Search Bar -->
-          <div class="flex items-center gap-2 w-full md:w-80 lg:w-[400px] shrink-0">
+          <div class="flex items-center gap-2 w-full md:w-[450px] lg:w-[520px] shrink-0">
             <div class="relative flex-1">
               <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
               <input
@@ -30,13 +30,23 @@
                 <Icon name="lucide:x-circle" class="w-4 h-4" />
               </button>
             </div>
-            <button
-              @click="refreshProducts"
-              class="px-3 py-2.5 bg-white border border-gray-200 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center shrink-0"
-              title="Refresh produk"
-            >
-              <Icon name="lucide:refresh-cw" class="w-4 h-4" />
-            </button>
+
+            <!-- Sort Select Dropdown -->
+            <div class="relative shrink-0">
+              <select
+                id="sortSelect"
+                name="sortBy"
+                v-model="sortBy"
+                class="pl-3 pr-8 py-2.5 bg-white border border-gray-200 hover:border-orange-400 text-gray-600 rounded-xl shadow-sm text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 appearance-none cursor-pointer"
+                title="Urutkan Produk"
+              >
+                <option value="name-asc">Nama A-Z</option>
+                <option value="name-desc">Nama Z-A</option>
+                <option value="price-asc">Harga Terendah</option>
+                <option value="price-desc">Harga Tertinggi</option>
+              </select>
+              <Icon name="lucide:chevron-down" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
             
             <!-- Tombol kembali ke POS Biasa -->
             <NuxtLink
@@ -680,6 +690,7 @@ const loading = computed(() => dataCacheStore.loadingProducts);
 const showDelayedLoading = ref(false);
 let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 const searchQuery = ref("");
+const sortBy = ref("name-asc");
 
 // Transaction Config
 const transactionDateTime = ref("");
@@ -789,9 +800,19 @@ const filteredProducts = computed(() => {
       return keywords.every(k => searchStr.includes(k));
     });
   }
-  return [...result].sort((a, b) => 
-    a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
-  );
+  
+  return [...result].sort((a, b) => {
+    if (sortBy.value === "name-asc") {
+      return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
+    } else if (sortBy.value === "name-desc") {
+      return b.name.localeCompare(a.name, 'id', { sensitivity: 'base' });
+    } else if (sortBy.value === "price-asc") {
+      return (a.askingPrice || 0) - (b.askingPrice || 0);
+    } else if (sortBy.value === "price-desc") {
+      return (b.askingPrice || 0) - (a.askingPrice || 0);
+    }
+    return 0;
+  });
 });
 
 
@@ -839,10 +860,7 @@ const fetchProducts = async (silent = false) => {
   }
 };
 
-const refreshProducts = async () => {
-  await fetchProducts();
-  showToast("Sip, produk udah refresh");
-};
+
 
 // (Removed server-side search fetch on searchQuery watch for client-side filtering)
 
