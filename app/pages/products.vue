@@ -228,17 +228,123 @@
             </div>
           </div>
 
-          <!-- Search and Pagination Controls -->
-          <div class="px-6 py-4 border-b border-gray-200 space-y-4">
-            <!-- Search Input -->
-            <div class="flex gap-2">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Cari produk pake nama, merk, atau model..."
-                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+          <!-- Search and Quick Categories Controls -->
+          <div class="px-4 lg:px-6 py-4 border-b border-gray-200 space-y-3.5 bg-gray-50/50">
+            <!-- Search & Filter Actions -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              <div class="relative flex-1">
+                <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Cari produk pake nama, merk, atau model..."
+                  class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-sm text-gray-800 placeholder-gray-400 shadow-sm transition"
+                />
+                <button
+                  v-if="searchQuery"
+                  @click="searchQuery = ''"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 hover:bg-gray-100 rounded-full"
+                  title="Clear search"
+                >
+                  <Icon name="lucide:x-circle" class="w-4 h-4" />
+                </button>
+              </div>
+
+              <!-- Quick Categories Toggle Button -->
+              <button
+                @click="showCategories = !showCategories"
+                class="px-3.5 py-2.5 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 hover:border-orange-300 font-bold rounded-xl shadow-sm text-xs transition flex items-center justify-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                title="Tampilkan / Sembunyikan Kategori Cepat"
+              >
+                <Icon name="lucide:tags" class="w-4 h-4 text-orange-500" />
+                <span>{{ showCategories ? 'Sembunyikan Kategori' : 'Kategori Cepat' }}</span>
+                <Icon :name="showCategories ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="w-3.5 h-3.5 text-orange-500" />
+              </button>
             </div>
+
+            <!-- Quick Categories Chips Bar -->
+            <Transition
+              enter-active-class="transition-all duration-300 ease-out"
+              enter-from-class="opacity-0 max-h-0 -translate-y-2 overflow-hidden"
+              enter-to-class="opacity-100 max-h-64 translate-y-0"
+              leave-active-class="transition-all duration-200 ease-in"
+              leave-from-class="opacity-100 max-h-64 translate-y-0"
+              leave-to-class="opacity-0 max-h-0 -translate-y-2 overflow-hidden"
+            >
+              <div v-show="showCategories" class="pt-1">
+                <!-- Scrollable Category Chips Container -->
+                <div class="relative group">
+                  <div class="flex items-center gap-2 overflow-x-auto py-1.5 px-0.5 scrollbar-hide scroll-smooth">
+                    
+                    <!-- "Semua Produk" Pill -->
+                    <button
+                      @click="searchQuery = ''"
+                      :class="[
+                        'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                        !searchQuery
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
+                          : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
+                      ]"
+                    >
+                      <Icon name="lucide:layout-grid" class="w-3.5 h-3.5" />
+                      <span>Semua</span>
+                      <span
+                        :class="[
+                          'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
+                          !searchQuery ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
+                        ]"
+                      >
+                        {{ dataCacheStore.products.length }}
+                      </span>
+                    </button>
+
+                    <!-- Category Pills -->
+                    <button
+                      v-for="cat in categoriesList"
+                      :key="cat.name"
+                      @click="selectCategory(cat.name)"
+                      :class="[
+                        'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                        isCategoryActive(cat.name)
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
+                          : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
+                      ]"
+                    >
+                      <Icon :name="cat.icon" class="w-3.5 h-3.5" />
+                      <span>{{ cat.name }}</span>
+                      <span
+                        v-if="cat.count > 0"
+                        :class="[
+                          'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
+                          isCategoryActive(cat.name) ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
+                        ]"
+                      >
+                        {{ cat.count }}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Active Filter Pill Indicator if a query is active -->
+                <div v-if="searchQuery" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
+                  <div class="flex items-center gap-2 text-gray-600 font-medium">
+                    <span class="text-gray-400">Filter Aktif:</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
+                      <Icon name="lucide:filter" class="w-3 h-3 text-orange-600" />
+                      "{{ searchQuery }}"
+                      <span class="text-orange-600 font-semibold">({{ totalItems }} produk)</span>
+                    </span>
+                  </div>
+                  <button
+                    @click="searchQuery = ''"
+                    class="text-orange-600 hover:text-orange-800 font-bold text-xs hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Icon name="lucide:rotate-ccw" class="w-3 h-3" />
+                    Reset Filter
+                  </button>
+                </div>
+              </div>
+            </Transition>
 
             <!-- Pagination Info and Controls -->
             <div
@@ -1199,12 +1305,78 @@ const hideDropdown = (item: ArrivalItem) => {
   }, 200);
 };
 
-// Search and Pagination State
+// Search, Quick Categories, and Pagination State
 const searchQuery = ref("");
+const showCategories = ref(true);
 const currentPage = ref(1);
 const itemsPerPage = ref(25);
 const sortBy = ref("name");
 const sortOrder = ref("asc");
+
+const getCategoryIcon = (catName: string) => {
+  const lower = catName.toLowerCase();
+  if (lower.includes('kipas')) return 'lucide:fan';
+  if (lower.includes('kompor')) return 'lucide:flame';
+  if (lower.includes('rice') || lower.includes('cooker') || lower.includes('magic')) return 'lucide:cooking-pot';
+  if (lower.includes('blender') || lower.includes('juicer')) return 'lucide:blender';
+  if (lower.includes('ac') || lower.includes('pendingin')) return 'lucide:snowflake';
+  if (lower.includes('cuci')) return 'lucide:washing-machine';
+  if (lower.includes('kulkas') || lower.includes('freezer')) return 'lucide:refrigerator';
+  if (lower.includes('setrika')) return 'lucide:shirt';
+  if (lower.includes('dispenser')) return 'lucide:droplets';
+  if (lower.includes('teko') || lower.includes('kettle')) return 'lucide:coffee';
+  if (lower.includes('exhaust') || lower.includes('ventilating')) return 'lucide:wind';
+  if (lower.includes('pompa')) return 'lucide:gauge';
+  if (lower.includes('tv') || lower.includes('televisi')) return 'lucide:tv';
+  if (lower.includes('speaker') || lower.includes('audio') || lower.includes('sound')) return 'lucide:speaker';
+  return 'lucide:tag';
+};
+
+const categoriesList = computed(() => {
+  const products = dataCacheStore.products || [];
+  
+  const defaultNames = [
+    'Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC',
+    'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko',
+    'Exhaust',  'Speaker'
+    // 'Pompa', 'TV'
+  ];
+
+  const categoryMap = new Map<string, number>();
+
+  defaultNames.forEach(name => {
+    categoryMap.set(name, 0);
+  });
+
+  products.forEach((p: any) => {
+    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+
+    categoryMap.forEach((_, catName) => {
+      if (fullText.includes(catName.toLowerCase())) {
+        categoryMap.set(catName, (categoryMap.get(catName) || 0) + 1);
+      }
+    });
+  });
+
+  return Array.from(categoryMap.entries()).map(([name, count]) => ({
+    name,
+    count,
+    icon: getCategoryIcon(name)
+  })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+});
+
+const isCategoryActive = (catName: string) => {
+  if (!searchQuery.value) return false;
+  return searchQuery.value.trim().toLowerCase() === catName.trim().toLowerCase();
+};
+
+const selectCategory = (catName: string) => {
+  if (isCategoryActive(catName)) {
+    searchQuery.value = '';
+  } else {
+    searchQuery.value = catName;
+  }
+};
 
 const toggleSort = (field: string) => {
   if (sortBy.value === field) {
@@ -1815,5 +1987,14 @@ onMounted(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Hide scrollbar for categories */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>

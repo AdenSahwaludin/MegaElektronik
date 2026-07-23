@@ -19,7 +19,11 @@ logs
 .idea
 docs
 
-# Local env files
+# SQLite temporary files
+*.db-shm
+*.db-wal
+prisma/*.db-shm
+prisma/*.db-wal
 .env
 .env.*
 !.env.example

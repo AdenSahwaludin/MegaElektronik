@@ -72,11 +72,11 @@
               <button
                 v-for="cat in ['Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC', 'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko', 'Exhaust']"
                 :key="cat"
-                @click="searchQuery = cat"
+                @click="searchQuery = searchQuery === cat ? '' : cat"
                 :class="[
-                  'px-3 py-1 rounded-full text-xs font-semibold transition border',
+                  'px-3 py-1 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95',
                   searchQuery === cat
-                    ? 'bg-orange-600 text-white border-orange-600'
+                    ? 'bg-orange-600 text-white border-orange-600 shadow-sm font-bold'
                     : 'bg-white text-gray-600 border-gray-300 hover:border-orange-500 hover:text-orange-600'
                 ]"
               >

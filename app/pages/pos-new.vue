@@ -60,30 +60,52 @@
           </div>
 
           <!-- Quick Categories - Horizontal Scroll -->
-          <div class="flex-1 min-w-0 overflow-x-auto py-1 scrollbar-hide flex gap-1.5 items-center">
+          <div class="flex-1 min-w-0 overflow-x-auto py-1 scrollbar-hide flex gap-2 items-center scroll-smooth">
+            <!-- "Semua" Pill -->
             <button
               @click="searchQuery = ''"
               :class="[
-                'px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95 shadow-sm border',
+                'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
                 !searchQuery
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/25'
-                  : 'bg-white hover:bg-orange-50 hover:text-orange-600 text-gray-600 border-gray-200'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
+                  : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
               ]"
             >
-              Semua
+              <Icon name="lucide:layout-grid" class="w-3.5 h-3.5" />
+              <span>Semua</span>
+              <span
+                :class="[
+                  'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
+                  !searchQuery ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
+                ]"
+              >
+                {{ products.length }}
+              </span>
             </button>
+
+            <!-- Category Pills -->
             <button
-              v-for="cat in categories"
-              :key="cat"
-              @click="searchQuery = cat"
+              v-for="cat in categoriesList"
+              :key="cat.name"
+              @click="selectCategory(cat.name)"
               :class="[
-                'px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-95 shadow-sm border',
-                searchQuery === cat
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/25'
-                  : 'bg-white hover:bg-orange-50 hover:text-orange-600 text-gray-600 border-gray-200'
+                'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                isCategoryActive(cat.name)
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
+                  : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
               ]"
             >
-              {{ cat }}
+              <Icon :name="cat.icon" class="w-3.5 h-3.5" />
+              <span>{{ cat.name }}</span>
+              <span
+                v-if="cat.count > 0"
+                :class="[
+                  'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
+                  isCategoryActive(cat.name) ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
+                ]"
+              >
+                {{ cat.count }}
+              </span>
             </button>
           </div>
 
@@ -679,8 +701,70 @@ const cartStore = useCartStore();
 const dataCacheStore = useDataCacheStore();
 const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
 
-// Categories
-const categories = ['Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC', 'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko', 'Exhaust'];
+// Categories with Icons and Dynamic Counts
+const getCategoryIcon = (catName: string) => {
+  const lower = catName.toLowerCase();
+  if (lower.includes('kipas')) return 'lucide:fan';
+  if (lower.includes('kompor')) return 'lucide:flame';
+  if (lower.includes('rice') || lower.includes('cooker') || lower.includes('magic')) return 'lucide:cooking-pot';
+  if (lower.includes('blender') || lower.includes('juicer')) return 'lucide:blender';
+  if (lower.includes('ac') || lower.includes('pendingin')) return 'lucide:snowflake';
+  if (lower.includes('cuci')) return 'lucide:washing-machine';
+  if (lower.includes('kulkas') || lower.includes('freezer')) return 'lucide:refrigerator';
+  if (lower.includes('setrika')) return 'lucide:shirt';
+  if (lower.includes('dispenser')) return 'lucide:droplets';
+  if (lower.includes('teko') || lower.includes('kettle')) return 'lucide:coffee';
+  if (lower.includes('exhaust') || lower.includes('ventilating')) return 'lucide:wind';
+  if (lower.includes('pompa')) return 'lucide:gauge';
+  if (lower.includes('tv') || lower.includes('televisi')) return 'lucide:tv';
+  if (lower.includes('speaker') || lower.includes('audio') || lower.includes('sound')) return 'lucide:speaker';
+  return 'lucide:tag';
+};
+
+const categoriesList = computed(() => {
+  const productsList = dataCacheStore.products || [];
+  
+  const defaultNames = [
+    'Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC',
+    'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko',
+    'Exhaust', 'Speaker'
+  ];
+
+  const categoryMap = new Map<string, number>();
+
+  defaultNames.forEach(name => {
+    categoryMap.set(name, 0);
+  });
+
+  productsList.forEach((p: any) => {
+    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+
+    categoryMap.forEach((_, catName) => {
+      if (fullText.includes(catName.toLowerCase())) {
+        categoryMap.set(catName, (categoryMap.get(catName) || 0) + 1);
+      }
+    });
+  });
+
+  return Array.from(categoryMap.entries()).map(([name, count]) => ({
+    name,
+    count,
+    icon: getCategoryIcon(name)
+  })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+});
+
+const isCategoryActive = (catName: string) => {
+  if (!searchQuery.value) return false;
+  return searchQuery.value.trim().toLowerCase() === catName.trim().toLowerCase();
+};
+
+const selectCategory = (catName: string) => {
+  if (isCategoryActive(catName)) {
+    searchQuery.value = '';
+  } else {
+    searchQuery.value = catName;
+  }
+};
 
 // Products from cache store (filtered by isActive)
 const products = computed(() => {
