@@ -202,7 +202,7 @@
                   </span>
                   <!-- Terlaris Badge -->
                   <span
-                    v-if="bestSellersMap[product.id] && bestSellersMap[product.id] > 0"
+                    v-if="bestSellersMap[product.id] && bestSellersMap[product.id]! > 0"
                     class="inline-flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 shrink-0"
                     :title="`Terjual ${bestSellersMap[product.id]} unit sepanjang masa`"
                   >
