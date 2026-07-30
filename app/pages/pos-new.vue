@@ -40,6 +40,7 @@
                 class="pl-3 pr-8 py-2.5 bg-white border border-gray-200 hover:border-orange-400 text-gray-600 rounded-xl shadow-sm text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 appearance-none cursor-pointer"
                 title="Urutkan Produk"
               >
+                <option value="best-seller">🔥 Terlaris</option>
                 <option value="name-asc">Nama A-Z</option>
                 <option value="name-desc">Nama Z-A</option>
                 <option value="price-asc">Harga Terendah</option>
@@ -198,6 +199,14 @@
                     class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md shrink-0"
                   >
                     Model: {{ product.model }}
+                  </span>
+                  <!-- Terlaris Badge -->
+                  <span
+                    v-if="bestSellersMap[product.id] && bestSellersMap[product.id] > 0"
+                    class="inline-flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 shrink-0"
+                    :title="`Terjual ${bestSellersMap[product.id]} unit sepanjang masa`"
+                  >
+                    🔥 {{ bestSellersMap[product.id] }}
                   </span>
                 </div>
 
@@ -774,7 +783,24 @@ const loading = computed(() => dataCacheStore.loadingProducts);
 const showDelayedLoading = ref(false);
 let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 const searchQuery = ref("");
-const sortBy = ref("name-asc");
+const sortBy = ref("best-seller");
+
+// Best sellers data: { [productId]: totalQuantitySold }
+const bestSellersMap = ref<Record<number, number>>({});
+const loadingBestSellers = ref(false);
+
+const fetchBestSellers = async () => {
+  if (loadingBestSellers.value) return;
+  loadingBestSellers.value = true;
+  try {
+    const data = await $fetch<Record<number, number>>('/api/products/best-sellers');
+    bestSellersMap.value = data || {};
+  } catch (err) {
+    console.error('Error fetching best sellers:', err);
+  } finally {
+    loadingBestSellers.value = false;
+  }
+};
 
 // Transaction Config
 const transactionDateTime = ref("");
@@ -886,7 +912,13 @@ const filteredProducts = computed(() => {
   }
   
   return [...result].sort((a, b) => {
-    if (sortBy.value === "name-asc") {
+    if (sortBy.value === "best-seller") {
+      const soldA = bestSellersMap.value[a.id] ?? 0;
+      const soldB = bestSellersMap.value[b.id] ?? 0;
+      if (soldB !== soldA) return soldB - soldA;
+      // Secondary sort by name for equal sold counts
+      return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
+    } else if (sortBy.value === "name-asc") {
       return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
     } else if (sortBy.value === "name-desc") {
       return b.name.localeCompare(a.name, 'id', { sensitivity: 'base' });
@@ -980,7 +1012,8 @@ const handleCheckout = async () => {
     closePaymentModal();
     showCartDrawer.value = false;
     startLiveClock();
-    await fetchProducts(); 
+    await fetchProducts();
+    fetchBestSellers(); // Refresh best sellers after checkout 
   } catch (error: any) {
     showToast("❌ Duh, " + (error.message || "transaksinya gagal nih"));
   }
@@ -1042,11 +1075,13 @@ const removeViewportListeners = () => {
 onMounted(() => {
   startLiveClock();
   fetchProducts();
+  fetchBestSellers();
   addViewportListeners();
 });
 
 onActivated(() => {
   fetchProducts();
+  fetchBestSellers();
   addViewportListeners();
 });
 
