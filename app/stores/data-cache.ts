@@ -46,8 +46,9 @@ export const useDataCacheStore = defineStore("dataCache", () => {
   // Add a new product to the local in-memory store
   const addLocalProduct = (newProd: any) => {
     products.value.unshift(newProd);
-    // Sort products by name to maintain order
-    products.value.sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
+    // Sort products by full name to maintain order
+    const getFullName = (p: any) => `${p.name || ''} ${p.brand || ''} ${p.model || ''}`.trim();
+    products.value.sort((a, b) => getFullName(a).localeCompare(getFullName(b), 'id', { sensitivity: 'base' }));
     clearAnalyticsCache();
   };
 

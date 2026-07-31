@@ -1209,7 +1209,8 @@ const lowStockProducts = computed(() => {
 });
 
 const allProductsForSelect = computed(() => {
-  return [...dataCacheStore.products].sort((a: any, b: any) => a.name.localeCompare(b.name));
+  const getFullName = (p: any) => `${p.name || ''} ${p.brand || ''} ${p.model || ''}`.trim();
+  return [...dataCacheStore.products].sort((a: any, b: any) => getFullName(a).localeCompare(getFullName(b)));
 });
 
 const loading = computed(() => dataCacheStore.loadingProducts);

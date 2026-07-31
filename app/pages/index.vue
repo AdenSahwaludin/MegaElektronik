@@ -853,10 +853,21 @@ const getProductDisplayName = (product: any) => {
   if (!product) return '';
   let name = product.name || '';
   if (product.brand && product.brand !== 'No Brand' && product.brand.trim() !== '') {
-    name += ` ${product.brand}`;
+    if (!name.toLowerCase().includes(product.brand.toLowerCase().trim())) {
+      name += ` ${product.brand.trim()}`;
+    }
   }
   // Model is intentionally omitted from the display name to be shown separately
   // otherName is intentionally omitted from the display name
+  return name.trim();
+};
+
+const getProductSortName = (product: any) => {
+  if (!product) return '';
+  let name = getProductDisplayName(product);
+  if (product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard') {
+    name += ` ${product.model.trim()}`;
+  }
   return name.trim();
 };
 
@@ -871,7 +882,7 @@ const filteredProducts = computed(() => {
     });
   }
   return [...result].sort((a, b) => 
-    a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
+    getProductSortName(a).localeCompare(getProductSortName(b), 'id', { sensitivity: 'base' })
   );
 });
 

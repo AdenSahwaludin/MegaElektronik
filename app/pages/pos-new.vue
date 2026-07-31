@@ -783,7 +783,7 @@ const loading = computed(() => dataCacheStore.loadingProducts);
 const showDelayedLoading = ref(false);
 let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 const searchQuery = ref("");
-const sortBy = ref("best-seller");
+const sortBy = ref("name-asc");
 
 // Best sellers data: { [productId]: totalQuantitySold }
 const bestSellersMap = ref<Record<number, number>>({});
@@ -893,10 +893,21 @@ const getProductDisplayName = (product: any) => {
   if (!product) return '';
   let name = product.name || '';
   if (product.brand && product.brand !== 'No Brand' && product.brand.trim() !== '') {
-    name += ` ${product.brand}`;
+    if (!name.toLowerCase().includes(product.brand.toLowerCase().trim())) {
+      name += ` ${product.brand.trim()}`;
+    }
   }
   // Model is intentionally omitted from the display name to be shown separately
   // otherName is intentionally omitted from the display name
+  return name.trim();
+};
+
+const getProductSortName = (product: any) => {
+  if (!product) return '';
+  let name = getProductDisplayName(product);
+  if (product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard') {
+    name += ` ${product.model.trim()}`;
+  }
   return name.trim();
 };
 
@@ -912,20 +923,25 @@ const filteredProducts = computed(() => {
   }
   
   return [...result].sort((a, b) => {
+    const sortNameA = getProductSortName(a);
+    const sortNameB = getProductSortName(b);
+
     if (sortBy.value === "best-seller") {
       const soldA = bestSellersMap.value[a.id] ?? 0;
       const soldB = bestSellersMap.value[b.id] ?? 0;
       if (soldB !== soldA) return soldB - soldA;
-      // Secondary sort by name for equal sold counts
-      return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
+      // Secondary sort by composite name for equal sold counts
+      return sortNameA.localeCompare(sortNameB, 'id', { sensitivity: 'base' });
     } else if (sortBy.value === "name-asc") {
-      return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
+      return sortNameA.localeCompare(sortNameB, 'id', { sensitivity: 'base' });
     } else if (sortBy.value === "name-desc") {
-      return b.name.localeCompare(a.name, 'id', { sensitivity: 'base' });
+      return sortNameB.localeCompare(sortNameA, 'id', { sensitivity: 'base' });
     } else if (sortBy.value === "price-asc") {
-      return (a.askingPrice || 0) - (b.askingPrice || 0);
+      const priceDiff = (a.askingPrice || 0) - (b.askingPrice || 0);
+      return priceDiff !== 0 ? priceDiff : sortNameA.localeCompare(sortNameB, 'id', { sensitivity: 'base' });
     } else if (sortBy.value === "price-desc") {
-      return (b.askingPrice || 0) - (a.askingPrice || 0);
+      const priceDiff = (b.askingPrice || 0) - (a.askingPrice || 0);
+      return priceDiff !== 0 ? priceDiff : sortNameA.localeCompare(sortNameB, 'id', { sensitivity: 'base' });
     }
     return 0;
   });
