@@ -482,35 +482,35 @@
               </div>
 
               <!-- Price Input -->
-              <div class="relative flex-1 flex items-center">
-                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold select-none pointer-events-none">Rp</span>
-                <input
-                  :id="'price-' + item.id"
-                  name="price"
-                  :value="item.soldPrice ? formatNumber(item.soldPrice) : ''"
-                  @input="handlePriceInput(item.id, $event)"
-                  type="text"
-                  inputmode="numeric"
-                  class="w-full pl-8 pr-7 py-2 border border-orange-200 rounded-lg font-bold text-sm text-right focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50/50 transition"
-                />
-                <div class="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col justify-center -space-y-0.5 z-10">
-                  <button
-                    type="button"
-                    @click="adjustPrice(item.id, item.soldPrice, 10000)"
-                    class="p-0.5 hover:bg-orange-200 text-orange-700 rounded transition active:scale-90 flex items-center justify-center"
-                    title="Tambah Rp 10.000"
-                  >
-                    <Icon name="lucide:chevron-up" class="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    @click="adjustPrice(item.id, item.soldPrice, -10000)"
-                    class="p-0.5 hover:bg-orange-200 text-orange-700 rounded transition active:scale-90 flex items-center justify-center"
-                    title="Kurang Rp 10.000"
-                  >
-                    <Icon name="lucide:chevron-down" class="w-3.5 h-3.5" />
-                  </button>
+              <div class="flex items-center gap-1 flex-1 min-w-0">
+                <button
+                  type="button"
+                  @click="adjustPrice(item.id, item.soldPrice, -10000)"
+                  class="h-9 px-2 min-w-[38px] bg-orange-100 hover:bg-orange-200 active:bg-orange-300 text-orange-800 font-bold rounded-lg transition active:scale-95 flex items-center justify-center text-xs shrink-0 select-none touch-manipulation border border-orange-200"
+                  title="Kurang Rp 10.000"
+                >
+                  -10rb
+                </button>
+                <div class="relative flex-1 min-w-0">
+                  <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold select-none pointer-events-none">Rp</span>
+                  <input
+                    :id="'price-' + item.id"
+                    name="price"
+                    :value="item.soldPrice ? formatNumber(item.soldPrice) : ''"
+                    @input="handlePriceInput(item.id, $event)"
+                    type="text"
+                    inputmode="numeric"
+                    class="w-full pl-7 pr-2 py-1.5 border border-orange-200 rounded-lg font-bold text-sm text-right focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50/50 transition h-9"
+                  />
                 </div>
+                <button
+                  type="button"
+                  @click="adjustPrice(item.id, item.soldPrice, 10000)"
+                  class="h-9 px-2 min-w-[38px] bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold rounded-lg transition active:scale-95 flex items-center justify-center text-xs shrink-0 select-none touch-manipulation shadow-xs"
+                  title="Tambah Rp 10.000"
+                >
+                  +10rb
+                </button>
               </div>
             </div>
 
