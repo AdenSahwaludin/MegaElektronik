@@ -154,13 +154,12 @@
           class="hidden sm:flex items-center gap-3 px-4 py-2.5 bg-orange-100/70 rounded-xl border border-orange-200/80 text-[11px] font-extrabold text-orange-900 uppercase tracking-wider mb-1 max-w-7xl mx-auto w-full shadow-2xs"
         >
           <div class="w-9 shrink-0"></div>
-          <div class="grid grid-cols-[minmax(130px,1fr)_100px_130px_90px] gap-2 lg:gap-3 min-w-0 flex-1">
+          <div class="grid grid-cols-[minmax(160px,1fr)_120px_160px] gap-3 min-w-0 flex-1">
             <div>Nama Barang</div>
             <div>Merek</div>
             <div>Model</div>
-            <div>Popularitas</div>
           </div>
-          <div class="w-[280px] shrink-0 text-right pr-2">Harga & Aksi</div>
+          <div class="w-[300px] shrink-0 text-right pr-2">Harga & Aksi</div>
         </div>
 
         <!-- Product List View -->
@@ -185,7 +184,7 @@
               class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-orange-500 transition-colors"
             />
 
-            <!-- Left: Product Identity & Grid Details (Tab Stops) -->
+            <!-- Left: Product Identity & Grid Details (Nama Barang | Merek | Model) -->
             <div class="flex items-center gap-3 min-w-0 flex-1 pl-1">
               <!-- Icon/Badge Indicator -->
               <div
@@ -202,8 +201,8 @@
                 />
               </div>
 
-              <!-- Fixed 4-Column Grid: Nama Barang | Merek | Model | Popularitas -->
-              <div class="grid grid-cols-1 sm:grid-cols-[minmax(130px,1fr)_100px_130px_90px] gap-2 lg:gap-3 items-center min-w-0 flex-1">
+              <!-- Fixed 3-Column Grid: Nama Barang | Merek | Model -->
+              <div class="grid grid-cols-1 sm:grid-cols-[minmax(160px,1fr)_120px_160px] gap-2 lg:gap-3 items-center min-w-0 flex-1">
                 <!-- 1. Nama Barang & Stok -->
                 <div class="min-w-0 flex flex-col justify-center">
                   <h3 class="font-bold text-sm text-gray-800 group-hover:text-orange-600 transition-colors leading-snug truncate" :title="product.name">
@@ -250,24 +249,11 @@
                   </span>
                   <span v-else class="text-gray-300 font-normal text-xs">-</span>
                 </div>
-
-                <!-- 4. Popularitas Badge -->
-                <div class="min-w-0 flex items-center">
-                  <span
-                    v-if="bestSellersMap[product.id] && bestSellersMap[product.id]! > 0"
-                    class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs shrink-0"
-                    :title="`Terjual ${bestSellersMap[product.id]} unit`"
-                  >
-                    <Icon name="lucide:flame" class="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span>{{ bestSellersMap[product.id] }}</span>
-                  </span>
-                  <span v-else class="text-gray-300 font-normal text-xs">-</span>
-                </div>
               </div>
             </div>
 
-            <!-- Right: Pricing & Quick Action Buttons (Fixed 280px width matching header) -->
-            <div class="w-full sm:w-[280px] shrink-0 flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 pl-1 sm:pl-0">
+            <!-- Right: Pricing & Quick Action Buttons (Fixed 300px width matching header) -->
+            <div class="w-full sm:w-[300px] shrink-0 flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 pl-1 sm:pl-0">
               <!-- Prices Column -->
               <div class="text-left sm:text-right">
                 <p class="text-base font-black text-orange-600 leading-tight">
