@@ -148,6 +148,21 @@
           <div class="w-10 h-10 border-[3px] border-orange-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
 
+        <!-- Header Kolom Produk (Desktop/Tablet) -->
+        <div
+          v-show="!showDelayedLoading && filteredProducts.length > 0"
+          class="hidden md:flex items-center gap-3 px-4 py-2 bg-orange-100/60 rounded-xl border border-orange-200/60 text-[11px] font-extrabold text-orange-800 uppercase tracking-wider mb-1 max-w-7xl mx-auto w-full"
+        >
+          <div class="w-9 shrink-0"></div>
+          <div class="grid grid-cols-[minmax(140px,1.5fr)_110px_140px_90px] gap-3 min-w-0 flex-1">
+            <div>Nama Barang</div>
+            <div>Merek</div>
+            <div>Model</div>
+            <div>Popularitas</div>
+          </div>
+          <div class="w-[200px] shrink-0 text-right pr-2">Harga & Aksi</div>
+        </div>
+
         <!-- Product List View -->
         <div
           v-show="!showDelayedLoading && filteredProducts.length > 0"
@@ -170,12 +185,12 @@
               class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-orange-500 transition-colors"
             />
 
-            <!-- Left: Product Identity & Details -->
-            <div class="flex items-start gap-3 min-w-0 flex-1 pl-1">
+            <!-- Left: Product Identity & Grid Details (Tab Stops) -->
+            <div class="flex items-center gap-3 min-w-0 flex-1 pl-1">
               <!-- Icon/Badge Indicator -->
               <div
                 :class="[
-                  'w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold transition-colors',
+                  'w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold transition-colors',
                   product.stock === 0
                     ? 'bg-red-50 text-red-500 border border-red-100'
                     : 'bg-orange-100/60 group-hover:bg-orange-500 text-orange-600 group-hover:text-white'
@@ -187,53 +202,66 @@
                 />
               </div>
 
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <!-- Product Name -->
-                  <h3 class="font-bold text-sm text-gray-800 group-hover:text-orange-600 transition-colors leading-snug">
-                    {{ getProductDisplayName(product) }}
+              <!-- Fixed 4-Column Grid: Nama Barang | Merek | Model | Popularitas -->
+              <div class="grid grid-cols-1 sm:grid-cols-[minmax(140px,1.5fr)_110px_140px_90px] gap-2 lg:gap-3 items-center min-w-0 flex-1">
+                <!-- 1. Nama Barang & Stok -->
+                <div class="min-w-0 flex flex-col justify-center">
+                  <h3 class="font-bold text-sm text-gray-800 group-hover:text-orange-600 transition-colors leading-snug truncate" :title="product.name">
+                    {{ product.name }}
                   </h3>
-                  <!-- Model next to name -->
-                  <span
-                    v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'"
-                    class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md shrink-0"
-                  >
-                    Model: {{ product.model }}
-                  </span>
-                  <!-- Terlaris Badge -->
-                  <span
-                    v-if="bestSellersMap[product.id] && bestSellersMap[product.id]! > 0"
-                    class="inline-flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 shrink-0"
-                    :title="`Terjual ${bestSellersMap[product.id]} unit sepanjang masa`"
-                  >
-                    🔥 {{ bestSellersMap[product.id] }}
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-2 mt-1 flex-wrap text-xs text-gray-400 font-semibold">
-                  <!-- Stock Status -->
-                  <span
-                    :class="[
-                      'inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md text-[11px]',
-                      product.stock === 0
-                        ? 'bg-red-100 text-red-700'
-                        : product.stock < 5
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-emerald-100 text-emerald-800'
-                    ]"
-                  >
+                  <div class="mt-0.5">
                     <span
                       :class="[
-                        'w-1.5 h-1.5 rounded-full',
+                        'inline-flex items-center gap-1 font-bold px-1.5 py-0.2 rounded text-[10px]',
                         product.stock === 0
-                          ? 'bg-red-500'
+                          ? 'bg-red-100 text-red-700'
                           : product.stock < 5
-                            ? 'bg-amber-500 animate-pulse'
-                            : 'bg-emerald-500'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-emerald-100 text-emerald-800'
                       ]"
-                    />
-                    {{ product.stock === 0 ? 'Stok Habis' : `Stok: ${product.stock}` }}
+                    >
+                      <span
+                        :class="[
+                          'w-1.5 h-1.5 rounded-full',
+                          product.stock === 0
+                            ? 'bg-red-500'
+                            : product.stock < 5
+                              ? 'bg-amber-500 animate-pulse'
+                              : 'bg-emerald-500'
+                        ]"
+                      />
+                      {{ product.stock === 0 ? 'Stok Habis' : `Stok: ${product.stock}` }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 2. Merek -->
+                <div class="min-w-0 text-xs font-semibold text-gray-600">
+                  <span v-if="product.brand && product.brand !== 'No Brand' && product.brand.trim() !== ''" class="px-2 py-0.5 rounded-md bg-gray-100/90 border border-gray-200/60 inline-block truncate max-w-full text-[11px]">
+                    {{ product.brand }}
                   </span>
+                  <span v-else class="text-gray-300 font-normal text-xs">-</span>
+                </div>
+
+                <!-- 3. Model -->
+                <div class="min-w-0 text-xs font-semibold text-gray-500">
+                  <span v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'" class="px-2 py-0.5 rounded-md bg-gray-100/90 border border-gray-200/60 inline-block truncate max-w-full text-[11px]">
+                    {{ product.model }}
+                  </span>
+                  <span v-else class="text-gray-300 font-normal text-xs">-</span>
+                </div>
+
+                <!-- 4. Popularitas Badge -->
+                <div class="min-w-0 flex items-center">
+                  <span
+                    v-if="bestSellersMap[product.id] && bestSellersMap[product.id]! > 0"
+                    class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs shrink-0"
+                    :title="`Terjual ${bestSellersMap[product.id]} unit`"
+                  >
+                    <Icon name="lucide:flame" class="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span>{{ bestSellersMap[product.id] }}</span>
+                  </span>
+                  <span v-else class="text-gray-300 font-normal text-xs">-</span>
                 </div>
               </div>
             </div>
