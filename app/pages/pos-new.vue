@@ -482,8 +482,8 @@
               </div>
 
               <!-- Price Input -->
-              <div class="relative flex-1">
-                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">Rp</span>
+              <div class="relative flex-1 flex items-center">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold select-none pointer-events-none">Rp</span>
                 <input
                   :id="'price-' + item.id"
                   name="price"
@@ -491,8 +491,26 @@
                   @input="handlePriceInput(item.id, $event)"
                   type="text"
                   inputmode="numeric"
-                  class="w-full pl-8 pr-2 py-2 border border-orange-200 rounded-lg font-bold text-sm text-right focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50/50 transition"
+                  class="w-full pl-8 pr-7 py-2 border border-orange-200 rounded-lg font-bold text-sm text-right focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50/50 transition"
                 />
+                <div class="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col justify-center -space-y-0.5 z-10">
+                  <button
+                    type="button"
+                    @click="adjustPrice(item.id, item.soldPrice, 10000)"
+                    class="p-0.5 hover:bg-orange-200 text-orange-700 rounded transition active:scale-90 flex items-center justify-center"
+                    title="Tambah Rp 10.000"
+                  >
+                    <Icon name="lucide:chevron-up" class="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    @click="adjustPrice(item.id, item.soldPrice, -10000)"
+                    class="p-0.5 hover:bg-orange-200 text-orange-700 rounded transition active:scale-90 flex items-center justify-center"
+                    title="Kurang Rp 10.000"
+                  >
+                    <Icon name="lucide:chevron-down" class="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1012,6 +1030,11 @@ const handlePriceInput = (cartItemId: string, event: Event) => {
   const input = event.target as HTMLInputElement;
   const value = parseFromDisplay(input.value);
   cartStore.updateSoldPrice(cartItemId, value);
+};
+
+const adjustPrice = (cartItemId: string, currentPrice: number, delta: number) => {
+  const newPrice = Math.max(0, (currentPrice || 0) + delta);
+  cartStore.updateSoldPrice(cartItemId, newPrice);
 };
 
 const handleCheckout = async () => {

@@ -1339,7 +1339,7 @@ const categoriesList = computed(() => {
   const defaultNames = [
     'Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC',
     'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko',
-    'Exhaust',  'Speaker'
+    'Exerhaust',  'Speaker'
     // 'Pompa', 'TV'
   ];
 

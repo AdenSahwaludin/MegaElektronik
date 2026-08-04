@@ -1,8 +1,7 @@
 export default defineNuxtRouteMiddleware((to) => {
-  // Hanya gunakan cookie ini di client-side atau saat rendering awal di server
-  // useCookie otomatis sinkron dengan header Set-Cookie di response server
+  // Gunakan cookie auth_token dengan masa aktif 24 jam (sliding expiration)
   const token = useCookie("auth_token", {
-    maxAge: 60 * 60 * 48, // 48 jam
+    maxAge: 60 * 60 * 24, // 24 jam
     path: "/",
     sameSite: "lax",
   });
@@ -17,9 +16,8 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo("/", { replace: true });
   }
 
-  // Rolling Session: Perbarui masa aktif cookie jika sedang aktif
-  // Hanya lakukan di server-side untuk memperbarui header Set-Cookie
-  if (process.server && token.value) {
+  // Sliding Session: Perbarui masa aktif cookie 24 jam setiap kali pengguna berpindah halaman
+  if (token.value) {
     token.value = token.value;
   }
 });
