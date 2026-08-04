@@ -151,16 +151,16 @@
         <!-- Header Kolom Produk (Desktop/Tablet) -->
         <div
           v-show="!showDelayedLoading && filteredProducts.length > 0"
-          class="hidden md:flex items-center gap-3 px-4 py-2 bg-orange-100/60 rounded-xl border border-orange-200/60 text-[11px] font-extrabold text-orange-800 uppercase tracking-wider mb-1 max-w-7xl mx-auto w-full"
+          class="hidden sm:flex items-center gap-3 px-4 py-2.5 bg-orange-100/70 rounded-xl border border-orange-200/80 text-[11px] font-extrabold text-orange-900 uppercase tracking-wider mb-1 max-w-7xl mx-auto w-full shadow-2xs"
         >
           <div class="w-9 shrink-0"></div>
-          <div class="grid grid-cols-[minmax(140px,1.5fr)_110px_140px_90px] gap-3 min-w-0 flex-1">
+          <div class="grid grid-cols-[minmax(130px,1fr)_100px_130px_90px] gap-2 lg:gap-3 min-w-0 flex-1">
             <div>Nama Barang</div>
             <div>Merek</div>
             <div>Model</div>
             <div>Popularitas</div>
           </div>
-          <div class="w-[200px] shrink-0 text-right pr-2">Harga & Aksi</div>
+          <div class="w-[280px] shrink-0 text-right pr-2">Harga & Aksi</div>
         </div>
 
         <!-- Product List View -->
@@ -203,7 +203,7 @@
               </div>
 
               <!-- Fixed 4-Column Grid: Nama Barang | Merek | Model | Popularitas -->
-              <div class="grid grid-cols-1 sm:grid-cols-[minmax(140px,1.5fr)_110px_140px_90px] gap-2 lg:gap-3 items-center min-w-0 flex-1">
+              <div class="grid grid-cols-1 sm:grid-cols-[minmax(130px,1fr)_100px_130px_90px] gap-2 lg:gap-3 items-center min-w-0 flex-1">
                 <!-- 1. Nama Barang & Stok -->
                 <div class="min-w-0 flex flex-col justify-center">
                   <h3 class="font-bold text-sm text-gray-800 group-hover:text-orange-600 transition-colors leading-snug truncate" :title="product.name">
@@ -266,8 +266,8 @@
               </div>
             </div>
 
-            <!-- Right: Pricing & Quick Action Buttons -->
-            <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 pl-1 sm:pl-0">
+            <!-- Right: Pricing & Quick Action Buttons (Fixed 280px width matching header) -->
+            <div class="w-full sm:w-[280px] shrink-0 flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 pl-1 sm:pl-0">
               <!-- Prices Column -->
               <div class="text-left sm:text-right">
                 <p class="text-base font-black text-orange-600 leading-tight">
