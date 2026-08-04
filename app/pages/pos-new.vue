@@ -151,16 +151,16 @@
         <!-- Product List View -->
         <div
           v-show="!showDelayedLoading && filteredProducts.length > 0"
-          class="flex flex-col gap-2 max-w-7xl mx-auto w-full pb-2"
+          class="flex flex-col gap-2.5 max-w-7xl mx-auto w-full pb-2"
         >
           <div
             v-for="product in filteredProducts"
             :key="product.id"
             :class="[
-              'group bg-white rounded-xl border border-gray-200/80 hover:border-orange-300/90 shadow-xs hover:shadow-md transition-all duration-150 p-3 lg:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left relative overflow-hidden',
+              'group bg-white rounded-2xl border border-gray-200/80 hover:border-orange-400/80 shadow-xs hover:shadow-md transition-all duration-200 p-3 lg:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left relative overflow-hidden',
               product.stock === 0
-                ? 'opacity-50 cursor-not-allowed bg-gray-50/70 grayscale'
-                : 'hover:bg-orange-50/20 cursor-pointer active:scale-[0.995]'
+                ? 'opacity-60 cursor-not-allowed bg-gray-50/80 grayscale'
+                : 'hover:bg-orange-50/10 cursor-pointer active:scale-[0.995]'
             ]"
             @click="product.stock > 0 && addProductToCart(product, 'umum')"
           >
@@ -171,55 +171,60 @@
             />
 
             <!-- Left: Product Identity & Details -->
-            <div class="flex items-start gap-3 min-w-0 flex-1 pl-1">
-              <!-- Icon/Badge Indicator -->
+            <div class="flex items-center gap-3 min-w-0 flex-1 pl-1">
+              <!-- Icon Indicator Box -->
               <div
                 :class="[
-                  'w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold transition-colors',
+                  'w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold transition-all duration-200',
                   product.stock === 0
                     ? 'bg-red-50 text-red-500 border border-red-100'
-                    : 'bg-orange-100/60 group-hover:bg-orange-500 text-orange-600 group-hover:text-white'
+                    : 'bg-orange-100/70 group-hover:bg-orange-500 text-orange-600 group-hover:text-white shadow-xs'
                 ]"
               >
                 <Icon
                   :name="product.stock === 0 ? 'lucide:package-x' : 'lucide:package'"
-                  class="w-4 h-4"
+                  class="w-5 h-5"
                 />
               </div>
 
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <!-- Product Name -->
-                  <h3 class="font-bold text-sm text-gray-800 group-hover:text-orange-600 transition-colors leading-snug">
+              <!-- Info Stack -->
+              <div class="min-w-0 flex-1 space-y-1">
+                <!-- Title & Hot Sales Row -->
+                <div class="flex items-center gap-2 min-w-0">
+                  <h3 class="font-bold text-sm lg:text-base text-gray-900 group-hover:text-orange-600 transition-colors leading-snug truncate">
                     {{ getProductDisplayName(product) }}
                   </h3>
-                  <!-- Model next to name -->
-                  <span
-                    v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'"
-                    class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md shrink-0"
-                  >
-                    Model: {{ product.model }}
-                  </span>
+                  
                   <!-- Terlaris Badge -->
                   <span
                     v-if="bestSellersMap[product.id] && bestSellersMap[product.id]! > 0"
-                    class="inline-flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 shrink-0"
+                    class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0"
                     :title="`Terjual ${bestSellersMap[product.id]} unit sepanjang masa`"
                   >
                     🔥 {{ bestSellersMap[product.id] }}
                   </span>
                 </div>
 
-                <div class="flex items-center gap-2 mt-1 flex-wrap text-xs text-gray-400 font-semibold">
-                  <!-- Stock Status -->
+                <!-- Meta Details Row: Model & Stock Badges -->
+                <div class="flex items-center gap-2 flex-wrap text-xs">
+                  <!-- Model Tag -->
+                  <span
+                    v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'"
+                    class="inline-flex items-center gap-1 text-[11px] font-mono text-gray-500 bg-slate-100/90 px-2 py-0.5 rounded-md border border-slate-200/70 shrink-0"
+                  >
+                    <span class="text-gray-400 font-sans text-[10px]">Model:</span>
+                    <span class="font-semibold text-gray-700">{{ product.model }}</span>
+                  </span>
+
+                  <!-- Stock Tag -->
                   <span
                     :class="[
-                      'inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md text-[11px]',
+                      'inline-flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-md text-[11px] shrink-0',
                       product.stock === 0
-                        ? 'bg-red-100 text-red-700'
+                        ? 'bg-red-50 text-red-700 border border-red-200/60'
                         : product.stock < 5
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-emerald-100 text-emerald-800'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200/60'
+                          : 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
                     ]"
                   >
                     <span
@@ -241,12 +246,12 @@
             <!-- Right: Pricing & Quick Action Buttons -->
             <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 pl-1 sm:pl-0">
               <!-- Prices Column -->
-              <div class="text-left sm:text-right">
-                <p class="text-base font-black text-orange-600 leading-tight">
+              <div class="text-left sm:text-right shrink-0">
+                <p class="text-base sm:text-lg font-black text-orange-600 leading-tight font-mono">
                   {{ formatCurrency(product.askingPrice) }}
                 </p>
                 <p class="text-[11px] text-gray-400 font-semibold mt-0.5">
-                  Pas: <span class="text-gray-600 font-bold">{{ formatCurrency(product.fixedPrice) }}</span>
+                  Pas: <span class="text-gray-700 font-bold font-mono">{{ formatCurrency(product.fixedPrice) }}</span>
                 </p>
               </div>
 
@@ -257,7 +262,7 @@
                   v-if="product.servicePrice"
                   :disabled="product.stock === 0"
                   @click.stop="addProductToCart(product, 'service')"
-                  class="px-2.5 py-2 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-xl transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                  class="px-2.5 py-2 text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-xl transition-all active:scale-95 flex items-center gap-1 shadow-xs"
                   title="Tambah Jasa Service"
                 >
                   <Icon name="lucide:wrench" class="w-3.5 h-3.5" />
