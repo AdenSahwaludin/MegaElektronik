@@ -1,11 +1,5 @@
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
   if (!import.meta.client) return;
-
-  const cookieOptions = {
-    maxAge: 60 * 60 * 24, // 24 jam
-    path: "/",
-    sameSite: "lax" as const,
-  };
 
   let lastRefreshTime = 0;
   const REFRESH_INTERVAL_MS = 60 * 1000; // Minimal 1 menit sekali saat user aktif
@@ -16,11 +10,22 @@ export default defineNuxtPlugin(() => {
       return;
     }
 
-    const token = useCookie("auth_token", cookieOptions);
-    if (token.value) {
-      lastRefreshTime = now;
-      token.value = token.value; // Memperbarui expiry cookie di browser (sliding expiration)
-    }
+    // Jalankan dalam Nuxt App Context agar composable useCookie aman dipanggil dari event listener
+    nuxtApp.runWithContext(() => {
+      try {
+        const token = useCookie("auth_token", {
+          maxAge: 60 * 60 * 24,
+          path: "/",
+          sameSite: "lax" as const,
+        });
+        if (token.value) {
+          lastRefreshTime = now;
+          token.value = token.value; // Memperbarui expiry cookie di browser (sliding expiration)
+        }
+      } catch (e) {
+        // Safe catch
+      }
+    });
   };
 
   // Event listener untuk mendeteksi aktivitas pengguna (klik, ketik, sentuh, scroll)
