@@ -151,15 +151,14 @@
         <!-- Header Kolom Produk (Desktop/Tablet) -->
         <div
           v-show="!showDelayedLoading && filteredProducts.length > 0"
-          class="hidden sm:flex items-center gap-3 px-4 py-2.5 bg-orange-100/70 rounded-xl border border-orange-200/80 text-[11px] font-extrabold text-orange-900 uppercase tracking-wider mb-1 max-w-7xl mx-auto w-full shadow-2xs"
+          class="hidden sm:grid grid-cols-[36px_minmax(140px,1fr)_110px_140px_170px_200px] gap-3 px-4 py-2.5 bg-orange-100/70 rounded-xl border border-orange-200/80 text-[11px] font-extrabold text-orange-900 uppercase tracking-wider mb-1 max-w-7xl mx-auto w-full items-center shadow-2xs"
         >
-          <div class="w-9 shrink-0"></div>
-          <div class="grid grid-cols-[minmax(160px,1fr)_120px_160px] gap-3 min-w-0 flex-1">
-            <div>Nama Barang</div>
-            <div>Merek</div>
-            <div>Model</div>
-          </div>
-          <div class="w-[300px] shrink-0 text-right pr-2">Harga & Aksi</div>
+          <div></div>
+          <div>Nama Barang</div>
+          <div>Merek</div>
+          <div>Model</div>
+          <div class="text-center">Harga</div>
+          <div class="text-center">Aksi</div>
         </div>
 
         <!-- Product List View -->
@@ -171,7 +170,8 @@
             v-for="product in filteredProducts"
             :key="product.id"
             :class="[
-              'group bg-white rounded-xl border border-gray-200/80 hover:border-orange-300/90 shadow-xs hover:shadow-md transition-all duration-150 p-3 lg:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left relative overflow-hidden',
+              'group bg-white rounded-xl border border-gray-200/80 hover:border-orange-300/90 shadow-xs hover:shadow-md transition-all duration-150 p-3 lg:px-4 lg:py-3 text-left relative overflow-hidden',
+              'grid grid-cols-1 sm:grid-cols-[36px_minmax(140px,1fr)_110px_140px_170px_200px] gap-3 items-center',
               product.stock === 0
                 ? 'opacity-50 cursor-not-allowed bg-gray-50/70 grayscale'
                 : 'hover:bg-orange-50/20 cursor-pointer active:scale-[0.995]'
@@ -184,115 +184,104 @@
               class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-orange-500 transition-colors"
             />
 
-            <!-- Left: Product Identity & Grid Details (Nama Barang | Merek | Model) -->
-            <div class="flex items-center gap-3 min-w-0 flex-1 pl-1">
-              <!-- Icon/Badge Indicator -->
-              <div
-                :class="[
-                  'w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold transition-colors',
-                  product.stock === 0
-                    ? 'bg-red-50 text-red-500 border border-red-100'
-                    : 'bg-orange-100/60 group-hover:bg-orange-500 text-orange-600 group-hover:text-white'
-                ]"
-              >
-                <Icon
-                  :name="product.stock === 0 ? 'lucide:package-x' : 'lucide:package'"
-                  class="w-4 h-4"
-                />
-              </div>
+            <!-- 1. Icon Indicator -->
+            <div
+              :class="[
+                'w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold transition-colors',
+                product.stock === 0
+                  ? 'bg-red-50 text-red-500 border border-red-100'
+                  : 'bg-orange-100/60 group-hover:bg-orange-500 text-orange-600 group-hover:text-white'
+              ]"
+            >
+              <Icon
+                :name="product.stock === 0 ? 'lucide:package-x' : 'lucide:package'"
+                class="w-4 h-4"
+              />
+            </div>
 
-              <!-- Fixed 3-Column Grid: Nama Barang | Merek | Model -->
-              <div class="grid grid-cols-1 sm:grid-cols-[minmax(160px,1fr)_120px_160px] gap-2 lg:gap-3 items-center min-w-0 flex-1">
-                <!-- 1. Nama Barang & Stok -->
-                <div class="min-w-0 flex flex-col justify-center">
-                  <h3 class="font-bold text-sm text-gray-800 group-hover:text-orange-600 transition-colors leading-snug truncate" :title="product.name">
-                    {{ product.name }}
-                  </h3>
-                  <div class="mt-0.5">
-                    <span
-                      :class="[
-                        'inline-flex items-center gap-1 font-bold px-1.5 py-0.2 rounded text-[10px]',
-                        product.stock === 0
-                          ? 'bg-red-100 text-red-700'
-                          : product.stock < 5
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-emerald-100 text-emerald-800'
-                      ]"
-                    >
-                      <span
-                        :class="[
-                          'w-1.5 h-1.5 rounded-full',
-                          product.stock === 0
-                            ? 'bg-red-500'
-                            : product.stock < 5
-                              ? 'bg-amber-500 animate-pulse'
-                              : 'bg-emerald-500'
-                        ]"
-                      />
-                      {{ product.stock === 0 ? 'Stok Habis' : `Stok: ${product.stock}` }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- 2. Merek -->
-                <div class="min-w-0 text-xs font-semibold text-gray-600">
-                  <span v-if="product.brand && product.brand !== 'No Brand' && product.brand.trim() !== ''" class="px-2 py-0.5 rounded-md bg-gray-100/90 border border-gray-200/60 inline-block truncate max-w-full text-[11px]">
-                    {{ product.brand }}
-                  </span>
-                  <span v-else class="text-gray-300 font-normal text-xs">-</span>
-                </div>
-
-                <!-- 3. Model -->
-                <div class="min-w-0 text-xs font-semibold text-gray-500">
-                  <span v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'" class="px-2 py-0.5 rounded-md bg-gray-100/90 border border-gray-200/60 inline-block truncate max-w-full text-[11px]">
-                    {{ product.model }}
-                  </span>
-                  <span v-else class="text-gray-300 font-normal text-xs">-</span>
-                </div>
+            <!-- 2. Nama Barang & Stok -->
+            <div class="min-w-0 flex flex-col justify-center">
+              <h3 class="font-bold text-sm text-gray-800 group-hover:text-orange-600 transition-colors leading-snug truncate" :title="product.name">
+                {{ product.name }}
+              </h3>
+              <div class="mt-0.5">
+                <span
+                  :class="[
+                    'inline-flex items-center gap-1 font-bold px-1.5 py-0.2 rounded text-[10px]',
+                    product.stock === 0
+                      ? 'bg-red-100 text-red-700'
+                      : product.stock < 5
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-emerald-100 text-emerald-800'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'w-1.5 h-1.5 rounded-full',
+                      product.stock === 0
+                        ? 'bg-red-500'
+                        : product.stock < 5
+                          ? 'bg-amber-500 animate-pulse'
+                          : 'bg-emerald-500'
+                    ]"
+                  />
+                  {{ product.stock === 0 ? 'Stok Habis' : `Stok: ${product.stock}` }}
+                </span>
               </div>
             </div>
 
-            <!-- Right: Pricing & Quick Action Buttons (Fixed 300px width matching header) -->
-            <div class="w-full sm:w-[300px] shrink-0 flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 pl-1 sm:pl-0">
-              <!-- Prices Column -->
-              <div class="text-left sm:text-right">
-                <p class="text-base font-black text-orange-600 leading-tight">
-                  {{ formatCurrency(product.askingPrice) }}
-                </p>
-                <p class="text-[11px] text-gray-400 font-semibold mt-0.5">
-                  Pas: <span class="text-gray-600 font-bold">{{ formatCurrency(product.fixedPrice) }}</span>
-                </p>
-              </div>
+            <!-- 3. Merek -->
+            <div class="min-w-0 text-xs font-semibold text-gray-600">
+              <span v-if="product.brand && product.brand !== 'No Brand' && product.brand.trim() !== ''" class="px-2 py-0.5 rounded-md bg-gray-100/90 border border-gray-200/60 inline-block truncate max-w-full text-[11px]">
+                {{ product.brand }}
+              </span>
+              <span v-else class="text-gray-300 font-normal text-xs">-</span>
+            </div>
 
-              <!-- Action Buttons -->
-              <div class="flex items-center gap-1.5 shrink-0">
-                <!-- Service Button (Optional) -->
-                <button
-                  v-if="product.servicePrice"
-                  :disabled="product.stock === 0"
-                  @click.stop="addProductToCart(product, 'service')"
-                  class="px-2.5 py-2 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-xl transition-all active:scale-95 flex items-center gap-1 shadow-xs"
-                  title="Tambah Jasa Service"
-                >
-                  <Icon name="lucide:wrench" class="w-3.5 h-3.5" />
-                  <span>Svc {{ formatCurrency(product.servicePrice) }}</span>
-                </button>
+            <!-- 4. Model -->
+            <div class="min-w-0 text-xs font-semibold text-gray-500">
+              <span v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'" class="px-2 py-0.5 rounded-md bg-gray-100/90 border border-gray-200/60 inline-block truncate max-w-full text-[11px]">
+                {{ product.model }}
+              </span>
+              <span v-else class="text-gray-300 font-normal text-xs">-</span>
+            </div>
 
-                <!-- Add to Cart Button -->
-                <button
-                  :disabled="product.stock === 0"
-                  @click.stop="addProductToCart(product, 'umum')"
-                  :class="[
-                    'px-3.5 py-2 text-xs font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 shadow-xs active:scale-95',
-                    product.stock === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                      : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20 group-hover:shadow-md'
-                  ]"
-                >
-                  <Icon name="lucide:plus" class="w-4 h-4" />
-                  <span class="hidden sm:inline">Tambah</span>
-                </button>
-              </div>
+            <!-- 5. Harga (Terpisah) -->
+            <div class="min-w-0 text-left sm:text-center">
+              <p class="text-sm sm:text-base font-black text-orange-600 leading-tight">
+                {{ formatCurrency(product.askingPrice) }}
+              </p>
+              <p class="text-[10px] sm:text-[11px] text-gray-400 font-semibold mt-0.5">
+                Pas: <span class="text-gray-600 font-bold">{{ formatCurrency(product.fixedPrice) }}</span>
+              </p>
+            </div>
+
+            <!-- 6. Aksi (Terpisah) -->
+            <div class="flex items-center justify-between sm:justify-center gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+              <button
+                v-if="product.servicePrice"
+                :disabled="product.stock === 0"
+                @click.stop="addProductToCart(product, 'service')"
+                class="px-2.5 py-2 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-xl transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                title="Tambah Jasa Service"
+              >
+                <Icon name="lucide:wrench" class="w-3.5 h-3.5" />
+                <span>Svc {{ formatCurrency(product.servicePrice) }}</span>
+              </button>
+
+              <button
+                :disabled="product.stock === 0"
+                @click.stop="addProductToCart(product, 'umum')"
+                :class="[
+                  'px-3.5 py-2 text-xs font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 shadow-xs active:scale-95',
+                  product.stock === 0
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                    : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20 group-hover:shadow-md'
+                ]"
+              >
+                <Icon name="lucide:plus" class="w-4 h-4" />
+                <span class="hidden sm:inline">Tambah</span>
+              </button>
             </div>
           </div>
         </div>
@@ -748,7 +737,7 @@ const getCategoryIcon = (catName: string) => {
   if (lower.includes('kipas')) return 'lucide:fan';
   if (lower.includes('kompor')) return 'lucide:flame';
   if (lower.includes('rice') || lower.includes('cooker') || lower.includes('magic')) return 'lucide:cooking-pot';
-  if (lower.includes('blender') || lower.includes('juicer')) return 'lucide:blender';
+  if (lower.includes('blender') || lower.includes('juicer')) return 'lucide:plug';
   if (lower.includes('ac') || lower.includes('pendingin')) return 'lucide:snowflake';
   if (lower.includes('cuci')) return 'lucide:washing-machine';
   if (lower.includes('kulkas') || lower.includes('freezer')) return 'lucide:refrigerator';

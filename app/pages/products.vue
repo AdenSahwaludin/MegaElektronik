@@ -1319,7 +1319,7 @@ const getCategoryIcon = (catName: string) => {
   if (lower.includes('kipas')) return 'lucide:fan';
   if (lower.includes('kompor')) return 'lucide:flame';
   if (lower.includes('rice') || lower.includes('cooker') || lower.includes('magic')) return 'lucide:cooking-pot';
-  if (lower.includes('blender') || lower.includes('juicer')) return 'lucide:blender';
+  if (lower.includes('blender') || lower.includes('juicer')) return 'lucide:plug';
   if (lower.includes('ac') || lower.includes('pendingin')) return 'lucide:snowflake';
   if (lower.includes('cuci')) return 'lucide:washing-machine';
   if (lower.includes('kulkas') || lower.includes('freezer')) return 'lucide:refrigerator';
