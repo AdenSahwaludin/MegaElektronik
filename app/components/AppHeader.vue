@@ -4,7 +4,7 @@
       <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
         <!-- Logo & Brand (Left) -->
         <div class="flex items-center gap-2 lg:gap-3 shrink-0">
-          <AppLogo class="h-12 lg:h-16 w-auto rounded-full" />
+          <AppLogo />
           <div class="hidden sm:flex items-center gap-2">
             <h1 class="text-lg lg:text-2xl font-bold">
               Mega Elektronik

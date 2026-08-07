@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onActivated } from 'vue'
+import { ref, watch, onMounted, onActivated, computed } from 'vue'
 import { useCurrency } from '../../composables/useCurrency'
 import { useDataCacheStore } from '../stores/data-cache'
 import RevenueTrendChart from '../components/charts/RevenueTrendChart.vue'
@@ -13,6 +13,10 @@ definePageMeta({
 
 const { formatCurrency } = useCurrency()
 const dataCacheStore = useDataCacheStore()
+
+const lowStockProducts = computed(() => {
+  return (dataCacheStore.products || []).filter((p: any) => p.stock === 0 && p.isActive !== false)
+})
 
 // State
 const dateRange = ref('month')
@@ -138,6 +142,33 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
       </div>
 
       <div class="max-w-7xl mx-auto">
+        <!-- Low Stock Warning (Out of Stock Alert) -->
+        <Transition
+          enter-active-class="transition-all duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-4"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition-all duration-200 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-4"
+        >
+          <div
+            v-if="lowStockProducts.length > 0"
+            class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800 flex flex-col gap-1.5 shadow-sm"
+          >
+            <div class="flex items-center gap-2 font-bold text-amber-900">
+              <Icon name="lucide:alert-triangle" class="w-5 h-5 text-amber-600 shrink-0" />
+              <span>Ada {{ lowStockProducts.length }} produk stok habis!</span>
+            </div>
+            <div class="text-xs text-amber-700 font-medium pb-0.5">
+              Produk habis: {{ lowStockProducts.map((p: any) => {
+                let str = p.name || '';
+                if (p.brand && p.brand.trim() !== '' && p.brand !== 'No Brand') str += ' ' + p.brand;
+                if (p.model && p.model.trim() !== '' && p.model !== '-' && p.model.toLowerCase() !== 'standar' && p.model.toLowerCase() !== 'standard') str += ' ' + p.model;
+                return str;
+              }).join(', ') }}
+            </div>
+          </div>
+        </Transition>
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Icon name="lucide:pie-chart" class="w-8 h-8 text-orange-600" />
