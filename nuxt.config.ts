@@ -3,7 +3,75 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ["@nuxt/eslint", "@nuxt/ui", "@nuxt/icon", "@pinia/nuxt", "@vercel/speed-insights"],
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/ui",
+    "@nuxt/icon",
+    "@pinia/nuxt",
+    "@vercel/speed-insights",
+    "@vite-pwa/nuxt"
+  ],
+
+  pwa: {
+    registerType: "autoUpdate",
+    manifest: {
+      name: "Mega Elektronik POS",
+      short_name: "MegaPOS",
+      description: "Aplikasi POS Kasir dan Manajemen Stok Mega Elektronik",
+      theme_color: "#ea580c",
+      background_color: "#fff7ed",
+      display: "standalone",
+      start_url: "/",
+      orientation: "portrait-primary",
+      icons: [
+        {
+          src: "/Logo Mega Elektronik Bongas Merah no-bg1.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any maskable"
+        },
+        {
+          src: "/Logo Mega Elektronik Bongas Merah no-bg1.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any maskable"
+        }
+      ]
+    },
+    workbox: {
+      navigateFallback: "/",
+      globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2}"],
+      runtimeCaching: [
+        {
+          urlPattern: "^https://fonts\\.googleapis\\.com/.*",
+          handler: "CacheFirst",
+          options: {
+            cacheName: "google-fonts-stylesheets",
+            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }
+          }
+        },
+        {
+          urlPattern: "/api/products.*",
+          handler: "StaleWhileRevalidate",
+          options: {
+            cacheName: "api-products-cache",
+            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 }
+          }
+        },
+        {
+          urlPattern: "/api/transactions.*",
+          handler: "NetworkFirst",
+          options: {
+            cacheName: "api-transactions-cache",
+            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 12 }
+          }
+        }
+      ]
+    },
+    client: {
+      installPrompt: true
+    }
+  },
   ui: {
     colorMode: false,
   },

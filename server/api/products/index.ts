@@ -165,35 +165,35 @@ export default defineEventHandler(async (event) => {
         where.AND = andConditions;
       }
 
-      // Fetch total count
-      const total = await prisma.product.count({ where });
-
       const validSortFields = ["name", "brand", "model", "stock", "askingPrice", "fixedPrice", "buyPrice", "servicePrice", "isActive", "createdAt"];
       const sortBy = validSortFields.includes(query.sortBy as string) ? (query.sortBy as string) : "name";
       const sortOrder = (query.sortOrder as string) || "asc";
 
-      // Fetch paginated results
-      const products = await (prisma.product as any).findMany({
-        where,
-        orderBy: { [sortBy]: sortOrder },
-        select: {
-          id: true,
-          name: true,
-          brand: true,
-          model: true,
-          otherName: true,
-          buyPrice: true,
-          askingPrice: true,
-          fixedPrice: true,
-          stock: true,
-          servicePrice: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-        take: limit,
-        skip: offset,
-      });
+      // Fetch total count and paginated results in parallel
+      const [total, products] = await Promise.all([
+        prisma.product.count({ where }),
+        (prisma.product as any).findMany({
+          where,
+          orderBy: { [sortBy]: sortOrder },
+          select: {
+            id: true,
+            name: true,
+            brand: true,
+            model: true,
+            otherName: true,
+            buyPrice: true,
+            askingPrice: true,
+            fixedPrice: true,
+            stock: true,
+            servicePrice: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          take: limit,
+          skip: offset,
+        }),
+      ]);
 
       return {
         products,

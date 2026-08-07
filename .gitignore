@@ -19,7 +19,9 @@ logs
 .idea
 docs
 
-# SQLite temporary files
+# SQLite databases & temporary files
+*.db
+prisma/*.db
 *.db-shm
 *.db-wal
 prisma/*.db-shm

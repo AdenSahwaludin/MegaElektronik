@@ -37,5 +37,8 @@ useSeoMeta({
 </script>
 
 <template>
-  <NuxtPage keepalive />
+  <div>
+    <NuxtPwaManifest />
+    <NuxtPage keepalive />
+  </div>
 </template>

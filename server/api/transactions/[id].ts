@@ -63,10 +63,13 @@ export default defineEventHandler(async (event) => {
       let itemCount = 0;
 
       const items = transaction.transactionItems.map((it: any) => {
-        const buyPrice = it.product?.buyPrice ?? 0;
-        const profitPerItem = it.profitPerItem ?? it.soldPrice - buyPrice;
+        const buyPriceAtSale =
+          it.profitPerItem !== undefined && it.profitPerItem !== null
+            ? it.soldPrice - it.profitPerItem
+            : it.product?.buyPrice ?? 0;
+        const profitPerItem = it.profitPerItem ?? it.soldPrice - buyPriceAtSale;
         const totalProfit = profitPerItem * it.quantity;
-        totalCost += buyPrice * it.quantity;
+        totalCost += buyPriceAtSale * it.quantity;
         itemCount += it.quantity;
         return {
           id: it.id,
@@ -75,7 +78,7 @@ export default defineEventHandler(async (event) => {
           quantity: it.quantity,
           soldPrice: it.soldPrice,
           subtotal: it.soldPrice * it.quantity,
-          buyPrice,
+          buyPrice: buyPriceAtSale,
           profitPerItem,
           totalProfit,
         };

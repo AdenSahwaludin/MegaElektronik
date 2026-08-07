@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
 
   const { filter: where, days } = getDateFilter(dateRange, startDate, endDate);
 
-  const [aggregateData, transactionCount] = await Promise.all([
+  const [aggregateData, transactionCount, allItems] = await Promise.all([
     prisma.transaction.aggregate({
       where,
       _sum: {
@@ -19,21 +19,19 @@ export default defineEventHandler(async (event) => {
         totalProfit: true,
       }
     }),
-    prisma.transaction.count({ where })
+    prisma.transaction.count({ where }),
+    prisma.transactionItem.findMany({
+      where: {
+        transaction: where
+      },
+      select: {
+        productId: true,
+        quantity: true,
+        profitPerItem: true,
+        product: { select: { name: true, brand: true, model: true } }
+      }
+    })
   ]);
-
-  // Fetch all items to calculate real total profit per product (more accurate)
-  const allItems = await prisma.transactionItem.findMany({
-    where: {
-      transaction: where
-    },
-    select: {
-      productId: true,
-      quantity: true,
-      profitPerItem: true,
-      product: { select: { name: true, brand: true, model: true } }
-    }
-  });
 
   const productStats: Record<number, { name: string, qty: number, profit: number }> = {};
   allItems.forEach(item => {

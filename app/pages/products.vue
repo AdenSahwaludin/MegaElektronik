@@ -34,172 +34,208 @@
           </div>
         </Transition>
 
-        <!-- Add Product Section -->
-        <div class="bg-white rounded-lg shadow p-6 mb-8">
-          <div class="flex items-center justify-between mb-4">
-            <h2
-              class="text-xl lg:text-2xl font-bold text-gray-900 flex items-center gap-2"
-            >
-              <Icon name="lucide:plus-circle" class="w-6 h-6 text-orange-600" />
-              Tambah Produk Baru
-            </h2>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Action Header & Toggle Button for Add Product (Ringkas View) -->
+        <div class="mb-6 flex flex-wrap justify-between items-center bg-white p-4 lg:p-5 rounded-xl shadow-sm border border-gray-100 gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-orange-100 rounded-xl text-orange-600">
+              <Icon name="lucide:package" class="w-6 h-6" />
+            </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Nama Produk <span class="text-red-500">*</span></label
-              >
-              <input
-                v-model="newProduct.name"
-                type="text"
-                placeholder="Kipas Angin"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Merk</label
-              >
-              <input
-                v-model="newProduct.brand"
-                type="text"
-                placeholder="Sanex"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Model/Tipe</label
-              >
-              <input
-                v-model="newProduct.model"
-                type="text"
-                placeholder="FS-1899"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Nama Lain <span class="text-xs font-normal text-gray-500">Opsional</span></label
-              >
-              <input
-                v-model="newProduct.otherName"
-                type="text"
-                placeholder="Alias untuk pencarian"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Stok <span class="text-red-500">*</span></label
-              >
-              <input
-                :value="newProduct.stock !== undefined ? formatNumber(newProduct.stock) : ''"
-                @input="newProduct.stock = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                type="text"
-                inputmode="numeric"
-                placeholder="0"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Service (Teknisi)</label
-              >
-              <input
-                :value="newProduct.servicePrice ? formatNumber(newProduct.servicePrice) : ''"
-                @input="newProduct.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                type="text"
-                inputmode="numeric"
-                placeholder="Khusus teknisi"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Tawar (Rp) <span class="text-red-500">*</span></label
-              >
-              <input
-                :value="newProduct.askingPrice ? formatNumber(newProduct.askingPrice) : ''"
-                @input="newProduct.askingPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                type="text"
-                inputmode="numeric"
-                placeholder="0"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Pas (Rp)</label
-              >
-              <input
-                :value="newProduct.fixedPrice ? formatNumber(newProduct.fixedPrice) : ''"
-                @input="newProduct.fixedPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                type="text"
-                inputmode="numeric"
-                placeholder="0"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-<div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Beli (Rp) <span class="text-red-500">*</span></label
-              >
-              <input
-                :value="newProduct.buyPrice ? formatNumber(newProduct.buyPrice) : ''"
-                @input="newProduct.buyPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                type="text"
-                inputmode="numeric"
-                placeholder="0"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-
-
-            <div class="flex items-center gap-2 mt-auto pb-2">
-              <input
-                type="checkbox"
-                id="isActiveNew"
-                v-model="newProduct.isActive"
-                class="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-              />
-              <label for="isActiveNew" class="text-sm font-semibold text-gray-700">Produk Aktif</label>
-            </div>
-
-            <div class="flex items-end gap-2">
-              <button
-                @click="addProduct"
-                :disabled="
-                  !newProduct.name ||
-                  newProduct.stock === undefined ||
-                  !newProduct.buyPrice ||
-                  !newProduct.askingPrice
-                "
-                class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
-              >
-                <Icon name="lucide:check" class="w-5 h-5" />
-                <span class="hidden sm:inline">Tambah</span>
-              </button>
-              <button
-                @click="resetForm"
-                class="flex-1 px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
-              >
-                <Icon name="lucide:x" class="w-5 h-5" />
-                <span class="hidden sm:inline">Reset</span>
-              </button>
+              <h1 class="text-xl font-bold text-gray-900">Kelola Produk</h1>
+              <p class="text-xs text-gray-500">Tambah produk baru, kelola stok, dan harga toko</p>
             </div>
           </div>
+          
+          <button
+            @click="showAddForm = !showAddForm"
+            class="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 active:scale-95 cursor-pointer text-sm"
+          >
+            <Icon :name="showAddForm ? 'lucide:minus-circle' : 'lucide:plus-circle'" class="w-5 h-5" />
+            <span>{{ showAddForm ? 'Sembunyikan Form' : '+ Tambah Produk Baru' }}</span>
+          </button>
         </div>
+
+        <!-- Add Product Section (Collapsible) -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="transform -translate-y-4 opacity-0 scale-98"
+          enter-to-class="transform translate-y-0 opacity-100 scale-100"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="transform translate-y-0 opacity-100 scale-100"
+          leave-to-class="transform -translate-y-4 opacity-0 scale-98"
+        >
+          <div v-if="showAddForm" class="bg-white rounded-xl shadow-md p-6 mb-8 border-2 border-orange-200">
+            <div class="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
+              <h2
+                class="text-lg lg:text-xl font-bold text-gray-900 flex items-center gap-2"
+              >
+                <Icon name="lucide:plus-circle" class="w-5 h-5 text-orange-600" />
+                Form Tambah Produk Baru
+              </h2>
+              <button
+                @click="showAddForm = false"
+                class="text-gray-400 hover:text-gray-600 transition p-1.5 rounded-lg hover:bg-gray-100 flex items-center gap-1 text-xs font-semibold"
+                title="Tutup Form"
+              >
+                <Icon name="lucide:x" class="w-4 h-4" />
+                <span>Tutup</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Nama Produk <span class="text-red-500">*</span></label
+                >
+                <input
+                  v-model="newProduct.name"
+                  type="text"
+                  placeholder="Kipas Angin"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Merk</label
+                >
+                <input
+                  v-model="newProduct.brand"
+                  type="text"
+                  placeholder="Sanex"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Model/Tipe</label
+                >
+                <input
+                  v-model="newProduct.model"
+                  type="text"
+                  placeholder="FS-1899"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Nama Lain <span class="text-xs font-normal text-gray-500">Opsional</span></label
+                >
+                <input
+                  v-model="newProduct.otherName"
+                  type="text"
+                  placeholder="Alias untuk pencarian"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Stok <span class="text-red-500">*</span></label
+                >
+                <input
+                  :value="newProduct.stock !== undefined ? formatNumber(newProduct.stock) : ''"
+                  @input="newProduct.stock = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Service (Teknisi)</label
+                >
+                <input
+                  :value="newProduct.servicePrice ? formatNumber(newProduct.servicePrice) : ''"
+                  @input="newProduct.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="Khusus teknisi"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Tawar (Rp) <span class="text-red-500">*</span></label
+                >
+                <input
+                  :value="newProduct.askingPrice ? formatNumber(newProduct.askingPrice) : ''"
+                  @input="newProduct.askingPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Pas (Rp)</label
+                >
+                <input
+                  :value="newProduct.fixedPrice ? formatNumber(newProduct.fixedPrice) : ''"
+                  @input="newProduct.fixedPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Beli (Rp) <span class="text-red-500">*</span></label
+                >
+                <input
+                  :value="newProduct.buyPrice ? formatNumber(newProduct.buyPrice) : ''"
+                  @input="newProduct.buyPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div class="flex items-center gap-2 mt-auto pb-2">
+                <input
+                  type="checkbox"
+                  id="isActiveNew"
+                  v-model="newProduct.isActive"
+                  class="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                />
+                <label for="isActiveNew" class="text-sm font-semibold text-gray-700">Produk Aktif</label>
+              </div>
+
+              <div class="flex items-end gap-2 col-span-1 lg:col-span-2">
+                <button
+                  @click="addProduct"
+                  :disabled="
+                    !newProduct.name ||
+                    newProduct.stock === undefined ||
+                    !newProduct.buyPrice ||
+                    !newProduct.askingPrice
+                  "
+                  class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Icon name="lucide:check" class="w-5 h-5" />
+                  <span>Simpan Produk</span>
+                </button>
+                <button
+                  @click="resetForm"
+                  class="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Icon name="lucide:rotate-ccw" class="w-4 h-4" />
+                  <span>Reset</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
 
         <!-- Products Table -->
         <div class="bg-white rounded-lg shadow overflow-hidden min-h-[600px]">
@@ -210,19 +246,27 @@
             </h2>
             <div class="flex gap-2">
               <button
+                @click="showAddForm = !showAddForm"
+                class="px-3.5 py-2 bg-white text-orange-700 hover:bg-orange-50 font-bold rounded-lg shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer"
+                title="Tambah Produk Baru"
+              >
+                <Icon :name="showAddForm ? 'lucide:minus-circle' : 'lucide:plus-circle'" class="w-4 h-4 text-orange-600" />
+                <span>{{ showAddForm ? 'Tutup Form' : 'Tambah Produk' }}</span>
+              </button>
+              <button
                 @click="showArrivalModal = true"
-                class="px-4 py-2 bg-white text-green-700 hover:bg-green-50 font-bold rounded-lg shadow-sm transition flex items-center gap-2 text-sm"
+                class="px-3.5 py-2 bg-white text-green-700 hover:bg-green-50 font-bold rounded-lg shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer"
                 title="Catat Barang Datang"
               >
-                <Icon name="lucide:truck" class="w-5 h-5" />
+                <Icon name="lucide:truck" class="w-4 h-4 text-green-600" />
                 <span class="hidden sm:inline">Barang Datang</span>
               </button>
               <button
                 @click="printProductList"
-                class="px-4 py-2 bg-white text-orange-700 hover:bg-orange-50 font-bold rounded-lg shadow-sm transition flex items-center gap-2 text-sm"
+                class="px-3.5 py-2 bg-white text-gray-700 hover:bg-gray-100 font-bold rounded-lg shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer"
                 title="Cetak Semua Daftar Harga"
               >
-                <Icon name="lucide:printer" class="w-5 h-5" />
+                <Icon name="lucide:printer" class="w-4 h-4 text-gray-600" />
                 <span class="hidden sm:inline">Cetak Semua Harga</span>
               </button>
             </div>
@@ -1214,6 +1258,7 @@ const allProductsForSelect = computed(() => {
 });
 
 const loading = computed(() => dataCacheStore.loadingProducts);
+const showAddForm = ref(false);
 const showEditModal = ref(false);
 const showArrivalModal = ref(false);
 const showHistoryModal = ref(false);
@@ -1478,6 +1523,7 @@ const addProduct = async () => {
 
     dataCacheStore.addLocalProduct(response.product);
     resetForm();
+    showAddForm.value = false;
     showToast("Sip, produk udah ditambah!");
   } catch (error: any) {
     showToast(error.message || "Yah, gagal nambahin produk");

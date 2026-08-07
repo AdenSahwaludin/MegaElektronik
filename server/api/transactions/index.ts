@@ -41,78 +41,92 @@ export default defineEventHandler(async (event) => {
       ...searchFilter,
     };
 
-    // Get total count
-    const totalCount = await prisma.transaction.count({ where });
+    // Run queries in parallel via Promise.all for maximum read performance
+    const [
+      totalCount,
+      transactions,
+      aggregateData,
+      itemsAggregate,
+      lightFilteredTransactions,
+    ] = await Promise.all([
+      // 1. Total count
+      prisma.transaction.count({ where }),
+
+      // 2. Paginated transactions for the current page
+      prisma.transaction.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          customer: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              address: true,
+            },
+          },
+          transactionItems: {
+            select: {
+              id: true,
+              quantity: true,
+              soldPrice: true,
+              profitPerItem: true,
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  brand: true,
+                  model: true,
+                  buyPrice: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+
+      // 3. Financial summary (Revenue & Profit)
+      prisma.transaction.aggregate({
+        where,
+        _sum: {
+          totalAmount: true,
+          totalProfit: true,
+        },
+        _count: true,
+      }),
+
+      // 4. Total items sold aggregated on DB level
+      prisma.transactionItem.aggregate({
+        where: { transaction: where },
+        _sum: {
+          quantity: true,
+        },
+      }),
+
+      // 5. Lightweight transaction list for daily profit/revenue breakdown (no relation joins!)
+      prisma.transaction.findMany({
+        where,
+        select: {
+          createdAt: true,
+          totalAmount: true,
+          totalProfit: true,
+        },
+      }),
+    ]);
+
     const totalPages = Math.ceil(totalCount / limit);
+    const totalRevenue = aggregateData._sum.totalAmount || 0;
+    const totalProfit = aggregateData._sum.totalProfit || 0;
+    // totalCost is mathematically totalRevenue - totalProfit
+    const totalCost = totalRevenue - totalProfit;
+    const totalItemsSold = itemsAggregate._sum.quantity || 0;
 
-    // Fetch paginated transactions
-    const transactions = await prisma.transaction.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-      include: {
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-            address: true,
-          },
-        },
-        transactionItems: {
-          select: {
-            id: true,
-            quantity: true,
-            soldPrice: true,
-            profitPerItem: true,
-            product: {
-              select: {
-                id: true,
-                name: true,
-                brand: true,
-                model: true,
-                buyPrice: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // Calculate summary from filtered data
-    const aggregateData = await prisma.transaction.aggregate({
-      where,
-      _sum: {
-        totalAmount: true,
-        totalProfit: true,
-      },
-      _count: true,
-    });
-
-    // Calculate total cost and items sold from ALL filtered transactions (not just current page)
-    const allFilteredTransactions = await prisma.transaction.findMany({
-      where,
-      include: {
-        transactionItems: {
-          include: {
-            product: {
-              select: {
-                buyPrice: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    let totalCost = 0;
-    let totalItemsSold = 0;
     const dailyProfits: Record<string, number> = {};
     const dailyRevenues: Record<string, number> = {};
 
-    for (const transaction of allFilteredTransactions) {
-      // Calculate daily profit and revenue using the same formatting as the frontend
+    for (const transaction of lightFilteredTransactions) {
       const dateKey = new Date(transaction.createdAt).toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "long",
@@ -121,11 +135,6 @@ export default defineEventHandler(async (event) => {
       });
       dailyProfits[dateKey] = (dailyProfits[dateKey] || 0) + (transaction.totalProfit || 0);
       dailyRevenues[dateKey] = (dailyRevenues[dateKey] || 0) + (transaction.totalAmount || 0);
-
-      for (const item of transaction.transactionItems) {
-        totalCost += item.product.buyPrice * item.quantity;
-        totalItemsSold += item.quantity;
-      }
     }
 
     return {
@@ -137,8 +146,8 @@ export default defineEventHandler(async (event) => {
         totalPages,
       },
       summary: {
-        totalRevenue: aggregateData._sum.totalAmount || 0,
-        totalProfit: aggregateData._sum.totalProfit || 0,
+        totalRevenue,
+        totalProfit,
         totalCost,
         totalItemsSold,
         transactionCount: aggregateData._count,

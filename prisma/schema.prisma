@@ -32,6 +32,8 @@ model Product {
 
   @@index([name])
   @@index([brand])
+  @@index([model])
+  @@index([otherName])
   @@index([isActive])
 }
 
