@@ -25,13 +25,13 @@ export default defineNuxtConfig({
       orientation: "portrait-primary",
       icons: [
         {
-          src: "/Logo Mega Elektronik Bongas Merah no-bg1.png",
+          src: "/logo.png",
           sizes: "192x192",
           type: "image/png",
           purpose: "any maskable"
         },
         {
-          src: "/Logo Mega Elektronik Bongas Merah no-bg1.png",
+          src: "/logo.png",
           sizes: "512x512",
           type: "image/png",
           purpose: "any maskable"

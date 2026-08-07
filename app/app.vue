@@ -17,7 +17,7 @@ useHead({
     { name: "theme-color", content: "#ea580c" } // orange-600
   ],
   link: [
-    { rel: "icon", href: "/Logo Mega Elektronik Bongas Merah no-bg1.png" },
+    { rel: "icon", href: "/logo.png" },
     { rel: "manifest", href: "/manifest.json" }
   ],
   htmlAttrs: {
@@ -31,7 +31,7 @@ useSeoMeta({
     "Aplikasi Point of Sale (POS) dan manajemen stok untuk toko Mega Elektronik.",
   ogDescription:
     "Aplikasi Point of Sale (POS) dan manajemen stok untuk toko Mega Elektronik.",
-  ogImage: "/cover-image.png",
+  ogImage: "/logo.png",
   twitterCard: "summary_large_image",
 });
 </script>
