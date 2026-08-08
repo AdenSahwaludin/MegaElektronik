@@ -1,10 +1,11 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, shallowRef } from "vue";
 
 const PRODUCTS_STORAGE_KEY = "mega_elektronik_products_cache_v1";
 
 export const useDataCacheStore = defineStore("dataCache", () => {
-  const products = ref<any[]>([]);
+  // Use shallowRef to avoid deep reactive proxy overhead on thousands of product object properties
+  const products = shallowRef<any[]>([]);
   const isProductsLoaded = ref(false);
   const loadingProducts = ref(false);
 
@@ -84,7 +85,9 @@ export const useDataCacheStore = defineStore("dataCache", () => {
   const updateLocalProduct = (updated: any) => {
     const idx = products.value.findIndex((p) => p.id === updated.id);
     if (idx !== -1) {
-      products.value[idx] = { ...products.value[idx], ...updated };
+      const updatedArray = [...products.value];
+      updatedArray[idx] = { ...updatedArray[idx], ...updated };
+      products.value = updatedArray;
       saveProductsToStorage(products.value);
     }
     clearAnalyticsCache();
@@ -92,9 +95,10 @@ export const useDataCacheStore = defineStore("dataCache", () => {
 
   // Add a new product to the local store & storage
   const addLocalProduct = (newProd: any) => {
-    products.value.unshift(newProd);
     const getFullName = (p: any) => `${p.name || ''} ${p.brand || ''} ${p.model || ''}`.trim();
-    products.value.sort((a, b) => getFullName(a).localeCompare(getFullName(b), 'id', { sensitivity: 'base' }));
+    const nextProducts = [newProd, ...products.value];
+    nextProducts.sort((a, b) => getFullName(a).localeCompare(getFullName(b), 'id', { sensitivity: 'base' }));
+    products.value = nextProducts;
     saveProductsToStorage(products.value);
     clearAnalyticsCache();
   };
@@ -110,7 +114,12 @@ export const useDataCacheStore = defineStore("dataCache", () => {
   const receiveLocalArrival = (productId: number, additionalStock: number) => {
     const idx = products.value.findIndex((p) => p.id === productId);
     if (idx !== -1) {
-      products.value[idx].stock += additionalStock;
+      const updatedArray = [...products.value];
+      updatedArray[idx] = {
+        ...updatedArray[idx],
+        stock: (updatedArray[idx].stock || 0) + additionalStock
+      };
+      products.value = updatedArray;
       saveProductsToStorage(products.value);
     }
     clearAnalyticsCache();
