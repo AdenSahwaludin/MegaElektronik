@@ -819,8 +819,21 @@ const products = computed(() => {
 });
 const loading = computed(() => dataCacheStore.loadingProducts);
 const showDelayedLoading = ref(false);
-let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 const searchQuery = ref("");
+const debouncedSearchQuery = ref("");
+let searchDebounceTimer: any = null;
+
+watch(searchQuery, (newVal) => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  if (!newVal || !newVal.trim()) {
+    debouncedSearchQuery.value = "";
+    return;
+  }
+  searchDebounceTimer = setTimeout(() => {
+    debouncedSearchQuery.value = newVal;
+  }, 150);
+});
+
 const sortBy = ref("name-asc");
 
 // Best sellers data: { [productId]: totalQuantitySold }
@@ -952,8 +965,8 @@ const getProductSortName = (product: any) => {
 // Computed
 const filteredProducts = computed(() => {
   let result = products.value;
-  if (searchQuery.value.trim()) {
-    const keywords = searchQuery.value.toLowerCase().trim().split(/\s+/);
+  if (debouncedSearchQuery.value.trim()) {
+    const keywords = debouncedSearchQuery.value.toLowerCase().trim().split(/\s+/);
     result = result.filter(p => {
       const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
       return keywords.every(k => searchStr.includes(k));

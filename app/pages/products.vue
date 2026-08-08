@@ -1142,15 +1142,27 @@ const toTitleCase = (str: string | null | undefined) => {
   return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };
 
-// State (using local computed filtering, sorting, and pagination on top of the cached store)
-const dataCacheStore = useDataCacheStore();
+const searchQuery = ref("");
+const debouncedSearchQuery = ref("");
+let searchDebounceTimer: any = null;
+
+watch(searchQuery, (newVal) => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  if (!newVal || !newVal.trim()) {
+    debouncedSearchQuery.value = "";
+    return;
+  }
+  searchDebounceTimer = setTimeout(() => {
+    debouncedSearchQuery.value = newVal;
+  }, 150);
+});
 
 const productsList = computed(() => {
   let list = dataCacheStore.products;
 
-  // 1. Filter by search query
-  if (searchQuery.value.trim()) {
-    const keywords = searchQuery.value.toLowerCase().trim().split(/\s+/).filter((k) => k.length > 0);
+  // 1. Filter by debounced search query
+  if (debouncedSearchQuery.value.trim()) {
+    const keywords = debouncedSearchQuery.value.toLowerCase().trim().split(/\s+/).filter((k) => k.length > 0);
     if (keywords.length > 0) {
       list = list.filter((p) => {
         const name = (p.name || "").toLowerCase();
@@ -1303,7 +1315,6 @@ const hideDropdown = (item: ArrivalItem) => {
 };
 
 // Search, Quick Categories, and Pagination State
-const searchQuery = ref("");
 const showCategories = ref(true);
 const currentPage = ref(1);
 const itemsPerPage = ref(25);
