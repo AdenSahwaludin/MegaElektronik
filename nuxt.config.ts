@@ -92,6 +92,8 @@ export default defineNuxtConfig({
 
   routeRules: {
     "/": { ssr: true },
+    "/_nuxt/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
+    "/logo.png": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
   },
 
   compatibilityDate: "2025-01-15",
@@ -110,8 +112,13 @@ export default defineNuxtConfig({
     storesDirs: ["./app/stores/**"],
   },
 
-  // Server middleware
+  // Server middleware & compression
   nitro: {
     srcDir: "./server",
+    compressPublicAssets: {
+      gzip: true,
+      brotli: true,
+    },
+    minify: true,
   },
 });
