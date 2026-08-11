@@ -49,6 +49,17 @@
               <Icon name="lucide:chevron-down" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
             
+            <!-- Tombol Scan Barcode Kamera -->
+            <button
+              @click="isScannerOpen = true"
+              type="button"
+              class="px-3 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1.5 shrink-0 text-xs font-bold cursor-pointer"
+              title="Scan Barcode Kamera"
+            >
+              <Icon name="lucide:scan-line" class="w-4 h-4" />
+              <span class="hidden sm:inline">Scan Kamera</span>
+            </button>
+
             <!-- Tombol kembali ke POS Biasa -->
             <NuxtLink
               to="/"
@@ -730,6 +741,20 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Barcode Scanner Modal Component -->
+    <BarcodeScannerModal
+      :is-open="isScannerOpen"
+      :cart-items="cartStore.items"
+      :total-amount="cartStore.totalRevenue"
+      :last-scanned-item="lastScannedName"
+      @close="isScannerOpen = false"
+      @scan="handleCameraScan"
+      @pay="openPaymentModal"
+      @increment-qty="handleScannerIncrementQty"
+      @decrement-qty="handleScannerDecrementQty"
+      @remove-item="(id) => cartStore.removeFromCart(id)"
+    />
   </div>
 </template>
 
@@ -739,6 +764,7 @@ import { watch, computed, ref, onActivated, onDeactivated, onMounted, onUnmounte
 import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
+import { useAudioBeep } from "~/composables/useAudioBeep";
 
 definePageMeta({
   layout: "default",
@@ -747,6 +773,80 @@ definePageMeta({
 const cartStore = useCartStore();
 const dataCacheStore = useDataCacheStore();
 const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
+const { playSuccessBeep, playErrorBeep } = useAudioBeep();
+
+const isScannerOpen = ref(false);
+const lastScannedName = ref("");
+
+let barcodeBuffer = "";
+let barcodeTimer: any = null;
+
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const tag = (e.target as HTMLElement)?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  if (e.key === 'Enter') {
+    if (barcodeBuffer.length >= 2) {
+      handleCameraScan(barcodeBuffer);
+    }
+    barcodeBuffer = '';
+    return;
+  }
+
+  if (e.key.length === 1) {
+    barcodeBuffer += e.key;
+    clearTimeout(barcodeTimer);
+    barcodeTimer = setTimeout(() => {
+      barcodeBuffer = '';
+    }, 200);
+  }
+}
+
+function handleCameraScan(scannedCode: string) {
+  const code = scannedCode.trim().toLowerCase();
+  if (!code) return;
+
+  const allProds = dataCacheStore.products || [];
+  const prod = allProds.find((p: any) =>
+    (p.barcode && p.barcode.toLowerCase() === code) ||
+    (p.model && p.model.toLowerCase() === code) ||
+    (p.name && p.name.toLowerCase() === code)
+  );
+
+  if (prod) {
+    if (prod.stock <= 0) {
+      playErrorBeep();
+      showToast(`Stok ${prod.name} habis!`);
+      return;
+    }
+    const added = cartStore.addToCart(prod);
+    if (added) {
+      playSuccessBeep();
+      lastScannedName.value = prod.name;
+      showToast(`+1 ${prod.name} ditambahkan ke keranjang`);
+    } else {
+      playErrorBeep();
+      showToast(`Stok maksimal ${prod.name} sudah tercapai!`);
+    }
+  } else {
+    playErrorBeep();
+    showToast(`Barcode "${scannedCode}" tidak ditemukan`);
+  }
+}
+
+function handleScannerIncrementQty(cartItemId: string) {
+  const item = cartStore.items.find(i => i.id === cartItemId);
+  if (item) {
+    cartStore.updateQuantity(cartItemId, item.quantity + 1);
+  }
+}
+
+function handleScannerDecrementQty(cartItemId: string) {
+  const item = cartStore.items.find(i => i.id === cartItemId);
+  if (item) {
+    cartStore.updateQuantity(cartItemId, item.quantity - 1);
+  }
+}
 
 // Categories with Icons and Dynamic Counts
 const getCategoryIcon = (catName: string) => {
@@ -1023,6 +1123,7 @@ const stopLiveClock = () => {
 };
 
 // Methods
+let loadingTimer: any = null;
 const fetchProducts = async (silent = false) => {
   if (!silent && !dataCacheStore.isProductsLoaded) {
     showDelayedLoading.value = false;
@@ -1149,6 +1250,9 @@ onMounted(() => {
   fetchProducts();
   fetchBestSellers();
   addViewportListeners();
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', handleGlobalKeydown);
+  }
 });
 
 onActivated(() => {
@@ -1164,6 +1268,9 @@ onDeactivated(() => {
 onUnmounted(() => {
   if (timeInterval) clearInterval(timeInterval);
   removeViewportListeners();
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleGlobalKeydown);
+  }
 });
 </script>
 

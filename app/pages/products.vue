@@ -48,7 +48,7 @@
 
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Merk</label
+                  >Merek</label
                 >
                 <input
                   v-model="newProduct.brand"
@@ -80,6 +80,29 @@
                   placeholder="Alias untuk pencarian"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Barcode <span class="text-xs font-normal text-gray-500">Opsional</span></label
+                >
+                <div class="relative flex items-center">
+                  <input
+                    v-model="newProduct.barcode"
+                    type="text"
+                    placeholder="Contoh: 8991234567890"
+                    class="w-full pl-4 pr-24 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono text-sm"
+                  />
+                  <button
+                    @click="openAddBarcodeScanner"
+                    type="button"
+                    class="absolute right-1.5 px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                    title="Scan Barcode Kamera"
+                  >
+                    <Icon name="lucide:scan-line" class="w-3.5 h-3.5" />
+                    <span>Scan</span>
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -190,35 +213,46 @@
 
         <!-- Products Table -->
         <div class="bg-white rounded-lg shadow overflow-hidden min-h-[600px]">
-          <div class="px-6 py-4 bg-orange-600 text-white flex justify-between items-center">
-            <h2 class="text-lg lg:text-xl font-bold flex items-center gap-2">
+          <div class="px-4 lg:px-6 py-4 bg-orange-600 text-white flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+            <h2 class="text-lg lg:text-xl font-bold flex items-center gap-2 shrink-0">
               <Icon name="lucide:list" class="w-6 h-6" />
-              Daftar Produk ({{ totalItems }})
+              <span>Daftar Produk ({{ totalItems }})</span>
             </h2>
-            <div class="flex gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full md:w-auto">
               <button
                 @click="showAddForm = !showAddForm"
-                class="px-3.5 py-2 bg-white text-orange-700 hover:bg-orange-50 font-bold rounded-lg shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer"
+                class="h-11 px-3 py-2 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
                 title="Tambah Produk Baru"
               >
-                <Icon :name="showAddForm ? 'lucide:minus-circle' : 'lucide:plus-circle'" class="w-4 h-4 text-orange-600" />
-                <span>{{ showAddForm ? 'Tutup Form' : 'Tambah Produk' }}</span>
+                <Icon :name="showAddForm ? 'lucide:minus-circle' : 'lucide:plus-circle'" class="w-4 h-4 text-orange-600 shrink-0" />
+                <span class="truncate">{{ showAddForm ? 'Tutup Form' : 'Tambah Produk' }}</span>
+              </button>
+              <button
+                @click="showScanModeChoiceModal = true"
+                class="h-11 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
+                title="Scan Barcode Massal"
+              >
+                <Icon name="lucide:layers" class="w-4 h-4 text-white shrink-0" />
+                <span class="truncate">Scan Massal</span>
+                <span v-if="selectedProductIds.length > 0" class="ml-0.5 px-1.5 py-0.5 bg-white text-amber-700 text-[10px] font-black rounded-full shrink-0">
+                  {{ selectedProductIds.length }}
+                </span>
               </button>
               <button
                 @click="showArrivalModal = true"
-                class="px-3.5 py-2 bg-white text-green-700 hover:bg-green-50 font-bold rounded-lg shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer"
+                class="h-11 px-3 py-2 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
                 title="Catat Barang Datang"
               >
-                <Icon name="lucide:truck" class="w-4 h-4 text-green-600" />
-                <span class="hidden sm:inline">Barang Datang</span>
+                <Icon name="lucide:truck" class="w-4 h-4 text-green-600 shrink-0" />
+                <span class="truncate">Barang Datang</span>
               </button>
               <button
                 @click="printProductList"
-                class="px-3.5 py-2 bg-white text-gray-700 hover:bg-gray-100 font-bold rounded-lg shadow-sm transition flex items-center gap-1.5 text-sm cursor-pointer"
+                class="h-11 px-3 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
                 title="Cetak Semua Daftar Harga"
               >
-                <Icon name="lucide:printer" class="w-4 h-4 text-gray-600" />
-                <span class="hidden sm:inline">Cetak Semua Harga</span>
+                <Icon name="lucide:printer" class="w-4 h-4 text-gray-600 shrink-0" />
+                <span class="truncate">Cetak Harga</span>
               </button>
             </div>
           </div>
@@ -232,14 +266,14 @@
                 <input
                   v-model="searchQuery"
                   type="text"
-                  placeholder="Cari produk pake nama, merk, atau model..."
+                  placeholder="Cari produk berdasarkan nama, merek, atau model..."
                   class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-sm text-gray-800 placeholder-gray-400 shadow-sm transition"
                 />
                 <button
                   v-if="searchQuery"
                   @click="searchQuery = ''"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 hover:bg-gray-100 rounded-full"
-                  title="Clear search"
+                  title="Hapus pencarian"
                 >
                   <Icon name="lucide:x-circle" class="w-4 h-4" />
                 </button>
@@ -269,13 +303,13 @@
               <div v-show="showCategories" class="pt-1">
                 <!-- Scrollable Category Chips Container -->
                 <div class="relative group">
-                  <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 py-1.5 px-0.5 overflow-x-auto scrollbar-hide scroll-smooth">
+                  <div class="flex flex-wrap items-center justify-center gap-2 py-1.5 px-0.5">
                     
                     <!-- "Semua Produk" Pill -->
                     <button
                       @click="searchQuery = ''"
                       :class="[
-                        'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                        'h-9 px-3.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
                         !searchQuery
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
                           : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
@@ -299,7 +333,7 @@
                       :key="cat.name"
                       @click="selectCategory(cat.name)"
                       :class="[
-                        'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                        'h-9 px-3.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
                         isCategoryActive(cat.name)
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
                           : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
@@ -405,10 +439,10 @@
               <Icon :name="searchQuery ? 'lucide:search-x' : 'lucide:inbox'" class="w-10 h-10 text-orange-600" />
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-1">
-              {{ searchQuery ? 'Produk nggak ketemu' : 'Belum ada produk' }}
+              {{ searchQuery ? 'Produk Tidak Ditemukan' : 'Belum Ada Produk' }}
             </h3>
             <p class="text-gray-500 max-w-xs mx-auto">
-              {{ searchQuery ? `Maaf, produk dengan kata kunci "${searchQuery}" nggak ada di daftar.` : 'Daftar produk kamu masih kosong nih. Yuk tambahin produk baru di atas!' }}
+              {{ searchQuery ? `Maaf, produk dengan kata kunci "${searchQuery}" tidak ditemukan.` : 'Daftar produk masih kosong. Silakan tambahkan produk baru melalui tombol di atas.' }}
             </p>
             <button 
               v-if="searchQuery"
@@ -426,7 +460,7 @@
             class="flex flex-col items-center justify-center py-32 text-center"
           >
             <div class="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-orange-600 font-bold animate-pulse">Lagi nunggu data...</p>
+            <p class="text-orange-600 font-bold animate-pulse">Memuat data produk...</p>
           </div>
 
           <!-- Table Content -->
@@ -437,6 +471,15 @@
             <table class="w-full">
               <thead class="bg-gray-100 border-b border-gray-300">
                 <tr>
+                  <th class="px-3 py-3 text-center w-10">
+                    <input
+                      type="checkbox"
+                      :checked="isAllSelected"
+                      @change="toggleSelectAll"
+                      class="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500 cursor-pointer"
+                      title="Pilih Semua Halaman Ini"
+                    />
+                  </th>
                   <th
                     @click="toggleSort('name')"
                     class="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-1/4 min-w-50 cursor-pointer hover:bg-gray-200 transition"
@@ -451,7 +494,7 @@
                     class="px-4 py-3 text-left text-sm font-semibold text-gray-700 hidden lg:table-cell cursor-pointer hover:bg-gray-200 transition"
                   >
                     <div class="flex items-center gap-1">
-                      Merk
+                      Merek
                       <Icon v-if="sortBy === 'brand'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
                     </div>
                   </th>
@@ -522,7 +565,16 @@
                   v-for="product in products"
                   :key="product.id"
                   class="hover:bg-orange-50 transition"
+                  :class="{ 'bg-orange-50/60': selectedProductIds.includes(product.id) }"
                 >
+                  <td class="px-3 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      :value="product.id"
+                      v-model="selectedProductIds"
+                      class="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500 cursor-pointer"
+                    />
+                  </td>
                   <td class="px-4 py-3 text-sm font-semibold text-gray-800 wrap-break-words max-w-75">
                     {{ getProductDisplayName(product) }}
                   </td>
@@ -690,6 +742,29 @@
                 type="text"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Barcode <span class="text-xs font-normal text-gray-500">Opsional</span></label
+              >
+              <div class="relative flex items-center">
+                <input
+                  v-model="editingProduct.barcode"
+                  type="text"
+                  placeholder="Scan / ketik barcode..."
+                  class="w-full pl-4 pr-24 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono text-sm"
+                />
+                <button
+                  @click="openEditBarcodeScanner"
+                  type="button"
+                  class="absolute right-1.5 px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                  title="Scan Barcode Kamera"
+                >
+                  <Icon name="lucide:scan-line" class="w-3.5 h-3.5" />
+                  <span>Scan</span>
+                </button>
+              </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -1118,6 +1193,105 @@
         {{ message }}
       </div>
     </Transition>
+
+    <!-- Modal Pilihan Mode Scan Barcode Masal -->
+    <div v-if="showScanModeChoiceModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-xs">
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-gray-100">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="p-2 bg-orange-100 rounded-xl text-orange-600">
+              <Icon name="lucide:layers" class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-gray-900">Scan Barcode Massal</h3>
+              <p class="text-xs text-gray-500">Pilih metode pengisian barcode produk</p>
+            </div>
+          </div>
+          <button @click="showScanModeChoiceModal = false" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+            <Icon name="lucide:x" class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Options Container -->
+        <div class="space-y-3">
+          <!-- Option 1: Pilih Produk Terlebih Dahulu (Manual Checkbox) -->
+          <button
+            @click="handleChoiceManualSelect"
+            type="button"
+            class="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50/40 transition-all group relative flex items-start gap-3.5 cursor-pointer"
+          >
+            <div class="p-2.5 rounded-xl bg-gray-100 group-hover:bg-orange-500 group-hover:text-white text-gray-600 transition-colors shrink-0">
+              <Icon name="lucide:check-square" class="w-5 h-5" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <h4 class="text-sm font-bold text-gray-900 group-hover:text-orange-700 transition-colors">
+                  Pilih Produk Terlebih Dahulu
+                </h4>
+                <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 text-gray-600 group-hover:bg-orange-100 group-hover:text-orange-700 rounded-md">
+                  {{ selectedProductIds.length }} Terpilih
+                </span>
+              </div>
+              <p class="text-xs text-gray-500 leading-relaxed">
+                Scan barcode hanya untuk produk yang telah dicentang pada tabel.
+              </p>
+            </div>
+          </button>
+
+          <!-- Option 2: Otomatis Pilih Semua Produk Tanpa Barcode -->
+          <button
+            @click="handleChoiceSelectAllUnbarcoded"
+            type="button"
+            class="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all group relative flex items-start gap-3.5 cursor-pointer"
+          >
+            <div class="p-2.5 rounded-xl bg-emerald-50 group-hover:bg-emerald-600 group-hover:text-white text-emerald-600 transition-colors shrink-0">
+              <Icon name="lucide:sparkles" class="w-5 h-5" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <h4 class="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
+                  Pilih Semua Produk Tanpa Barcode
+                </h4>
+                <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-md">
+                  {{ unbarcodedCount }} Produk
+                </span>
+              </div>
+              <p class="text-xs text-gray-500 leading-relaxed">
+                Otomatis mengumpulkan seluruh produk aktif yang belum memiliki data barcode.
+              </p>
+            </div>
+          </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-end pt-2 border-t border-gray-100">
+          <button
+            @click="showScanModeChoiceModal = false"
+            type="button"
+            class="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Camera Barcode Scanner Modal -->
+    <BulkBarcodeScannerModal
+      :is-open="isBulkScannerOpen"
+      :products="bulkTargetProducts"
+      @close="isBulkScannerOpen = false"
+      @updated-product="handleBulkProductUpdated"
+    />
+
+    <!-- Single Product Camera Barcode Scanner Modal (for Add/Edit form) -->
+    <BarcodeScannerModal
+      :is-open="isSingleBarcodeScannerOpen"
+      :auto-close-on-scan="true"
+      @close="isSingleBarcodeScannerOpen = false"
+      @scan="handleSingleBarcodeScan"
+    />
   </div>
 </template>
 
@@ -1231,6 +1405,86 @@ const arrivalHistory = ref<any[]>([]);
 const loadingHistory = ref(false);
 const showMessage = ref(false);
 const message = ref("");
+
+// Bulk Barcode Scanner State
+const selectedProductIds = ref<(number | string)[]>([]);
+const showScanModeChoiceModal = ref(false);
+const isBulkScannerOpen = ref(false);
+const bulkTargetProducts = ref<any[]>([]);
+
+// Single Barcode Scanner State (for Add/Edit form)
+const isSingleBarcodeScannerOpen = ref(false);
+const activeBarcodeTarget = ref<'add' | 'edit' | null>(null);
+
+const openAddBarcodeScanner = () => {
+  activeBarcodeTarget.value = 'add';
+  isSingleBarcodeScannerOpen.value = true;
+};
+
+const openEditBarcodeScanner = () => {
+  activeBarcodeTarget.value = 'edit';
+  isSingleBarcodeScannerOpen.value = true;
+};
+
+const handleSingleBarcodeScan = (scannedCode: string) => {
+  if (activeBarcodeTarget.value === 'add') {
+    newProduct.barcode = scannedCode;
+  } else if (activeBarcodeTarget.value === 'edit') {
+    editingProduct.barcode = scannedCode;
+  }
+  isSingleBarcodeScannerOpen.value = false;
+  activeBarcodeTarget.value = null;
+  showToast(`Barcode "${scannedCode}" berhasil dimasukkan!`);
+};
+
+const unbarcodedCount = computed(() => {
+  return (dataCacheStore.products || []).filter((p: any) => p.isActive !== false && (!p.barcode || !p.barcode.trim())).length;
+});
+
+const isAllSelected = computed(() => {
+  if (products.value.length === 0) return false;
+  return products.value.every((p: any) => selectedProductIds.value.includes(p.id));
+});
+
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    const pageIds = products.value.map((p: any) => p.id);
+    selectedProductIds.value = selectedProductIds.value.filter((id) => !pageIds.includes(id));
+  } else {
+    const newIds = new Set([...selectedProductIds.value, ...products.value.map((p: any) => p.id)]);
+    selectedProductIds.value = Array.from(newIds);
+  }
+}
+
+function handleChoiceManualSelect() {
+  if (selectedProductIds.value.length === 0) {
+    showToast("Pilih minimal 1 produk terlebih dahulu menggunakan centang di tabel");
+    return;
+  }
+  const targets = (dataCacheStore.products || []).filter((p: any) => selectedProductIds.value.includes(p.id));
+  bulkTargetProducts.value = targets;
+  showScanModeChoiceModal.value = false;
+  isBulkScannerOpen.value = true;
+}
+
+function handleChoiceSelectAllUnbarcoded() {
+  const targets = (dataCacheStore.products || []).filter((p: any) => p.isActive !== false && (!p.barcode || !p.barcode.trim()));
+  if (targets.length === 0) {
+    showToast("Semua produk aktif sudah memiliki barcode!");
+    return;
+  }
+  bulkTargetProducts.value = targets;
+  showScanModeChoiceModal.value = false;
+  isBulkScannerOpen.value = true;
+}
+
+function handleBulkProductUpdated(productId: number | string, newBarcode: string) {
+  const numId = typeof productId === 'string' ? parseInt(productId, 10) : productId;
+  const target = (dataCacheStore.products || []).find((p: any) => p.id === numId || p.id === productId);
+  if (target) {
+    target.barcode = newBarcode;
+  }
+}
 
 interface ArrivalItem {
   id: string;
@@ -1348,7 +1602,7 @@ const categoriesList = computed(() => {
   const defaultNames = [
     'Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC',
     'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko',
-    'Exerhaust',  'Speaker'
+    'Exhaust',  'Speaker'
     // 'Pompa', 'TV'
   ];
 
@@ -1398,6 +1652,7 @@ const toggleSort = (field: string) => {
 };
 
 const newProduct = reactive({
+  barcode: "",
   name: "",
   brand: "",
   model: "",
@@ -1412,6 +1667,7 @@ const newProduct = reactive({
 
 const editingProduct = reactive({
   id: "",
+  barcode: "",
   name: "",
   brand: "",
   model: "",
@@ -1430,8 +1686,6 @@ const getProductDisplayName = (product: any) => {
   if (product.brand && product.brand !== 'No Brand' && product.brand.trim() !== '') {
     name += ` ${product.brand}`;
   }
-  // Model is intentionally omitted from the display name
-  // otherName is intentionally omitted from the display name
   return name.trim();
 };
 
@@ -1472,6 +1726,7 @@ const addProduct = async () => {
     const response = await $fetch<any>("/api/products", {
       method: "POST",
       body: {
+        barcode: newProduct.barcode ? newProduct.barcode.trim() : null,
         name: toTitleCase(newProduct.name),
         brand: newProduct.brand ? toTitleCase(newProduct.brand) : null,
         model: newProduct.model ? newProduct.model.trim() : null,
@@ -1496,6 +1751,7 @@ const addProduct = async () => {
 
 const editProduct = (product: any) => {
   editingProduct.id = product.id;
+  editingProduct.barcode = product.barcode || "";
   editingProduct.name = product.name;
   editingProduct.brand = product.brand;
   editingProduct.model = product.model;
@@ -1514,6 +1770,7 @@ const saveProduct = async () => {
     const response = await $fetch<any>(`/api/products/${editingProduct.id}`, {
       method: "PUT",
       body: {
+        barcode: editingProduct.barcode ? editingProduct.barcode.trim() : null,
         name: toTitleCase(editingProduct.name),
         brand: editingProduct.brand ? toTitleCase(editingProduct.brand) : null,
         model: editingProduct.model ? editingProduct.model.trim() : null,
@@ -1935,9 +2192,11 @@ const printProductPrice = (product: any) => {
 };
 
 const resetForm = () => {
+  newProduct.barcode = "";
   newProduct.name = "";
   newProduct.brand = "";
   newProduct.model = "";
+  newProduct.otherName = "";
   newProduct.stock = 0;
   newProduct.servicePrice = null;
   newProduct.buyPrice = 0;

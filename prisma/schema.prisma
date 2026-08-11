@@ -13,6 +13,7 @@ datasource db {
 
 model Product {
   id           Int     @id @default(autoincrement())
+  barcode      String? // Barcode produk (opsional, unik jika diisi)
   name         String
   brand        String
   model        String
@@ -30,6 +31,7 @@ model Product {
   transactionItems TransactionItem[]
   productArrivals  ProductArrival[]
 
+  @@index([barcode])
   @@index([name])
   @@index([brand])
   @@index([model])

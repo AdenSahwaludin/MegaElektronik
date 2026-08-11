@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
           try {
             const created = await (prisma.product as any).create({
               data: {
+                barcode: product.barcode ? String(product.barcode).trim() : null,
                 name: product.name.trim(),
                 brand: product.brand.trim(),
                 model: product.model.trim(),
@@ -86,6 +87,7 @@ export default defineEventHandler(async (event) => {
 
         const product = await (prisma.product as any).create({
           data: {
+            barcode: body.barcode ? String(body.barcode).trim() : null,
             name: body.name.trim(),
             brand: body.brand?.trim() || " ",
             model: body.model?.trim() || " ",
@@ -119,6 +121,7 @@ export default defineEventHandler(async (event) => {
 
       const activeOnly = query.activeOnly === "true";
       const lowStockOnly = query.lowStockOnly === "true";
+      const unbarcodedOnly = query.unbarcodedOnly === "true";
 
       // Build WHERE clause
       let where: any = {};
@@ -132,6 +135,15 @@ export default defineEventHandler(async (event) => {
         andConditions.push({ stock: 0 });
       }
 
+      if (unbarcodedOnly) {
+        andConditions.push({
+          OR: [
+            { barcode: null },
+            { barcode: "" }
+          ]
+        });
+      }
+
       // Advanced search: split by spaces and match ALL keywords
       if (search.trim()) {
         const keywords = search
@@ -141,15 +153,14 @@ export default defineEventHandler(async (event) => {
           .filter((k) => k.length > 0);
 
         if (keywords.length > 0) {
-          // Every keyword must match name, brand, model, or otherName
-          // For short numeric keywords (1-2 chars like "7"), skip model field
-          // to avoid false matches from model numbers like "PWM 1076Y"
+          // Every keyword must match name, brand, model, otherName, or barcode
           const searchConditions = keywords.map((keyword) => {
             const isShortNumeric = keyword.length <= 2 && /^\d+$/.test(keyword);
             const fields: any[] = [
               { name: { contains: keyword } },
               { brand: { contains: keyword } },
               { otherName: { contains: keyword } },
+              { barcode: { contains: keyword } },
             ];
             if (!isShortNumeric) {
               fields.push({ model: { contains: keyword } });
@@ -165,7 +176,7 @@ export default defineEventHandler(async (event) => {
         where.AND = andConditions;
       }
 
-      const validSortFields = ["name", "brand", "model", "stock", "askingPrice", "fixedPrice", "buyPrice", "servicePrice", "isActive", "createdAt"];
+      const validSortFields = ["name", "brand", "model", "stock", "askingPrice", "fixedPrice", "buyPrice", "servicePrice", "isActive", "barcode", "createdAt"];
       const sortBy = validSortFields.includes(query.sortBy as string) ? (query.sortBy as string) : "name";
       const sortOrder = (query.sortOrder as string) || "asc";
 
@@ -177,6 +188,7 @@ export default defineEventHandler(async (event) => {
           orderBy: { [sortBy]: sortOrder },
           select: {
             id: true,
+            barcode: true,
             name: true,
             brand: true,
             model: true,

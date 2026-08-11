@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
       const brand = body.brand?.trim() || " ";
       const model = body.model?.trim() || " ";
       const otherName = body.otherName?.trim() || null;
+      const barcode = body.barcode !== undefined ? (body.barcode ? String(body.barcode).trim() : null) : undefined;
       const stock = parseInt(String(body.stock), 10) || 0;
       const servicePrice = (body.servicePrice !== undefined && body.servicePrice !== null && body.servicePrice !== "") ? parseInt(String(body.servicePrice), 10) : null;
       const buyPrice = parseInt(String(body.buyPrice), 10) || 0;
@@ -34,20 +35,26 @@ export default defineEventHandler(async (event) => {
         });
       }
 
+      const updateData: any = {
+        name,
+        brand,
+        model,
+        otherName,
+        stock,
+        servicePrice,
+        buyPrice,
+        askingPrice,
+        fixedPrice,
+        isActive
+      };
+
+      if (barcode !== undefined) {
+        updateData.barcode = barcode;
+      }
+
       const product = await (prisma.product as any).update({
         where: { id },
-        data: {
-          name,
-          brand,
-          model,
-          otherName,
-          stock,
-          servicePrice,
-          buyPrice,
-          askingPrice,
-          fixedPrice,
-          isActive
-        },
+        data: updateData,
       });
 
       return { success: true, product };

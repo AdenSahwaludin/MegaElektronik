@@ -54,8 +54,18 @@
               <button
                 @click="refreshProducts"
                 class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
+                title="Refresh Produk"
               >
                 ↻
+              </button>
+              <button
+                @click="isScannerOpen = true"
+                type="button"
+                class="px-3.5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition flex items-center gap-1.5 text-xs cursor-pointer"
+                title="Scan Barcode Kamera"
+              >
+                <Icon name="lucide:scan-line" class="w-4 h-4" />
+                <span class="hidden sm:inline">Scan Kamera</span>
               </button>
               <!-- Mobile Cart Toggle Button -->
               <button
@@ -765,15 +775,30 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Barcode Scanner Modal Component -->
+    <BarcodeScannerModal
+      :is-open="isScannerOpen"
+      :cart-items="cartStore.items"
+      :total-amount="cartStore.totalRevenue"
+      :last-scanned-item="lastScannedName"
+      @close="isScannerOpen = false"
+      @scan="handleCameraScan"
+      @pay="openPaymentModal"
+      @increment-qty="handleScannerIncrementQty"
+      @decrement-qty="handleScannerDecrementQty"
+      @remove-item="(id) => cartStore.removeFromCart(id)"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Ref } from "vue";
-import { watch, computed, ref, onActivated } from "vue";
+import { watch, computed, ref, onActivated, onMounted, onUnmounted } from "vue";
 import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
+import { useAudioBeep } from "~/composables/useAudioBeep";
 
 definePageMeta({
   layout: "default",
@@ -782,6 +807,79 @@ definePageMeta({
 const cartStore = useCartStore();
 const dataCacheStore = useDataCacheStore();
 const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
+const { playSuccessBeep, playErrorBeep } = useAudioBeep();
+
+const isScannerOpen = ref(false);
+const lastScannedName = ref("");
+
+let barcodeBuffer = "";
+let barcodeTimer: any = null;
+
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const tag = (e.target as HTMLElement)?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  if (e.key === 'Enter') {
+    if (barcodeBuffer.length >= 2) {
+      handleCameraScan(barcodeBuffer);
+    }
+    barcodeBuffer = '';
+    return;
+  }
+
+  if (e.key.length === 1) {
+    barcodeBuffer += e.key;
+    clearTimeout(barcodeTimer);
+    barcodeTimer = setTimeout(() => {
+      barcodeBuffer = '';
+    }, 200);
+  }
+}
+
+function handleCameraScan(scannedCode: string) {
+  const code = scannedCode.trim().toLowerCase();
+  if (!code) return;
+
+  const allProds = dataCacheStore.products || [];
+  const prod = allProds.find((p: any) =>
+    (p.barcode && p.barcode.toLowerCase() === code) ||
+    (p.model && p.model.toLowerCase() === code) ||
+    (p.name && p.name.toLowerCase() === code)
+  );
+
+  if (prod) {
+    if (prod.stock <= 0) {
+      playErrorBeep();
+      alert(`Stok ${prod.name} habis!`);
+      return;
+    }
+    const added = cartStore.addToCart(prod);
+    if (added) {
+      playSuccessBeep();
+      lastScannedName.value = prod.name;
+    } else {
+      playErrorBeep();
+      alert(`Stok maksimal ${prod.name} sudah tercapai!`);
+    }
+  } else {
+    playErrorBeep();
+    alert(`Barcode "${scannedCode}" tidak ditemukan`);
+  }
+}
+
+function handleScannerIncrementQty(cartItemId: string) {
+  const item = cartStore.items.find(i => i.id === cartItemId);
+  if (item) {
+    cartStore.updateQuantity(cartItemId, item.quantity + 1);
+  }
+}
+
+function handleScannerDecrementQty(cartItemId: string) {
+  const item = cartStore.items.find(i => i.id === cartItemId);
+  if (item) {
+    cartStore.updateQuantity(cartItemId, item.quantity - 1);
+  }
+}
 
 // Products from cache store (filtered by isActive)
 const products = computed(() => {
@@ -1039,6 +1137,9 @@ const showToast = (message: string) => {
 onMounted(() => {
   startLiveClock();
   fetchProducts();
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', handleGlobalKeydown);
+  }
 });
 
 onActivated(() => {
@@ -1047,6 +1148,9 @@ onActivated(() => {
 
 onUnmounted(() => {
   if (timeInterval) clearInterval(timeInterval);
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleGlobalKeydown);
+  }
 });
 </script>
 
