@@ -42,8 +42,16 @@
           </div>
           <div class="flex items-center gap-2">
             <button
+              @click="$emit('scan-qr', productsList)"
+              class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-amber-200 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+              title="Scan QR Code Produk"
+            >
+              <Icon name="lucide:qr-code" class="w-4 h-4" />
+              <span>Scan QR Produk</span>
+            </button>
+            <button
               @click="printLabels"
-              class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-orange-200 transition-all hover:scale-[1.02] active:scale-95"
+              class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-orange-200 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
             >
               <Icon name="lucide:printer" class="w-4 h-4" />
               <span>Cetak Label Stiker</span>
@@ -135,7 +143,7 @@ const props = defineProps<{
   products: any[] | any
 }>()
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'scan-qr'])
 const { formatCurrency } = useCurrency()
 
 const copyCount = ref(1)

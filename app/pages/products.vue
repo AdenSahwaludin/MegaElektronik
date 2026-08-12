@@ -255,12 +255,12 @@
                 <span class="truncate">Cetak Harga</span>
               </button>
               <button
-                @click="openBulkQrModal"
+                @click="openBulkQrScanModal"
                 class="h-11 px-3 py-2 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
-                title="Cetak Stiker Label QR Code Massal"
+                title="Scan QR Code Produk"
               >
                 <Icon name="lucide:qr-code" class="w-4 h-4 text-orange-600 shrink-0" />
-                <span class="truncate">Cetak QR Stiker</span>
+                <span class="truncate">Scan QR Produk</span>
               </button>
             </div>
           </div>
@@ -584,7 +584,11 @@
                     />
                   </td>
                   <td class="px-4 py-3 text-sm font-semibold text-gray-800 wrap-break-words max-w-75">
-                    {{ getProductDisplayName(product) }}
+                    <div>{{ getProductDisplayName(product) }}</div>
+                    <div v-if="product.barcode && product.barcode.trim()" class="text-[11px] font-mono text-gray-500 font-normal flex items-center gap-1 mt-0.5">
+                      <Icon name="lucide:barcode" class="w-3 h-3 text-gray-400" />
+                      <span>{{ product.barcode }}</span>
+                    </div>
                   </td>
                   <td
                     class="px-4 py-3 text-sm text-gray-700 hidden lg:table-cell"
@@ -628,12 +632,13 @@
                   <td class="px-4 py-3 text-center whitespace-nowrap">
                     <div class="flex items-center justify-center gap-2">
                       <button
-                        @click="openSingleQrModal(product)"
+                        v-if="!product.barcode || !product.barcode.trim()"
+                        @click="openSingleProductQrScan(product)"
                         class="p-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded transition flex items-center gap-1 text-sm font-semibold cursor-pointer"
-                        title="Lihat / Cetak Stiker QR Code"
+                        title="Scan QR / Barcode Produk"
                       >
                         <Icon name="lucide:qr-code" class="w-4 h-4" />
-                        <span class="hidden sm:inline">QR</span>
+                        <span class="hidden sm:inline">Scan QR Produk</span>
                       </button>
                       <button
                         @click="editProduct(product)"
@@ -1314,6 +1319,7 @@
       :is-open="isQrModalOpen"
       :products="qrModalProducts"
       @close="isQrModalOpen = false"
+      @scan-qr="handleScanQrFromModal"
     />
   </div>
 </template>
@@ -1442,6 +1448,27 @@ const activeBarcodeTarget = ref<'add' | 'edit' | null>(null);
 // QR Code Generator & Label Print State
 const isQrModalOpen = ref(false);
 const qrModalProducts = ref<any[]>([]);
+
+function openSingleProductQrScan(product: any) {
+  bulkTargetProducts.value = [product];
+  isBulkScannerOpen.value = true;
+}
+
+function openBulkQrScanModal() {
+  if (selectedProductIds.value.length > 0) {
+    bulkTargetProducts.value = filteredProducts.value.filter((p: any) => selectedProductIds.value.includes(p.id));
+  } else {
+    showScanModeChoiceModal.value = true;
+    return;
+  }
+  isBulkScannerOpen.value = true;
+}
+
+function handleScanQrFromModal(products: any[]) {
+  isQrModalOpen.value = false;
+  bulkTargetProducts.value = products;
+  isBulkScannerOpen.value = true;
+}
 
 function openSingleQrModal(product: any) {
   qrModalProducts.value = [product];

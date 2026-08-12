@@ -12,12 +12,14 @@
     "typecheck": "nuxt typecheck",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset --force"
+    "db:reset": "prisma migrate reset --force",
+    "db:sync": "npx tsx scripts/sync-turso-to-dev.ts"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.102",
     "@iconify-json/simple-icons": "^1.2.78",
     "@libsql/client": "^0.17.2",
+    "@libsql/linux-x64-gnu": "^0.5.29",
     "@nuxt/ui": "^4.6.1",
     "@oxc-minify/binding-linux-x64-gnu": "^0.144.0",
     "@oxc-parser/binding-linux-x64-gnu": "^0.144.0",

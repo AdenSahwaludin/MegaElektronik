@@ -13,12 +13,12 @@
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h3 class="text-base font-bold leading-tight text-white">Scan Barcode Massal</h3>
+                <h3 class="text-base font-bold leading-tight text-white">Scan QR Produk</h3>
                 <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full tracking-wider">
                   {{ completedCount }} / {{ items.length }} Selesai
                 </span>
               </div>
-              <p class="text-xs text-gray-400">Pindai barcode secara berturut-turut untuk daftar produk terpilih</p>
+              <p class="text-xs text-gray-400">Pindai QR Code atau barcode untuk produk terpilih</p>
             </div>
           </div>
 
@@ -154,7 +154,7 @@
                           Sedang Diproses #{{ currentIndex + 1 }}
                         </span>
                         <span v-if="activeItem.barcode" class="text-[10px] text-amber-300 font-mono">
-                          (Barcode lama: {{ activeItem.barcode }})
+                          (QR Code lama: {{ activeItem.barcode }})
                         </span>
                       </div>
                       <h4 class="text-sm font-bold text-white truncate">{{ activeItem.name }}</h4>
@@ -176,7 +176,7 @@
                   </div>
 
                   <p class="text-xs text-gray-300 font-medium bg-gray-900/60 px-3 py-1 rounded-full border border-white/5">
-                    Arahkan kamera tepat ke barcode produk di atas
+                    Arahkan kamera tepat ke QR Code produk di atas
                   </p>
                 </div>
               </div>
@@ -223,13 +223,13 @@
                   
                   <div class="flex items-center gap-2 mt-1 pl-7 text-[11px]">
                     <span v-if="item.scannedBarcode" class="font-mono text-emerald-400 font-bold flex items-center gap-1">
-                      <Icon name="lucide:barcode" class="w-3 h-3" /> {{ item.scannedBarcode }}
+                      <Icon name="lucide:qr-code" class="w-3 h-3" /> {{ item.scannedBarcode }}
                     </span>
                     <span v-else-if="item.barcode" class="font-mono text-gray-400">
                       Semula: {{ item.barcode }}
                     </span>
                     <span v-else class="text-gray-500 italic">
-                      Belum ada barcode
+                      Belum ada QR Code
                     </span>
                   </div>
                 </div>
@@ -282,13 +282,13 @@
           <div class="bg-gray-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 text-white space-y-4 shadow-2xl">
             <div class="flex items-center gap-3 text-amber-400">
               <Icon name="lucide:alert-triangle" class="w-6 h-6 shrink-0" />
-              <h3 class="text-base font-bold">Konfirmasi Timpa Barcode</h3>
+              <h3 class="text-base font-bold">Konfirmasi Timpa QR Code</h3>
             </div>
             <p class="text-xs text-gray-300 leading-relaxed">
-              Produk <strong class="text-white">{{ overwriteTarget.item.name }}</strong> sudah memiliki barcode lama
+              Produk <strong class="text-white">{{ overwriteTarget.item.name }}</strong> sudah memiliki QR Code lama
               <code class="bg-gray-800 text-amber-300 px-1.5 py-0.5 rounded font-mono">{{ overwriteTarget.item.barcode }}</code>.
               <br /><br />
-              Apakah Anda yakin ingin menimpanya dengan barcode baru
+              Apakah Anda yakin ingin menimpanya dengan QR Code baru
               <code class="bg-gray-800 text-emerald-400 px-1.5 py-0.5 rounded font-mono font-bold">{{ overwriteTarget.barcode }}</code>?
             </p>
             <div class="flex items-center justify-end gap-3 pt-2">
@@ -304,7 +304,7 @@
                 type="button"
                 class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-amber-600/30 cursor-pointer"
               >
-                Ya, Timpa Barcode
+                Ya, Timpa QR Code
               </button>
             </div>
           </div>
@@ -315,7 +315,7 @@
           <div class="bg-gray-900 border border-red-500/40 rounded-2xl max-w-md w-full p-6 text-white space-y-4 shadow-2xl">
             <div class="flex items-center gap-3 text-red-400">
               <Icon name="lucide:alert-octagon" class="w-6 h-6 shrink-0" />
-              <h3 class="text-base font-bold">Peringatan Barcode</h3>
+              <h3 class="text-base font-bold">Peringatan QR Code</h3>
             </div>
             <p class="text-xs text-gray-300 leading-relaxed">
               {{ warningModal.message }}
