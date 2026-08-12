@@ -471,20 +471,52 @@ async function initCamera() {
 async function startScanEngine() {
   if (!process.client || !videoRef.value) return
 
+  let lastCandidateCode = ''
+  let candidateMatchCount = 0
+  let lastCandidateTime = 0
+
+  function isValidBarcodeText(code: string): boolean {
+    if (!code) return false
+    const trimmed = code.trim()
+    if (trimmed.length < 3) return false
+    if (/^(.)\1+$/i.test(trimmed)) return false
+    return true
+  }
+
+  function processCandidateBarcode(rawVal: string) {
+    if (!isValidBarcodeText(rawVal)) return
+
+    const now = performance.now()
+    if (rawVal === lastCandidateCode && (now - lastCandidateTime) <= 350) {
+      candidateMatchCount++
+    } else {
+      lastCandidateCode = rawVal
+      candidateMatchCount = 1
+    }
+    lastCandidateTime = now
+
+    if (candidateMatchCount >= 2) {
+      lastCandidateCode = ''
+      candidateMatchCount = 0
+      handleDetectedBarcode(rawVal)
+    }
+  }
+
   // Strategy 1: Native BarcodeDetector API
   if ('BarcodeDetector' in window) {
     try {
       activeEngine.value = 'BarcodeDetector'
       let formats: string[]
       try {
-        formats = await (window as any).BarcodeDetector.getSupportedFormats()
+        const supported = await (window as any).BarcodeDetector.getSupportedFormats()
+        formats = (supported || []).filter((f: string) => f !== 'itf' && f !== 'codabar')
       } catch (_) {
         formats = []
       }
       if (!formats || formats.length === 0) {
         formats = [
           'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_39', 'code_93', 'code_128',
-          'itf', 'codabar', 'qr_code', 'data_matrix', 'pdf417', 'aztec'
+          'qr_code', 'data_matrix', 'pdf417', 'aztec'
         ]
       }
 
@@ -507,7 +539,6 @@ async function startScanEngine() {
       BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
       BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
       BarcodeFormat.CODE_39, BarcodeFormat.CODE_93, BarcodeFormat.CODE_128,
-      BarcodeFormat.ITF, BarcodeFormat.CODABAR,
       BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX,
       BarcodeFormat.PDF_417, BarcodeFormat.AZTEC
     ])
@@ -541,7 +572,7 @@ function startScanLoop() {
             if (barcodes && barcodes.length > 0) {
               const rawVal = barcodes[0].rawValue?.trim()
               if (rawVal) {
-                handleDetectedBarcode(rawVal)
+                processCandidateBarcode(rawVal)
               }
             }
           } catch (_) {}
@@ -552,7 +583,7 @@ function startScanLoop() {
             if (result) {
               const text = typeof result.getText === 'function' ? result.getText()?.trim() : result.text?.trim()
               if (text) {
-                handleDetectedBarcode(text)
+                processCandidateBarcode(text)
               }
             }
           } catch (_) {}
