@@ -228,17 +228,6 @@
                 <span class="truncate">{{ showAddForm ? 'Tutup Form' : 'Tambah Produk' }}</span>
               </button>
               <button
-                @click="showScanModeChoiceModal = true"
-                class="h-11 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
-                title="Scan Barcode Massal"
-              >
-                <Icon name="lucide:layers" class="w-4 h-4 text-white shrink-0" />
-                <span class="truncate">Scan Massal</span>
-                <span v-if="selectedProductIds.length > 0" class="ml-0.5 px-1.5 py-0.5 bg-white text-amber-700 text-[10px] font-black rounded-full shrink-0">
-                  {{ selectedProductIds.length }}
-                </span>
-              </button>
-              <button
                 @click="showArrivalModal = true"
                 class="h-11 px-3 py-2 bg-white hover:bg-green-50 text-green-700 border border-green-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
                 title="Catat Barang Datang"
@@ -257,7 +246,7 @@
               <button
                 @click="openBulkQrScanModal"
                 class="h-11 px-3 py-2 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
-                title="Scan QR Code Produk"
+                title="Scan Barcode / QR Code Produk"
               >
                 <Icon name="lucide:qr-code" class="w-4 h-4 text-orange-600 shrink-0" />
                 <span class="truncate">Scan QR Produk</span>
@@ -479,15 +468,6 @@
             <table class="w-full">
               <thead class="bg-gray-100 border-b border-gray-300">
                 <tr>
-                  <th class="px-3 py-3 text-center w-10">
-                    <input
-                      type="checkbox"
-                      :checked="isAllSelected"
-                      @change="toggleSelectAll"
-                      class="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500 cursor-pointer"
-                      title="Pilih Semua Halaman Ini"
-                    />
-                  </th>
                   <th
                     @click="toggleSort('name')"
                     class="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-1/4 min-w-50 cursor-pointer hover:bg-gray-200 transition"
@@ -573,16 +553,7 @@
                   v-for="product in products"
                   :key="product.id"
                   class="hover:bg-orange-50 transition"
-                  :class="{ 'bg-orange-50/60': selectedProductIds.includes(product.id) }"
                 >
-                  <td class="px-3 py-3 text-center">
-                    <input
-                      type="checkbox"
-                      :value="product.id"
-                      v-model="selectedProductIds"
-                      class="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500 cursor-pointer"
-                    />
-                  </td>
                   <td class="px-4 py-3 text-sm font-semibold text-gray-800 wrap-break-words max-w-75">
                     <div>{{ getProductDisplayName(product) }}</div>
                     <div v-if="product.barcode && product.barcode.trim()" class="text-[11px] font-mono text-gray-500 font-normal flex items-center gap-1 mt-0.5">
@@ -1215,88 +1186,7 @@
       </div>
     </Transition>
 
-    <!-- Modal Pilihan Mode Scan Barcode Masal -->
-    <div v-if="showScanModeChoiceModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-xs">
-      <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-gray-100">
-        <!-- Header -->
-        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-          <div class="flex items-center gap-2.5">
-            <div class="p-2 bg-orange-100 rounded-xl text-orange-600">
-              <Icon name="lucide:layers" class="w-5 h-5" />
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-gray-900">Scan Barcode Massal</h3>
-              <p class="text-xs text-gray-500">Pilih metode pengisian barcode produk</p>
-            </div>
-          </div>
-          <button @click="showScanModeChoiceModal = false" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
-            <Icon name="lucide:x" class="w-5 h-5" />
-          </button>
-        </div>
 
-        <!-- Options Container -->
-        <div class="space-y-3">
-          <!-- Option 1: Pilih Produk Terlebih Dahulu (Manual Checkbox) -->
-          <button
-            @click="handleChoiceManualSelect"
-            type="button"
-            class="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50/40 transition-all group relative flex items-start gap-3.5 cursor-pointer"
-          >
-            <div class="p-2.5 rounded-xl bg-gray-100 group-hover:bg-orange-500 group-hover:text-white text-gray-600 transition-colors shrink-0">
-              <Icon name="lucide:check-square" class="w-5 h-5" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between gap-2 mb-1">
-                <h4 class="text-sm font-bold text-gray-900 group-hover:text-orange-700 transition-colors">
-                  Pilih Produk Terlebih Dahulu
-                </h4>
-                <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 text-gray-600 group-hover:bg-orange-100 group-hover:text-orange-700 rounded-md">
-                  {{ selectedProductIds.length }} Terpilih
-                </span>
-              </div>
-              <p class="text-xs text-gray-500 leading-relaxed">
-                Scan barcode hanya untuk produk yang telah dicentang pada tabel.
-              </p>
-            </div>
-          </button>
-
-          <!-- Option 2: Otomatis Pilih Semua Produk Tanpa Barcode -->
-          <button
-            @click="handleChoiceSelectAllUnbarcoded"
-            type="button"
-            class="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all group relative flex items-start gap-3.5 cursor-pointer"
-          >
-            <div class="p-2.5 rounded-xl bg-emerald-50 group-hover:bg-emerald-600 group-hover:text-white text-emerald-600 transition-colors shrink-0">
-              <Icon name="lucide:sparkles" class="w-5 h-5" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between gap-2 mb-1">
-                <h4 class="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
-                  Pilih Semua Produk Tanpa Barcode
-                </h4>
-                <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-md">
-                  {{ unbarcodedCount }} Produk
-                </span>
-              </div>
-              <p class="text-xs text-gray-500 leading-relaxed">
-                Otomatis mengumpulkan seluruh produk aktif yang belum memiliki data barcode.
-              </p>
-            </div>
-          </button>
-        </div>
-
-        <!-- Footer -->
-        <div class="flex items-center justify-end pt-2 border-t border-gray-100">
-          <button
-            @click="showScanModeChoiceModal = false"
-            type="button"
-            class="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
-          >
-            Batal
-          </button>
-        </div>
-      </div>
-    </div>
 
     <!-- Bulk Camera Barcode Scanner Modal -->
     <BulkBarcodeScannerModal
@@ -1455,12 +1345,8 @@ function openSingleProductQrScan(product: any) {
 }
 
 function openBulkQrScanModal() {
-  if (selectedProductIds.value.length > 0) {
-    bulkTargetProducts.value = filteredProducts.value.filter((p: any) => selectedProductIds.value.includes(p.id));
-  } else {
-    showScanModeChoiceModal.value = true;
-    return;
-  }
+  const unbarcoded = (dataCacheStore.products || []).filter((p: any) => p.isActive !== false && (!p.barcode || !p.barcode.trim()));
+  bulkTargetProducts.value = unbarcoded;
   isBulkScannerOpen.value = true;
 }
 
@@ -1476,11 +1362,7 @@ function openSingleQrModal(product: any) {
 }
 
 function openBulkQrModal() {
-  if (selectedProductIds.value.length > 0) {
-    qrModalProducts.value = filteredProducts.value.filter((p: any) => selectedProductIds.value.includes(p.id));
-  } else {
-    qrModalProducts.value = filteredProducts.value;
-  }
+  qrModalProducts.value = filteredProducts.value;
   isQrModalOpen.value = true;
 }
 
@@ -1504,47 +1386,6 @@ const handleSingleBarcodeScan = (scannedCode: string) => {
   activeBarcodeTarget.value = null;
   showToast(`Barcode "${scannedCode}" berhasil dimasukkan!`);
 };
-
-const unbarcodedCount = computed(() => {
-  return (dataCacheStore.products || []).filter((p: any) => p.isActive !== false && (!p.barcode || !p.barcode.trim())).length;
-});
-
-const isAllSelected = computed(() => {
-  if (products.value.length === 0) return false;
-  return products.value.every((p: any) => selectedProductIds.value.includes(p.id));
-});
-
-function toggleSelectAll() {
-  if (isAllSelected.value) {
-    const pageIds = products.value.map((p: any) => p.id);
-    selectedProductIds.value = selectedProductIds.value.filter((id) => !pageIds.includes(id));
-  } else {
-    const newIds = new Set([...selectedProductIds.value, ...products.value.map((p: any) => p.id)]);
-    selectedProductIds.value = Array.from(newIds);
-  }
-}
-
-function handleChoiceManualSelect() {
-  if (selectedProductIds.value.length === 0) {
-    showToast("Pilih minimal 1 produk terlebih dahulu menggunakan centang di tabel");
-    return;
-  }
-  const targets = (dataCacheStore.products || []).filter((p: any) => selectedProductIds.value.includes(p.id));
-  bulkTargetProducts.value = targets;
-  showScanModeChoiceModal.value = false;
-  isBulkScannerOpen.value = true;
-}
-
-function handleChoiceSelectAllUnbarcoded() {
-  const targets = (dataCacheStore.products || []).filter((p: any) => p.isActive !== false && (!p.barcode || !p.barcode.trim()));
-  if (targets.length === 0) {
-    showToast("Semua produk aktif sudah memiliki barcode!");
-    return;
-  }
-  bulkTargetProducts.value = targets;
-  showScanModeChoiceModal.value = false;
-  isBulkScannerOpen.value = true;
-}
 
 function handleBulkProductUpdated(productId: number | string, newBarcode: string) {
   const numId = typeof productId === 'string' ? parseInt(productId, 10) : productId;
