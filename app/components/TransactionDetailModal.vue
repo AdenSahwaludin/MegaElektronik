@@ -81,6 +81,24 @@
               <span class="font-black text-xl">{{ formatCurrency(transaction.paidAmount - transaction.totalAmount) }}</span>
             </div>
           </div>
+
+          <!-- QR Code Transaksi & Action Print Struk -->
+          <div class="pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <img v-if="qrCodeUrl" :src="qrCodeUrl" alt="QR Transaksi" class="w-16 h-16 bg-white p-1 rounded border border-gray-300" />
+              <div>
+                <p class="text-xs font-bold text-gray-700">QR Code Struk Transaksi</p>
+                <p class="text-[10px] text-gray-500 font-mono">TRX-{{ transaction.id }}</p>
+              </div>
+            </div>
+            <button
+              @click="printReceipt"
+              class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition"
+            >
+              <Icon name="lucide:printer" class="w-4 h-4" />
+              <span>Cetak Struk (dengan QR)</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -89,6 +107,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import QRCode from "qrcode";
 import { useCurrency } from "../../composables/useCurrency";
 
 const props = defineProps<{ transactionId: string | number | null }>();
@@ -97,14 +116,19 @@ const { formatCurrency } = useCurrency();
 
 const transaction = ref<any>({ transactionItems: [] });
 const loading = ref(false);
+const qrCodeUrl = ref<string>("");
 
 const fetchDetail = async () => {
   if (!props.transactionId) return;
   loading.value = true;
+  qrCodeUrl.value = "";
   try {
     transaction.value = await $fetch(
       `/api/transactions/${props.transactionId}`,
     );
+    // Generate QR Code for transaction
+    const trxData = `TRX-${transaction.value.id}-${transaction.value.totalAmount}`;
+    qrCodeUrl.value = await QRCode.toDataURL(trxData, { width: 200, margin: 1 });
   } catch (err) {
     console.error("Failed fetch transaction detail", err);
   } finally {
@@ -137,5 +161,111 @@ const calculateMargin = (it: any) => {
   return ((it.profitPerItem / it.soldPrice) * 100).toFixed(1);
 };
 
+const printReceipt = () => {
+  if (!transaction.value) return;
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
+
+  const itemsHtml = (transaction.value.transactionItems || [])
+    .map(
+      (it: any) => `
+        <tr>
+          <td style="padding: 4px 0;">${it.product?.name || 'Produk'}</td>
+          <td style="text-align: center; padding: 4px 0;">${it.quantity}</td>
+          <td style="text-align: right; padding: 4px 0;">${formatCurrency(it.soldPrice)}</td>
+          <td style="text-align: right; padding: 4px 0;">${formatCurrency(it.subtotal)}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  const tDate = transaction.value.createdAt ? formatDate(transaction.value.createdAt) + " " + formatTime(transaction.value.createdAt) : "";
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Struk Pembayaran TRX-${transaction.value.id}</title>
+        <style>
+          @page { size: 80mm 200mm; margin: 0; }
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            width: 76mm;
+            margin: 0 auto;
+            padding: 8px;
+            font-size: 11px;
+            color: #000;
+          }
+          .header { text-align: center; margin-bottom: 8px; }
+          .header h2 { margin: 0; font-size: 14px; }
+          .divider { border-top: 1px dashed #000; margin: 6px 0; }
+          table { width: 100%; border-collapse: collapse; font-size: 10px; }
+          .qr-container { text-align: center; margin-top: 10px; }
+          .qr-container img { width: 70px; height: 70px; }
+          .footer { text-align: center; font-size: 9px; margin-top: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2>MEGA ELEKTRONIK</h2>
+          <p style="margin: 2px 0;">Nota Pembayaran Toko</p>
+          <p style="margin: 2px 0;">No: TRX-${transaction.value.id}</p>
+          <p style="margin: 2px 0;">${tDate}</p>
+        </div>
+        <div class="divider"></div>
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align: left;">Item</th>
+              <th style="text-align: center;">Qty</th>
+              <th style="text-align: right;">Harga</th>
+              <th style="text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+        <div class="divider"></div>
+        <div style="display: flex; justify-content: space-between; font-weight: bold;">
+          <span>TOTAL</span>
+          <span>${formatCurrency(transaction.value.totalAmount)}</span>
+        </div>
+        ${
+          transaction.value.paidAmount != null
+            ? `
+          <div style="display: flex; justify-content: space-between; margin-top: 2px;">
+            <span>BAYAR</span>
+            <span>${formatCurrency(transaction.value.paidAmount)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 2px;">
+            <span>KEMBALI</span>
+            <span>${formatCurrency(transaction.value.paidAmount - transaction.value.totalAmount)}</span>
+          </div>
+        `
+            : ""
+        }
+        <div class="divider"></div>
+        <div class="qr-container">
+          <img src="${qrCodeUrl.value}" />
+          <div style="font-size: 8px; margin-top: 2px;">Scan untuk Verifikasi Transaksi</div>
+        </div>
+        <div class="footer">
+          <p style="margin: 4px 0;">Terima Kasih Atas Kunjungan Anda!</p>
+          <p style="margin: 0;">Barang yang sudah dibeli tidak dapat ditukar.</p>
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 200);
+          }
+        <\/script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
+
 const close = () => emit("close");
 </script>
+

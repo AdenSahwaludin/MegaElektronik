@@ -254,6 +254,14 @@
                 <Icon name="lucide:printer" class="w-4 h-4 text-gray-600 shrink-0" />
                 <span class="truncate">Cetak Harga</span>
               </button>
+              <button
+                @click="openBulkQrModal"
+                class="h-11 px-3 py-2 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
+                title="Cetak Stiker Label QR Code Massal"
+              >
+                <Icon name="lucide:qr-code" class="w-4 h-4 text-orange-600 shrink-0" />
+                <span class="truncate">Cetak QR Stiker</span>
+              </button>
             </div>
           </div>
 
@@ -620,15 +628,23 @@
                   <td class="px-4 py-3 text-center whitespace-nowrap">
                     <div class="flex items-center justify-center gap-2">
                       <button
+                        @click="openSingleQrModal(product)"
+                        class="p-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded transition flex items-center gap-1 text-sm font-semibold cursor-pointer"
+                        title="Lihat / Cetak Stiker QR Code"
+                      >
+                        <Icon name="lucide:qr-code" class="w-4 h-4" />
+                        <span class="hidden sm:inline">QR</span>
+                      </button>
+                      <button
                         @click="editProduct(product)"
-                        class="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded transition flex items-center gap-1 text-sm"
+                        class="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded transition flex items-center gap-1 text-sm cursor-pointer"
                       >
                         <Icon name="lucide:edit" class="w-4 h-4" />
                         <span class="hidden sm:inline">Edit</span>
                       </button>
                       <button
                         @click="deleteProduct(product.id)"
-                        class="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded transition flex items-center gap-1 text-sm"
+                        class="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded transition flex items-center gap-1 text-sm cursor-pointer"
                       >
                         <Icon name="lucide:trash" class="w-4 h-4" />
                         <span class="hidden sm:inline">Hapus</span>
@@ -1292,6 +1308,13 @@
       @close="isSingleBarcodeScannerOpen = false"
       @scan="handleSingleBarcodeScan"
     />
+
+    <!-- Product QR Code Generator & Sticker Printer Modal -->
+    <ProductQrCodeModal
+      :is-open="isQrModalOpen"
+      :products="qrModalProducts"
+      @close="isQrModalOpen = false"
+    />
   </div>
 </template>
 
@@ -1415,6 +1438,24 @@ const bulkTargetProducts = ref<any[]>([]);
 // Single Barcode Scanner State (for Add/Edit form)
 const isSingleBarcodeScannerOpen = ref(false);
 const activeBarcodeTarget = ref<'add' | 'edit' | null>(null);
+
+// QR Code Generator & Label Print State
+const isQrModalOpen = ref(false);
+const qrModalProducts = ref<any[]>([]);
+
+function openSingleQrModal(product: any) {
+  qrModalProducts.value = [product];
+  isQrModalOpen.value = true;
+}
+
+function openBulkQrModal() {
+  if (selectedProductIds.value.length > 0) {
+    qrModalProducts.value = filteredProducts.value.filter((p: any) => selectedProductIds.value.includes(p.id));
+  } else {
+    qrModalProducts.value = filteredProducts.value;
+  }
+  isQrModalOpen.value = true;
+}
 
 const openAddBarcodeScanner = () => {
   activeBarcodeTarget.value = 'add';
