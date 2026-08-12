@@ -121,4 +121,14 @@ export default defineNuxtConfig({
     },
     minify: true,
   },
+
+  build: {
+    transpile: ["qrcode"],
+  },
+
+  vite: {
+    optimizeDeps: {
+      include: ["qrcode"],
+    },
+  },
 });

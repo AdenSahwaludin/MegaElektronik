@@ -135,7 +135,6 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import QRCode from 'qrcode'
 import { useCurrency } from '../../composables/useCurrency'
 
 const props = defineProps<{
@@ -167,18 +166,26 @@ async function generateQrCodes() {
   qrItems.value = []
 
   try {
+    const QRCode = await import('qrcode')
+    const toDataURL = QRCode.toDataURL || (QRCode as any).default?.toDataURL
+
     const generated = await Promise.all(
       productsList.value.map(async (product) => {
         const codeValue = getProductCode(product)
-        const qrUrl = await QRCode.toDataURL(codeValue, {
-          width: 300,
-          margin: 1,
-          color: {
-            dark: '#000000',
-            light: '#ffffff'
-          }
-        })
-        return { product, qrUrl }
+        const qrUrl = toDataURL
+          ? await toDataURL(codeValue, {
+              width: 300,
+              margin: 1,
+              color: {
+                dark: '#000000',
+                light: '#ffffff'
+              }
+            })
+          : ''
+        return {
+          product,
+          qrUrl
+        }
       })
     )
     qrItems.value = generated

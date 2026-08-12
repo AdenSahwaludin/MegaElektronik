@@ -107,7 +107,6 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import QRCode from "qrcode";
 import { useCurrency } from "../../composables/useCurrency";
 
 const props = defineProps<{ transactionId: string | number | null }>();
@@ -128,7 +127,11 @@ const fetchDetail = async () => {
     );
     // Generate QR Code for transaction
     const trxData = `TRX-${transaction.value.id}-${transaction.value.totalAmount}`;
-    qrCodeUrl.value = await QRCode.toDataURL(trxData, { width: 200, margin: 1 });
+    const QRCode = await import("qrcode");
+    const toDataURL = QRCode.toDataURL || (QRCode as any).default?.toDataURL;
+    if (toDataURL) {
+      qrCodeUrl.value = await toDataURL(trxData, { width: 200, margin: 1 });
+    }
   } catch (err) {
     console.error("Failed fetch transaction detail", err);
   } finally {

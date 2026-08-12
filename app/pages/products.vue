@@ -1548,10 +1548,7 @@ function handleChoiceSelectAllUnbarcoded() {
 
 function handleBulkProductUpdated(productId: number | string, newBarcode: string) {
   const numId = typeof productId === 'string' ? parseInt(productId, 10) : productId;
-  const target = (dataCacheStore.products || []).find((p: any) => p.id === numId || p.id === productId);
-  if (target) {
-    target.barcode = newBarcode;
-  }
+  dataCacheStore.updateLocalProduct({ id: numId, barcode: newBarcode });
 }
 
 interface ArrivalItem {
