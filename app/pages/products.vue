@@ -344,25 +344,66 @@
                           'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
                           isCategoryActive(cat.name) ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
                         ]"
-                      >
+                  >
                         {{ cat.count }}
                       </span>
                     </button>
                   </div>
+
+                  <!-- Brand Pills (Sub-category Merek Filter based on DB) -->
+                  <div
+                    v-if="selectedCategory && availableBrandsForSelectedCategory.length > 0"
+                    class="flex flex-wrap items-center justify-center gap-1.5 pt-2 mt-1 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+                  >
+                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1">
+                      <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500" />
+                      <span>Merek {{ selectedCategory }}:</span>
+                    </span>
+                    <button
+                      @click="selectedBrand = ''"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95',
+                        !selectedBrand
+                          ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                    >
+                      Semua Merek
+                    </button>
+                    <button
+                      v-for="brand in availableBrandsForSelectedCategory"
+                      :key="brand"
+                      @click="selectedBrand = selectedBrand === brand ? '' : brand"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        selectedBrand === brand
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                    >
+                      <span>{{ brand }}</span>
+                    </button>
+                  </div>
                 </div>
 
-                <!-- Active Filter Pill Indicator if a query is active -->
-                <div v-if="searchQuery" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
-                  <div class="flex items-center gap-2 text-gray-600 font-medium">
+                <!-- Active Filter Pill Indicator if a query or category/brand filter is active -->
+                <div v-if="searchQuery || selectedCategory || selectedBrand" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
+                  <div class="flex flex-wrap items-center gap-2 text-gray-600 font-medium">
                     <span class="text-gray-400">Filter Aktif:</span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
+                    <span v-if="selectedCategory" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
+                      Kategori: {{ selectedCategory }}
+                    </span>
+                    <span v-if="selectedBrand" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-200">
+                      Merek: {{ selectedBrand }}
+                    </span>
+                    <span v-if="searchQuery" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
                       <Icon name="lucide:filter" class="w-3 h-3 text-orange-600" />
                       "{{ searchQuery }}"
-                      <span class="text-orange-600 font-semibold">({{ totalItems }} produk)</span>
                     </span>
+                    <span class="text-orange-600 font-semibold">({{ totalItems }} produk)</span>
                   </div>
                   <button
-                    @click="searchQuery = ''"
+                    @click="resetAllFilters"
                     class="text-orange-600 hover:text-orange-800 font-bold text-xs hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Icon name="lucide:rotate-ccw" class="w-3 h-3" />
@@ -1255,7 +1296,25 @@ watch(searchQuery, (newVal) => {
 const productsList = computed(() => {
   let list = dataCacheStore.products;
 
-  // 1. Filter by debounced search query
+  // Filter by selectedCategory
+  if (selectedCategory.value) {
+    const catLower = selectedCategory.value.trim().toLowerCase();
+    list = list.filter((p: any) => {
+      const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+      return searchStr.includes(catLower);
+    });
+  }
+
+  // Filter by selectedBrand
+  if (selectedBrand.value) {
+    const brandLower = selectedBrand.value.trim().toLowerCase();
+    list = list.filter((p: any) => {
+      const b = (p.brand || '').trim().toLowerCase();
+      return b === brandLower;
+    });
+  }
+
+  // Filter by debounced search query
   if (debouncedSearchQuery.value.trim()) {
     const keywords = debouncedSearchQuery.value.toLowerCase().trim().split(/\s+/).filter((k) => k.length > 0);
     if (keywords.length > 0) {
@@ -1535,18 +1594,59 @@ const categoriesList = computed(() => {
   })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 });
 
+// Category & Brand Selection State
+const selectedCategory = ref('');
+const selectedBrand = ref('');
+
 const isCategoryActive = (catName: string) => {
-  if (!searchQuery.value) return false;
-  return searchQuery.value.trim().toLowerCase() === catName.trim().toLowerCase();
+  if (!catName && !selectedCategory.value) return true;
+  if (!selectedCategory.value) return false;
+  return selectedCategory.value.trim().toLowerCase() === catName.trim().toLowerCase();
 };
 
 const selectCategory = (catName: string) => {
-  if (isCategoryActive(catName)) {
-    searchQuery.value = '';
+  if (!catName) {
+    selectedCategory.value = '';
+    selectedBrand.value = '';
+    return;
+  }
+  if (selectedCategory.value.trim().toLowerCase() === catName.trim().toLowerCase()) {
+    selectedCategory.value = '';
+    selectedBrand.value = '';
   } else {
-    searchQuery.value = catName;
+    selectedCategory.value = catName;
+    selectedBrand.value = '';
   }
 };
+
+const resetAllFilters = () => {
+  searchQuery.value = '';
+  selectedCategory.value = '';
+  selectedBrand.value = '';
+};
+
+const availableBrandsForSelectedCategory = computed(() => {
+  if (!selectedCategory.value) return [];
+  const catLower = selectedCategory.value.trim().toLowerCase();
+  const allProds = dataCacheStore.products || [];
+  
+  const brandMap = new Map<string, string>();
+  allProds.forEach((p: any) => {
+    if (p.isActive === false) return;
+
+    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+    if (fullText.includes(catLower)) {
+      const b = (p.brand || '').trim();
+      if (b && b !== '-' && b.toLowerCase() !== 'no brand') {
+        if (!brandMap.has(b.toLowerCase())) {
+          brandMap.set(b.toLowerCase(), b);
+        }
+      }
+    }
+  });
+
+  return Array.from(brandMap.values()).sort((a, b) => a.localeCompare(b, 'id', { sensitivity: 'base' }));
+});
 
 const toggleSort = (field: string) => {
   if (sortBy.value === field) {

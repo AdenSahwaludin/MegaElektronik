@@ -72,53 +72,90 @@
           </div>
 
           <!-- Quick Categories - Horizontal Scroll / Wrap on Mobile -->
-          <div class="flex-1 min-w-0 flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 items-center py-1 overflow-x-auto scrollbar-hide scroll-smooth">
-            <!-- "Semua" Pill -->
-            <button
-              @click="searchQuery = ''"
-              :class="[
-                'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
-                !searchQuery
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
-                  : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
-              ]"
-            >
-              <Icon name="lucide:layout-grid" class="w-3.5 h-3.5" />
-              <span>Semua</span>
-              <span
+          <div class="flex-1 min-w-0 flex flex-col gap-1.5 py-1">
+            <div class="flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 items-center overflow-x-auto scrollbar-hide scroll-smooth">
+              <!-- "Semua" Pill -->
+              <button
+                @click="selectCategory('')"
                 :class="[
-                  'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
-                  !searchQuery ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
+                  'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                  !selectedCategory
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
+                    : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
                 ]"
               >
-                {{ products.length }}
-              </span>
-            </button>
+                <Icon name="lucide:layout-grid" class="w-3.5 h-3.5" />
+                <span>Semua</span>
+                <span
+                  :class="[
+                    'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
+                    !selectedCategory ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
+                  ]"
+                >
+                  {{ products.length }}
+                </span>
+              </button>
 
-            <!-- Category Pills -->
-            <button
-              v-for="cat in categoriesList"
-              :key="cat.name"
-              @click="selectCategory(cat.name)"
-              :class="[
-                'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
-                isCategoryActive(cat.name)
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
-                  : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
-              ]"
-            >
-              <Icon :name="cat.icon" class="w-3.5 h-3.5" />
-              <span>{{ cat.name }}</span>
-              <span
-                v-if="cat.count > 0"
+              <!-- Category Pills -->
+              <button
+                v-for="cat in categoriesList"
+                :key="cat.name"
+                @click="selectCategory(cat.name)"
                 :class="[
-                  'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
-                  isCategoryActive(cat.name) ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
+                  'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                  isCategoryActive(cat.name)
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
+                    : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
                 ]"
               >
-                {{ cat.count }}
+                <Icon :name="cat.icon" class="w-3.5 h-3.5" />
+                <span>{{ cat.name }}</span>
+                <span
+                  v-if="cat.count > 0"
+                  :class="[
+                    'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
+                    isCategoryActive(cat.name) ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
+                  ]"
+                >
+                  {{ cat.count }}
+                </span>
+              </button>
+            </div>
+
+            <!-- Brand Pills (Sub-category Merek Filter based on DB) -->
+            <div
+              v-if="selectedCategory && availableBrandsForSelectedCategory.length > 0"
+              class="flex items-center gap-1.5 pt-1.5 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200 border-t border-orange-200/50"
+            >
+              <span class="text-[11px] font-bold text-gray-600 shrink-0 flex items-center gap-1">
+                <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500" />
+                <span>Merek {{ selectedCategory }}:</span>
               </span>
-            </button>
+              <button
+                @click="selectedBrand = ''"
+                :class="[
+                  'px-3 py-1 rounded-lg text-xs font-bold transition-all duration-150 shrink-0 border cursor-pointer active:scale-95',
+                  !selectedBrand
+                    ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                ]"
+              >
+                Semua Merek
+              </button>
+              <button
+                v-for="brand in availableBrandsForSelectedCategory"
+                :key="brand"
+                @click="selectedBrand = selectedBrand === brand ? '' : brand"
+                :class="[
+                  'px-3 py-1 rounded-lg text-xs font-bold transition-all duration-150 shrink-0 border cursor-pointer active:scale-95 flex items-center gap-1',
+                  selectedBrand === brand
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                ]"
+              >
+                <span>{{ brand }}</span>
+              </button>
+            </div>
           </div>
 
         </div>
@@ -900,18 +937,51 @@ const categoriesList = computed(() => {
   })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 });
 
+// Category & Brand Selection State
+const selectedCategory = ref('');
+const selectedBrand = ref('');
+
 const isCategoryActive = (catName: string) => {
-  if (!searchQuery.value) return false;
-  return searchQuery.value.trim().toLowerCase() === catName.trim().toLowerCase();
+  if (!catName && !selectedCategory.value) return true;
+  if (!selectedCategory.value) return false;
+  return selectedCategory.value.trim().toLowerCase() === catName.trim().toLowerCase();
 };
 
 const selectCategory = (catName: string) => {
-  if (isCategoryActive(catName)) {
-    searchQuery.value = '';
+  if (!catName) {
+    selectedCategory.value = '';
+    selectedBrand.value = '';
+    return;
+  }
+  if (selectedCategory.value.trim().toLowerCase() === catName.trim().toLowerCase()) {
+    selectedCategory.value = '';
+    selectedBrand.value = '';
   } else {
-    searchQuery.value = catName;
+    selectedCategory.value = catName;
+    selectedBrand.value = '';
   }
 };
+
+const availableBrandsForSelectedCategory = computed(() => {
+  if (!selectedCategory.value) return [];
+  const catLower = selectedCategory.value.trim().toLowerCase();
+  const activeProds = products.value;
+  
+  const brandMap = new Map<string, string>();
+  activeProds.forEach((p: any) => {
+    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+    if (fullText.includes(catLower)) {
+      const b = (p.brand || '').trim();
+      if (b && b !== '-' && b.toLowerCase() !== 'no brand') {
+        if (!brandMap.has(b.toLowerCase())) {
+          brandMap.set(b.toLowerCase(), b);
+        }
+      }
+    }
+  });
+
+  return Array.from(brandMap.values()).sort((a, b) => a.localeCompare(b, 'id', { sensitivity: 'base' }));
+});
 
 // Products from cache store (filtered by isActive)
 const products = computed(() => {
@@ -1065,9 +1135,26 @@ const getProductSortName = (product: any) => {
 // Computed
 const filteredProducts = computed(() => {
   let result = products.value;
+
+  if (selectedCategory.value) {
+    const catLower = selectedCategory.value.trim().toLowerCase();
+    result = result.filter((p: any) => {
+      const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+      return searchStr.includes(catLower);
+    });
+  }
+
+  if (selectedBrand.value) {
+    const brandLower = selectedBrand.value.trim().toLowerCase();
+    result = result.filter((p: any) => {
+      const b = (p.brand || '').trim().toLowerCase();
+      return b === brandLower;
+    });
+  }
+
   if (debouncedSearchQuery.value.trim()) {
     const keywords = debouncedSearchQuery.value.toLowerCase().trim().split(/\s+/);
-    result = result.filter(p => {
+    result = result.filter((p: any) => {
       const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
       return keywords.every(k => searchStr.includes(k));
     });

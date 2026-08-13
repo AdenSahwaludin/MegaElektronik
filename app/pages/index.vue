@@ -78,20 +78,57 @@
             </div>
 
             <!-- Quick Categories -->
-            <div v-show="showCategories" class="flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-              <button
-                v-for="cat in ['Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC', 'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko', 'Exhaust']"
-                :key="cat"
-                @click="searchQuery = searchQuery === cat ? '' : cat"
-                :class="[
-                  'px-3 py-1 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95',
-                  searchQuery === cat
-                    ? 'bg-orange-600 text-white border-orange-600 shadow-sm font-bold'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-orange-500 hover:text-orange-600'
-                ]"
+            <div v-show="showCategories" class="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="cat in ['Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC', 'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko', 'Exhaust', 'Speaker']"
+                  :key="cat"
+                  @click="selectCategory(cat)"
+                  :class="[
+                    'px-3 py-1 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95',
+                    selectedCategory === cat
+                      ? 'bg-orange-600 text-white border-orange-600 shadow-xs font-bold'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-orange-500 hover:text-orange-600'
+                  ]"
+                >
+                  {{ cat }}
+                </button>
+              </div>
+
+              <!-- Quick Brands (Sub-category Merek Filter based on DB) -->
+              <div
+                v-if="selectedCategory && availableBrandsForSelectedCategory.length > 0"
+                class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
               >
-                {{ cat }}
-              </button>
+                <span class="text-[11px] font-bold text-gray-500 mr-1 flex items-center gap-1">
+                  <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500" />
+                  Merek {{ selectedCategory }}:
+                </span>
+                <button
+                  @click="selectedBrand = ''"
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95',
+                    !selectedBrand
+                      ? 'bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-xs'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-orange-400 hover:text-orange-600'
+                  ]"
+                >
+                  Semua Merek
+                </button>
+                <button
+                  v-for="brand in availableBrandsForSelectedCategory"
+                  :key="brand"
+                  @click="selectedBrand = selectedBrand === brand ? '' : brand"
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1',
+                    selectedBrand === brand
+                      ? 'bg-orange-600 text-white border-orange-600 shadow-xs font-bold'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600'
+                  ]"
+                >
+                  <span>{{ brand }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1012,12 +1049,64 @@ const getProductSortName = (product: any) => {
   return name.trim();
 };
 
+// Category & Brand Selection State
+const selectedCategory = ref('');
+const selectedBrand = ref('');
+
+const selectCategory = (cat: string) => {
+  if (selectedCategory.value === cat) {
+    selectedCategory.value = '';
+    selectedBrand.value = '';
+  } else {
+    selectedCategory.value = cat;
+    selectedBrand.value = '';
+  }
+};
+
+const availableBrandsForSelectedCategory = computed(() => {
+  if (!selectedCategory.value) return [];
+  const catLower = selectedCategory.value.trim().toLowerCase();
+  const activeProds = (dataCacheStore.products || []).filter((p: any) => p.isActive !== false);
+  
+  const brandMap = new Map<string, string>();
+  activeProds.forEach((p: any) => {
+    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+    if (fullText.includes(catLower)) {
+      const b = (p.brand || '').trim();
+      if (b && b !== '-' && b.toLowerCase() !== 'no brand') {
+        if (!brandMap.has(b.toLowerCase())) {
+          brandMap.set(b.toLowerCase(), b);
+        }
+      }
+    }
+  });
+
+  return Array.from(brandMap.values()).sort((a, b) => a.localeCompare(b, 'id', { sensitivity: 'base' }));
+});
+
 // Computed
 const filteredProducts = computed(() => {
   let result = products.value;
+
+  if (selectedCategory.value) {
+    const catLower = selectedCategory.value.trim().toLowerCase();
+    result = result.filter((p: any) => {
+      const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+      return searchStr.includes(catLower);
+    });
+  }
+
+  if (selectedBrand.value) {
+    const brandLower = selectedBrand.value.trim().toLowerCase();
+    result = result.filter((p: any) => {
+      const b = (p.brand || '').trim().toLowerCase();
+      return b === brandLower;
+    });
+  }
+
   if (debouncedSearchQuery.value.trim()) {
     const keywords = debouncedSearchQuery.value.toLowerCase().trim().split(/\s+/);
-    result = result.filter(p => {
+    result = result.filter((p: any) => {
       const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
       return keywords.every(k => searchStr.includes(k));
     });
