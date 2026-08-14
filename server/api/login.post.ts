@@ -24,9 +24,9 @@ export default defineEventHandler(async (event) => {
   // Generate a simple token (in a real app, use JWT)
   const token = `token_${user.username}_${Date.now()}`;
 
-  // Set cookie valid for 1 day (86400 seconds)
+  // Set cookie valid for 7 days (604800 seconds)
   setCookie(event, "auth_token", token, {
-    maxAge: 60 * 60 * 24, // 24 hours
+    maxAge: 60 * 60 * 24 * 7, // 7 hari
     path: "/",
     sameSite: "lax",
   });

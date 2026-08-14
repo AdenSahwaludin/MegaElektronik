@@ -14,13 +14,13 @@ export default defineNuxtPlugin((nuxtApp) => {
     nuxtApp.runWithContext(() => {
       try {
         const token = useCookie("auth_token", {
-          maxAge: 60 * 60 * 24,
+          maxAge: 60 * 60 * 24 * 7, // 7 hari
           path: "/",
           sameSite: "lax" as const,
         });
         if (token.value) {
           lastRefreshTime = now;
-          token.value = token.value; // Memperbarui expiry cookie di browser (sliding expiration)
+          token.value = token.value; // Memperbarui expiry cookie di browser (sliding expiration 7 hari)
         }
       } catch (e) {
         // Safe catch

@@ -887,20 +887,21 @@ function handleCameraScan(scannedCode: string) {
   if (prod) {
     if (prod.stock <= 0) {
       playErrorBeep();
-      alert(`Stok ${prod.name} habis!`);
+      showToast(`Stok ${prod.name} habis!`);
       return;
     }
     const added = cartStore.addToCart(prod);
     if (added) {
       playSuccessBeep();
       lastScannedName.value = prod.name;
+      showToast(`+1 ${prod.name} ditambahkan ke keranjang`);
     } else {
       playErrorBeep();
-      alert(`Stok maksimal ${prod.name} sudah tercapai!`);
+      showToast(`Stok maksimal ${prod.name} sudah tercapai!`);
     }
   } else {
     playErrorBeep();
-    alert(`Barcode "${scannedCode}" tidak ditemukan`);
+    showToast(`Barcode "${scannedCode}" tidak ditemukan`);
   }
 }
 
