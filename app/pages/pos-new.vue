@@ -871,17 +871,17 @@ function handleCameraScan(scannedCode: string) {
   }
 }
 
-function handleScannerIncrementQty(cartItemId: string) {
-  const item = cartStore.items.find(i => i.id === cartItemId);
+function handleScannerIncrementQty(cartItemId: any) {
+  const item = cartStore.items.find(i => i.id === cartItemId || i.productId === cartItemId || (i as any).productId == cartItemId);
   if (item) {
-    cartStore.updateQuantity(cartItemId, item.quantity + 1);
+    cartStore.updateQuantity(item.id, item.quantity + 1);
   }
 }
 
-function handleScannerDecrementQty(cartItemId: string) {
-  const item = cartStore.items.find(i => i.id === cartItemId);
+function handleScannerDecrementQty(cartItemId: any) {
+  const item = cartStore.items.find(i => i.id === cartItemId || i.productId === cartItemId || (i as any).productId == cartItemId);
   if (item) {
-    cartStore.updateQuantity(cartItemId, item.quantity - 1);
+    cartStore.updateQuantity(item.id, item.quantity - 1);
   }
 }
 

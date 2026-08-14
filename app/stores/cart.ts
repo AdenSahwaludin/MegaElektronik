@@ -65,11 +65,11 @@ export const useCartStore = defineStore("cart", () => {
   };
 
   // Update quantity
-  const updateQuantity = (cartItemId: string, quantity: number) => {
-    const item = items.value.find((i) => i.id === cartItemId);
+  const updateQuantity = (cartItemId: string | number, quantity: number) => {
+    const item = items.value.find((i) => i.id === cartItemId || i.productId === cartItemId || (i as any).productId == cartItemId);
     if (item) {
       if (quantity <= 0) {
-        removeFromCart(cartItemId);
+        removeFromCart(item.id);
       } else {
         if (item.maxStock !== undefined && quantity > item.maxStock) {
           item.quantity = item.maxStock;
@@ -81,16 +81,16 @@ export const useCartStore = defineStore("cart", () => {
   };
 
   // Update sold price (for bargaining)
-  const updateSoldPrice = (cartItemId: string, price: number) => {
-    const item = items.value.find((i) => i.id === cartItemId);
+  const updateSoldPrice = (cartItemId: string | number, price: number) => {
+    const item = items.value.find((i) => i.id === cartItemId || i.productId === cartItemId || (i as any).productId == cartItemId);
     if (item) {
       item.soldPrice = Math.max(0, price);
     }
   };
 
   // Remove item from cart
-  const removeFromCart = (cartItemId: string) => {
-    const index = items.value.findIndex((i) => i.id === cartItemId);
+  const removeFromCart = (cartItemId: string | number) => {
+    const index = items.value.findIndex((i) => i.id === cartItemId || i.productId === cartItemId || (i as any).productId == cartItemId);
     if (index > -1) {
       items.value.splice(index, 1);
     }

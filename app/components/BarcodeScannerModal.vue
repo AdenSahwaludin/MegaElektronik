@@ -210,7 +210,7 @@
                   <Icon :name="isCartDrawerOpen ? 'lucide:chevron-down' : 'lucide:chevron-up'" class="w-3.5 h-3.5 text-gray-400" />
                 </div>
                 <p class="text-sm sm:text-base font-extrabold text-emerald-400">
-                  {{ formatRupiah(totalAmount || 0) }}
+                  {{ formatRupiah(computedTotalAmount) }}
                 </p>
               </div>
             </button>
@@ -288,16 +288,23 @@ const formatRupiah = (val: number) => {
 }
 
 function getItemKey(item: any) {
-  return item.product?.id || item.produk?.id || item.productId || item.id
+  return item.id || item.cartItemId || item.productId || item.product?.id || item.produk?.id
 }
 function getItemId(item: any) {
-  return item.product?.id || item.produk?.id || item.productId || item.id
+  return item.id || item.cartItemId || item.productId || item.product?.id || item.produk?.id
 }
 function getItemName(item: any) {
-  return item.product?.name || item.produk?.name || item.name || 'Produk'
+  return item.productName || item.name || item.product?.name || item.produk?.name || 'Produk'
 }
 function getItemPrice(item: any) {
-  return item.product?.fixedPrice || item.product?.askingPrice || item.produk?.price || item.price || item.agreedPrice || 0
+  if (typeof item.soldPrice === 'number') return item.soldPrice
+  if (typeof item.askingPrice === 'number') return item.askingPrice
+  if (typeof item.fixedPrice === 'number') return item.fixedPrice
+  if (typeof item.price === 'number') return item.price
+  if (item.product?.fixedPrice !== undefined) return item.product.fixedPrice
+  if (item.product?.askingPrice !== undefined) return item.product.askingPrice
+  if (item.produk?.price !== undefined) return item.produk.price
+  return 0
 }
 function getItemQty(item: any) {
   return item.quantity || item.qty || 1
@@ -309,6 +316,11 @@ function getItemSubtotal(item: any) {
 
 const totalItemsCount = computed(() => {
   return (props.cartItems || []).reduce((sum, item) => sum + getItemQty(item), 0)
+})
+
+const computedTotalAmount = computed(() => {
+  if (props.totalAmount && props.totalAmount > 0) return props.totalAmount
+  return (props.cartItems || []).reduce((sum, item) => sum + getItemSubtotal(item), 0)
 })
 
 function handlePayFromScanner() {
