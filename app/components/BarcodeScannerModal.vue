@@ -16,7 +16,7 @@
                 <h3 class="text-base font-bold leading-tight text-white">Scan Barcode Produk</h3>
                 <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full tracking-wider animate-pulse">POS</span>
               </div>
-              <p class="text-xs text-gray-400">Arahkan kamera ke barcode produk</p>
+              <p class="text-xs text-gray-400">Arahkan kamera ke barcode atau QR code</p>
             </div>
           </div>
 
@@ -83,11 +83,11 @@
             <!-- Dim Backdrop Overlay around target window -->
             <div class="absolute inset-0 z-10 pointer-events-none flex flex-col">
               <!-- Top mask -->
-              <div class="bg-black/55 flex-1"></div>
+              <div class="bg-black/40 flex-1"></div>
               
               <!-- Middle strip containing clear window -->
               <div class="flex h-56 sm:h-64">
-                <div class="bg-black/55 flex-1"></div>
+                <div class="bg-black/40 flex-1"></div>
                 <!-- Target Box (Scan Window) -->
                 <div ref="targetBoxRef" class="relative w-72 sm:w-80 h-full">
                   <!-- Corner Borders -->
@@ -108,14 +108,14 @@
                     class="absolute inset-0 bg-emerald-500/30 border-2 border-emerald-400 rounded-lg animate-pulse"
                   ></div>
                 </div>
-                <div class="bg-black/55 flex-1"></div>
+                <div class="bg-black/40 flex-1"></div>
               </div>
 
               <!-- Bottom mask -->
-              <div class="bg-black/55 flex-1 flex items-start justify-center pt-6 px-4">
+              <div class="bg-black/40 flex-1 flex items-start justify-center pt-6 px-4">
                 <div class="text-center bg-gray-900/75 border border-white/10 px-4 py-2 rounded-full backdrop-blur-md">
                   <p class="text-xs sm:text-sm font-medium text-gray-200">
-                    Posisikan barcode di dalam kotak scan
+                    Arahkan kamera ke barcode atau QR code
                   </p>
                 </div>
               </div>
@@ -330,62 +330,112 @@ let animFrameId: number | null = null
 let barcodeDetector: any = null
 let zxingReader: any = null
 let lockTimer: any = null
-let cropCanvas: HTMLCanvasElement | null = null
-let cropCtx: CanvasRenderingContext2D | null = null
+let roiCanvas: HTMLCanvasElement | null = null
+let roiCtx: CanvasRenderingContext2D | null = null
+let fullCanvas: HTMLCanvasElement | null = null
+let fullCtx: CanvasRenderingContext2D | null = null
 let lastScanTime = 0
+let isDetecting = false
+let scanPassCount = 0
 
 const { unlockAudio } = useAudioBeep()
 
-// Crop video frame precisely to target scan box ROI
-function updateCropCanvas(): HTMLCanvasElement | null {
-  if (!videoRef.value || !targetBoxRef.value) return null
+// Extract high-contrast, uncompressed native-pixel ROI from viewfinder area (0ms instant path)
+function getRoiCanvas(): HTMLCanvasElement | null {
+  if (!videoRef.value) return null
   const video = videoRef.value
-  const vRect = video.getBoundingClientRect()
-  const tRect = targetBoxRef.value.getBoundingClientRect()
-
   const vw = video.videoWidth
   const vh = video.videoHeight
-  if (!vw || !vh || !vRect.width || !vRect.height || !tRect.width || !tRect.height) {
-    return null
+  if (!vw || !vh) return null
+
+  let roiX = 0, roiY = 0, roiW = vw, roiH = vh
+
+  if (targetBoxRef.value) {
+    const vRect = video.getBoundingClientRect()
+    const tRect = targetBoxRef.value.getBoundingClientRect()
+    if (vRect.width && vRect.height && tRect.width && tRect.height) {
+      const scale = Math.max(vRect.width / vw, vRect.height / vh)
+      const offsetX = (vRect.width - vw * scale) / 2
+      const offsetY = (vRect.height - vh * scale) / 2
+
+      // Add generous margin (+15%) around target box
+      const padX = tRect.width * 0.15
+      const padY = tRect.height * 0.15
+
+      roiX = (tRect.left - padX - vRect.left - offsetX) / scale
+      roiY = (tRect.top - padY - vRect.top - offsetY) / scale
+      roiW = (tRect.width + padX * 2) / scale
+      roiH = (tRect.height + padY * 2) / scale
+
+      roiX = Math.max(0, roiX)
+      roiY = Math.max(0, roiY)
+      if (roiX + roiW > vw) roiW = vw - roiX
+      if (roiY + roiH > vh) roiH = vh - roiY
+    }
+  } else {
+    roiX = vw * 0.15
+    roiY = vh * 0.15
+    roiW = vw * 0.7
+    roiH = vh * 0.7
   }
-
-  // Calculate object-cover scale & top-left video offset in screen space
-  const scale = Math.max(vRect.width / vw, vRect.height / vh)
-  const offsetX = (vRect.width - vw * scale) / 2
-  const offsetY = (vRect.height - vh * scale) / 2
-
-  // Map scan box (tRect) to native video pixel coordinates
-  let roiX = (tRect.left - vRect.left - offsetX) / scale
-  let roiY = (tRect.top - vRect.top - offsetY) / scale
-  let roiW = tRect.width / scale
-  let roiH = tRect.height / scale
-
-  // Clamp ROI within video resolution
-  roiX = Math.max(0, roiX)
-  roiY = Math.max(0, roiY)
-  if (roiX + roiW > vw) roiW = vw - roiX
-  if (roiY + roiH > vh) roiH = vh - roiY
 
   if (roiW <= 0 || roiH <= 0) return null
 
-  if (!cropCanvas) {
-    cropCanvas = document.createElement('canvas')
-    cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true })
+  if (!roiCanvas) {
+    roiCanvas = document.createElement('canvas')
+    roiCtx = roiCanvas.getContext('2d', { willReadFrequently: true })
   }
 
   const targetW = Math.round(roiW)
   const targetH = Math.round(roiH)
 
-  if (cropCanvas.width !== targetW || cropCanvas.height !== targetH) {
-    cropCanvas.width = targetW
-    cropCanvas.height = targetH
+  if (roiCanvas.width !== targetW || roiCanvas.height !== targetH) {
+    roiCanvas.width = targetW
+    roiCanvas.height = targetH
   }
 
-  if (cropCtx) {
-    cropCtx.drawImage(video, roiX, roiY, roiW, roiH, 0, 0, targetW, targetH)
+  if (roiCtx) {
+    roiCtx.drawImage(video, roiX, roiY, roiW, roiH, 0, 0, targetW, targetH)
   }
 
-  return cropCanvas
+  return roiCanvas
+}
+
+// Capture scaled full frame for wide-angle scanning anywhere in view (even rotated / 90 degrees)
+function getFullCanvas(maxDim = 640): HTMLCanvasElement | null {
+  if (!videoRef.value) return null
+  const video = videoRef.value
+  const vw = video.videoWidth
+  const vh = video.videoHeight
+  if (!vw || !vh) return null
+
+  let targetW = vw
+  let targetH = vh
+  if (targetW > maxDim || targetH > maxDim) {
+    if (targetW >= targetH) {
+      targetH = Math.round((vh / vw) * maxDim)
+      targetW = maxDim
+    } else {
+      targetW = Math.round((vw / vh) * maxDim)
+      targetH = maxDim
+    }
+  }
+
+  if (!fullCanvas) {
+    fullCanvas = document.createElement('canvas')
+    fullCtx = fullCanvas.getContext('2d', { willReadFrequently: true })
+  }
+
+  if (fullCanvas.width !== targetW || fullCanvas.height !== targetH) {
+    fullCanvas.width = targetW
+    fullCanvas.height = targetH
+  }
+
+  if (fullCtx) {
+    fullCtx.drawImage(video, 0, 0, targetW, targetH)
+  }
+
+  return fullCanvas
 }
 
 // Watch isOpen to initialize or stop camera
@@ -410,39 +460,52 @@ async function initCamera() {
   hasTorchSupport.value = false
   activeEngine.value = 'None'
   isLocked.value = false
+  isDetecting = false
 
   stopEverything()
 
   try {
     let stream: MediaStream
+    const constraints: MediaStreamConstraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280, min: 640 },
+        height: { ideal: 720, min: 480 }
+      },
+      audio: false
+    }
+
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { exact: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 }
         },
         audio: false
       })
     } catch (_) {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false
-      })
+      stream = await navigator.mediaDevices.getUserMedia(constraints)
     }
 
     mediaStream = stream
     mediaTrack = stream.getVideoTracks()[0] || null
 
-    if (mediaTrack && typeof mediaTrack.getCapabilities === 'function') {
-      const caps = mediaTrack.getCapabilities() as any
-      if (caps?.torch) {
-        hasTorchSupport.value = true
-      }
+    // Enable continuous autofocus & detect flashlight support
+    if (mediaTrack && typeof mediaTrack.applyConstraints === 'function') {
+      try {
+        const caps = typeof mediaTrack.getCapabilities === 'function' ? (mediaTrack.getCapabilities() as any) : {}
+        const adv: any = {}
+        if (caps.focusMode && Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
+          adv.focusMode = 'continuous'
+        }
+        if (caps.torch) {
+          hasTorchSupport.value = true
+        }
+        if (Object.keys(adv).length > 0) {
+          await mediaTrack.applyConstraints({ advanced: [adv] })
+        }
+      } catch (_) {}
     }
 
     if (videoRef.value) {
@@ -497,8 +560,8 @@ async function startScanEngine() {
       }
       if (!formats || formats.length === 0) {
         formats = [
-          'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_39', 'code_93', 'code_128',
-          'qr_code', 'data_matrix', 'pdf417', 'aztec'
+          'qr_code', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_39', 'code_93', 'code_128',
+          'data_matrix', 'pdf417', 'aztec'
         ]
       }
 
@@ -518,11 +581,17 @@ async function startScanEngine() {
 
     const hints = new Map()
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-      BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
-      BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
-      BarcodeFormat.CODE_39, BarcodeFormat.CODE_93, BarcodeFormat.CODE_128,
-      BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX,
-      BarcodeFormat.PDF_417, BarcodeFormat.AZTEC
+      BarcodeFormat.QR_CODE,
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.CODE_128,
+      BarcodeFormat.CODE_39,
+      BarcodeFormat.CODE_93,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E,
+      BarcodeFormat.DATA_MATRIX,
+      BarcodeFormat.PDF_417,
+      BarcodeFormat.AZTEC
     ])
     hints.set(DecodeHintType.TRY_HARDER, true)
 
@@ -544,32 +613,54 @@ function startScanLoop() {
     if (!props.isOpen || !videoRef.value) return
 
     const now = performance.now()
-    if (!isLocked.value && videoRef.value.readyState >= 2 && now - lastScanTime >= 70) {
+    if (!isLocked.value && !isDetecting && videoRef.value.readyState >= 2 && now - lastScanTime >= 35) {
       lastScanTime = now
-      const croppedCanvas = updateCropCanvas()
-      if (croppedCanvas) {
+      isDetecting = true
+      scanPassCount++
+
+      try {
         if (activeEngine.value === 'BarcodeDetector' && barcodeDetector) {
-          try {
-            const barcodes = await barcodeDetector.detect(croppedCanvas)
-            if (barcodes && barcodes.length > 0) {
-              const rawVal = barcodes[0].rawValue?.trim()
-              if (rawVal) {
-                processCandidateBarcode(rawVal)
-              }
+          // Native BarcodeDetector processes the full video frame directly & fast
+          const barcodes = await barcodeDetector.detect(videoRef.value)
+          if (barcodes && barcodes.length > 0) {
+            const rawVal = barcodes[0].rawValue?.trim()
+            if (rawVal) {
+              processCandidateBarcode(rawVal)
             }
-          } catch (_) {}
+          }
         } else if (activeEngine.value === 'ZXing' && zxingReader) {
-          try {
-            const res = zxingReader.decodeFromCanvas(croppedCanvas)
-            const result = res && typeof res.then === 'function' ? await res : res
-            if (result) {
-              const text = typeof result.getText === 'function' ? result.getText()?.trim() : result.text?.trim()
-              if (text) {
-                processCandidateBarcode(text)
-              }
+          // Priority 1: High-contrast ROI canvas for instant detection
+          let result: any = null
+          const roi = getRoiCanvas()
+          if (roi) {
+            try {
+              const res = zxingReader.decodeFromCanvas(roi)
+              result = res && typeof res.then === 'function' ? await res : res
+            } catch (_) {}
+          }
+
+          // Priority 2: Scaled full canvas every alternating frame for 360-deg / rotated / off-center barcodes
+          if (!result && scanPassCount % 2 === 0) {
+            const full = getFullCanvas(640)
+            if (full) {
+              try {
+                const res = zxingReader.decodeFromCanvas(full)
+                result = res && typeof res.then === 'function' ? await res : res
+              } catch (_) {}
             }
-          } catch (_) {}
+          }
+
+          if (result) {
+            const text = typeof result.getText === 'function' ? result.getText()?.trim() : result.text?.trim()
+            if (text) {
+              processCandidateBarcode(text)
+            }
+          }
         }
+      } catch (_) {
+        // Ignored
+      } finally {
+        isDetecting = false
       }
     }
 
@@ -646,9 +737,12 @@ function stopEverything() {
     lockTimer = null
   }
   isLocked.value = false
+  isDetecting = false
   isTorchOn.value = false
-  cropCanvas = null
-  cropCtx = null
+  roiCanvas = null
+  roiCtx = null
+  fullCanvas = null
+  fullCtx = null
 }
 
 function closeScanner() {

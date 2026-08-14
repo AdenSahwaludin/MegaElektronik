@@ -18,6 +18,7 @@ logs
 .fleet
 .idea
 docs
+.vscode
 
 # SQLite databases & temporary files
 *.db
