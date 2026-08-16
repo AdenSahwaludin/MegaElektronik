@@ -1689,8 +1689,11 @@ const editingProduct = reactive({
 const getProductDisplayName = (product: any) => {
   if (!product) return '';
   let name = product.name || '';
-  if (product.brand && product.brand !== 'No Brand' && product.brand.trim() !== '') {
-    name += ` ${product.brand}`;
+  const brand = (product.brand || '').trim();
+  if (brand && brand !== '-' && brand.toLowerCase() !== 'no brand') {
+    if (!name.toLowerCase().includes(brand.toLowerCase())) {
+      name += ` ${brand}`;
+    }
   }
   return name.trim();
 };
@@ -1918,8 +1921,9 @@ const printProductList = async () => {
         const isEven = index % 2 === 0;
         const rowStyle = isEven ? "background-color: #ffffff;" : "background-color: #f9fafb;";
         
-        const brand = p.brand ? p.brand : "";
-        const productName = (p.name + (brand ? ` ${brand}` : "")).trim();
+        const brand = p.brand && !["-", "No Brand", "no brand"].includes(p.brand.trim()) ? p.brand.trim() : "";
+        const alreadyHasBrand = brand && p.name.toLowerCase().includes(brand.toLowerCase());
+        const productName = (p.name + (brand && !alreadyHasBrand ? ` ${brand}` : "")).trim();
         const model = p.model ? p.model : "-";
         const askingPrice = formatCurrency(p.askingPrice);
         const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";

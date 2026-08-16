@@ -1,5 +1,5 @@
 import { getPrismaClient } from "../../utils/prisma";
-import { getDateFilter } from "../../utils/analytics";
+import { getDateFilter, getProductLabel } from "../../utils/analytics";
 
 const prisma = getPrismaClient();
 
@@ -36,7 +36,9 @@ export default defineEventHandler(async (event) => {
   const productStats: Record<number, { name: string, qty: number, profit: number }> = {};
   allItems.forEach(item => {
     if (!productStats[item.productId]) {
-      const productName = item.product ? `${item.product.name} ${item.product.brand} ${item.product.model}`.trim() : 'Produk Terhapus';
+      const productName = item.product
+        ? getProductLabel(item.product.name, item.product.brand, item.product.model)
+        : 'Produk Terhapus';
       productStats[item.productId] = { name: productName, qty: 0, profit: 0 };
     }
     productStats[item.productId]!.qty += item.quantity;

@@ -1,5 +1,5 @@
 import { getPrismaClient } from "../../utils/prisma";
-import { getDateFilter } from "../../utils/analytics";
+import { getDateFilter, getProductLabel } from "../../utils/analytics";
 
 const prisma = getPrismaClient();
 
@@ -45,7 +45,9 @@ export default defineEventHandler(async (event) => {
 
   items.forEach(item => {
     if (!productStats[item.productId]) {
-      const productName = item.product ? `${item.product.name} ${item.product.brand} ${item.product.model}`.trim() : 'Unknown Product';
+      const productName = item.product
+        ? getProductLabel(item.product.name, item.product.brand, item.product.model)
+        : 'Unknown Product';
       productStats[item.productId] = { name: productName, quantity: 0, revenue: 0 };
     }
     productStats[item.productId]!.quantity += item.quantity;

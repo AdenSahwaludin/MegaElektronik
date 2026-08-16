@@ -1,6 +1,24 @@
 // WIB = UTC+7
 const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
 
+// Build product label tanpa brand/model yang duplikat dengan nama
+export const getProductLabel = (
+  name: string,
+  brand?: string | null,
+  model?: string | null,
+) => {
+  let label = (name || "").trim();
+  const appendIfMissing = (part?: string | null) => {
+    const trimmed = (part || "").trim();
+    if (trimmed && !label.toLowerCase().includes(trimmed.toLowerCase())) {
+      label += ` ${trimmed}`;
+    }
+  };
+  appendIfMissing(brand);
+  appendIfMissing(model);
+  return label;
+};
+
 // Get current date/time components in WIB timezone
 const getWibNow = () => {
   const now = new Date();

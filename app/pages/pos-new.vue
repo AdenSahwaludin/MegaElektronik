@@ -1113,9 +1113,10 @@ const successMessage = ref("");
 const getProductDisplayName = (product: any) => {
   if (!product) return '';
   let name = product.name || '';
-  if (product.brand && product.brand !== 'No Brand' && product.brand.trim() !== '') {
-    if (!name.toLowerCase().includes(product.brand.toLowerCase().trim())) {
-      name += ` ${product.brand.trim()}`;
+  const brand = (product.brand || '').trim();
+  if (brand && brand !== '-' && brand.toLowerCase() !== 'no brand') {
+    if (!name.toLowerCase().includes(brand.toLowerCase())) {
+      name += ` ${brand}`;
     }
   }
   // Model is intentionally omitted from the display name to be shown separately
