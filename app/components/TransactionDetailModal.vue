@@ -82,21 +82,17 @@
             </div>
           </div>
 
-          <!-- QR Code Transaksi & Action Print Struk -->
+          <!-- Action Print Struk -->
           <div class="pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <img v-if="qrCodeUrl" :src="qrCodeUrl" alt="QR Transaksi" class="w-16 h-16 bg-white p-1 rounded border border-gray-300" />
-              <div>
-                <p class="text-xs font-bold text-gray-700">QR Code Struk Transaksi</p>
-                <p class="text-[10px] text-gray-500 font-mono">TRX-{{ transaction.id }}</p>
-              </div>
+            <div>
+              <p class="text-xs font-bold text-gray-700">No: TRX-{{ transaction.id }}</p>
             </div>
             <button
               @click="printReceipt"
               class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition"
             >
               <Icon name="lucide:printer" class="w-4 h-4" />
-              <span>Cetak Struk (dengan QR)</span>
+              <span>Cetak Struk</span>
             </button>
           </div>
         </div>
@@ -115,23 +111,14 @@ const { formatCurrency } = useCurrency();
 
 const transaction = ref<any>({ transactionItems: [] });
 const loading = ref(false);
-const qrCodeUrl = ref<string>("");
 
 const fetchDetail = async () => {
   if (!props.transactionId) return;
   loading.value = true;
-  qrCodeUrl.value = "";
   try {
     transaction.value = await $fetch(
       `/api/transactions/${props.transactionId}`,
     );
-    // Generate QR Code for transaction
-    const trxData = `TRX-${transaction.value.id}-${transaction.value.totalAmount}`;
-    const QRCode = await import("qrcode");
-    const toDataURL = QRCode.toDataURL || (QRCode as any).default?.toDataURL;
-    if (toDataURL) {
-      qrCodeUrl.value = await toDataURL(trxData, { width: 200, margin: 1 });
-    }
   } catch (err) {
     console.error("Failed fetch transaction detail", err);
   } finally {
@@ -204,8 +191,6 @@ const printReceipt = () => {
           .header h2 { margin: 0; font-size: 14px; }
           .divider { border-top: 1px dashed #000; margin: 6px 0; }
           table { width: 100%; border-collapse: collapse; font-size: 10px; }
-          .qr-container { text-align: center; margin-top: 10px; }
-          .qr-container img { width: 70px; height: 70px; }
           .footer { text-align: center; font-size: 9px; margin-top: 8px; }
         </style>
       </head>
@@ -250,10 +235,6 @@ const printReceipt = () => {
             : ""
         }
         <div class="divider"></div>
-        <div class="qr-container">
-          <img src="${qrCodeUrl.value}" />
-          <div style="font-size: 8px; margin-top: 2px;">Scan untuk Verifikasi Transaksi</div>
-        </div>
         <div class="footer">
           <p style="margin: 4px 0;">Terima Kasih Atas Kunjungan Anda!</p>
           <p style="margin: 0;">Barang yang sudah dibeli tidak dapat ditukar.</p>
