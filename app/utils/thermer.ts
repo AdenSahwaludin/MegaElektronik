@@ -222,20 +222,22 @@ export function generateThermerReceiptEntries(transaction: any): ThermerEntriesM
 
   // 10. FOOTER / UCAPAN (Center)
   addText("Terima Kasih Atas Kunjungan Anda!", 1, 1, 0);
-  addText("Barang yang sudah dibeli", 0, 1, 4);
-  addText("tidak dapat ditukar / dikembalikan.", 0, 1, 4);
+  addText("Barang yang sudah dibeli", 0, 1, 0);
+  addText("tidak dapat ditukar / dikembalikan.", 0, 1, 0);
 
-  // 11. FEED 3 BARIS DI PALING BAWAH (Hanya di akhir struk untuk mempermudah sobek kertas)
-  addText(" ", 0, 0, 0);
-  addText(" ", 0, 0, 0);
-  addText(" ", 0, 0, 0);
+  // 11. FEED DI PALING BAWAH
+  addText("", 0, 0, 0);
+  addText("", 0, 0, 0);
 
-  // Convert array to sequential integer dictionary: { "0": entry0, "1": entry1, ... }
+  // Convert array to sequential integer dictionary with 3-digit zero-padding:
+  // e.g. { "000": entry0, "001": entry1, ..., "018": entry18 }
+  // This prevents iOS string dictionary sorting from placing "10" before "2".
   const entriesMap: ThermerEntriesMap = {};
   for (let i = 0; i < list.length; i++) {
     const item = list[i];
     if (item) {
-      entriesMap[i.toString()] = item;
+      const key = i.toString().padStart(3, "0");
+      entriesMap[key] = item;
     }
   }
 

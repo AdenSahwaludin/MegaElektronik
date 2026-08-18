@@ -7,9 +7,24 @@
 export function printBrowserReceipt(transaction: any): void {
   if (typeof window === "undefined" || !transaction) return;
 
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    alert("Mohon izinkan pop-up window untuk mencetak struk.");
+  // Use hidden iframe instead of window.open to prevent opening a new browser tab
+  let printIframe = document.getElementById("receipt-print-iframe") as HTMLIFrameElement | null;
+  if (!printIframe) {
+    printIframe = document.createElement("iframe");
+    printIframe.id = "receipt-print-iframe";
+    printIframe.style.position = "fixed";
+    printIframe.style.right = "0";
+    printIframe.style.bottom = "0";
+    printIframe.style.width = "0";
+    printIframe.style.height = "0";
+    printIframe.style.border = "0";
+    printIframe.style.visibility = "hidden";
+    document.body.appendChild(printIframe);
+  }
+
+  const doc = printIframe.contentDocument || printIframe.contentWindow?.document;
+  if (!doc) {
+    alert("Gagal memuat modul pencetakan.");
     return;
   }
 
@@ -54,7 +69,8 @@ export function printBrowserReceipt(transaction: any): void {
 
   const trxId = transaction.id ? `TRX-${transaction.id}` : "";
 
-  printWindow.document.write(`
+  doc.open();
+  doc.write(`
     <!DOCTYPE html>
     <html>
       <head>
@@ -97,7 +113,7 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .logo {
             display: block;
-            margin: 0 auto 3px auto;
+            margin: 0 auto -7px auto;
             max-height: 42px;
             width: auto;
             object-fit: contain;
@@ -109,13 +125,15 @@ export function printBrowserReceipt(transaction: any): void {
             letter-spacing: -0.1px;
           }
           .store-subtitle {
-            font-size: 6px;
-            color: #333;
+            font-size: 6.5px;
+            font-weight: 600;
+            color: #000;
           }
           .info {
             text-align: center;
-            font-size: 6px;
-            color: #333;
+            font-size: 6.5px;
+            font-weight: 600;
+            color: #000;
             padding: 2px 0;
             border-bottom: 1px dashed #000;
             margin-bottom: 2px;
@@ -128,7 +146,8 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .item-name {
             font-weight: 700;
-            font-size: 6.5px;
+            font-size: 6.8px;
+            color: #000;
             word-wrap: break-word;
             overflow-wrap: break-word;
           }
@@ -136,7 +155,9 @@ export function printBrowserReceipt(transaction: any): void {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 5.8px;
+            font-size: 6px;
+            font-weight: 600;
+            color: #000;
             padding-left: 1.5px;
           }
           .item-detail span {
@@ -157,6 +178,7 @@ export function printBrowserReceipt(transaction: any): void {
             justify-content: space-between;
             align-items: center;
             font-size: 7px;
+            color: #000;
             padding: 1px 0;
           }
           .summary-row.total {
@@ -180,16 +202,18 @@ export function printBrowserReceipt(transaction: any): void {
             border-top: 1px double #000;
             padding-top: 2px;
             margin-top: 3px;
-            font-size: 6px;
+            font-size: 6.5px;
+            color: #000;
           }
           .footer .thanks {
             font-weight: 700;
-            font-size: 7px;
+            font-size: 7.5px;
             margin-bottom: 1px;
           }
           .footer .note {
-            font-size: 5.5px;
-            color: #444;
+            font-size: 6px;
+            font-weight: 600;
+            color: #000;
           }
           .feed {
             height: 5mm;
@@ -215,9 +239,8 @@ export function printBrowserReceipt(transaction: any): void {
             <span class="label">TOTAL</span>
             <span class="value">${formatCurrency(transaction.totalAmount)}</span>
           </div>
-          ${
-            transaction.paidAmount != null && Number(transaction.paidAmount) > 0
-              ? `
+          ${transaction.paidAmount != null && Number(transaction.paidAmount) > 0
+      ? `
             <div class="summary-row">
               <span class="label">BAYAR</span>
               <span class="value">${formatCurrency(transaction.paidAmount)}</span>
@@ -227,8 +250,8 @@ export function printBrowserReceipt(transaction: any): void {
               <span class="value">${formatCurrency(Math.max(0, transaction.paidAmount - transaction.totalAmount))}</span>
             </div>
           `
-              : ""
-          }
+      : ""
+    }
         </div>
         <div class="footer">
           <div class="thanks">Terima Kasih!</div>
@@ -236,13 +259,18 @@ export function printBrowserReceipt(transaction: any): void {
         </div>
         <div class="feed"></div>
         </div>
-        <script>
-          window.onload = function() {
-            setTimeout(function() { window.print(); }, 300);
-          }
-        <\/script>
       </body>
     </html>
   `);
-  printWindow.document.close();
+  doc.close();
+
+  // Trigger print in iframe directly without opening new tab
+  setTimeout(() => {
+    try {
+      printIframe?.contentWindow?.focus();
+      printIframe?.contentWindow?.print();
+    } catch (e) {
+      console.error("Iframe print error:", e);
+    }
+  }, 250);
 }
