@@ -85,7 +85,7 @@ export function printBrowserReceipt(transaction: any): void {
           .receipt {
             width: 100%;
             max-width: 48mm;
-            padding: 1mm 5mm 1mm 1mm;
+            padding: 1mm 6.5mm 1mm 1mm;
             margin-left: 0;
             margin-right: auto;
           }
@@ -98,23 +98,23 @@ export function printBrowserReceipt(transaction: any): void {
           .logo {
             display: block;
             margin: 0 auto 2px auto;
-            max-height: 24px;
+            max-height: 22px;
             width: auto;
             object-fit: contain;
           }
           .store-name {
-            font-size: 9.5px;
+            font-size: 8px;
             font-weight: 900;
             white-space: nowrap;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.1px;
           }
           .store-subtitle {
-            font-size: 6.5px;
+            font-size: 6px;
             color: #333;
           }
           .info {
             text-align: center;
-            font-size: 6.5px;
+            font-size: 6px;
             color: #333;
             padding: 2px 0;
             border-bottom: 1px dashed #000;
@@ -128,7 +128,7 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .item-name {
             font-weight: 700;
-            font-size: 7px;
+            font-size: 6.5px;
             word-wrap: break-word;
             overflow-wrap: break-word;
           }
@@ -136,8 +136,11 @@ export function printBrowserReceipt(transaction: any): void {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 6.5px;
-            padding-left: 2px;
+            font-size: 5.8px;
+            padding-left: 1.5px;
+          }
+          .item-detail span {
+            white-space: nowrap;
           }
           .item-subtotal {
             font-weight: 700;
