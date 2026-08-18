@@ -74,9 +74,9 @@ export function printBrowserReceipt(transaction: any): void {
             width: 100%;
             margin: 0;
             padding: 0;
-            font-size: 8px;
+            font-size: 7px;
             color: #000;
-            line-height: 1.3;
+            line-height: 1.25;
             word-wrap: break-word;
             overflow-wrap: break-word;
             -webkit-print-color-adjust: exact;
@@ -84,56 +84,59 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .receipt {
             width: 100%;
-            max-width: 44mm;
-            padding: 2px 6mm 2px 1mm;
+            max-width: 48mm;
+            padding: 1mm 5mm 1mm 1mm;
             margin-left: 0;
             margin-right: auto;
           }
           .header {
             text-align: center;
-            padding-bottom: 3px;
+            padding-bottom: 2px;
             border-bottom: 1px dashed #000;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
           }
           .logo {
             display: block;
             margin: 0 auto 2px auto;
-            max-height: 28px;
+            max-height: 24px;
             width: auto;
             object-fit: contain;
           }
           .store-name {
-            font-size: 12px;
+            font-size: 9.5px;
             font-weight: 900;
+            white-space: nowrap;
+            letter-spacing: -0.2px;
           }
           .store-subtitle {
-            font-size: 8px;
+            font-size: 6.5px;
             color: #333;
           }
           .info {
             text-align: center;
-            font-size: 8px;
+            font-size: 6.5px;
             color: #333;
             padding: 2px 0;
             border-bottom: 1px dashed #000;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
           }
           .info div {
             margin: 1px 0;
           }
           .item {
-            margin-bottom: 3px;
+            margin-bottom: 2px;
           }
           .item-name {
             font-weight: 700;
-            font-size: 8px;
+            font-size: 7px;
             word-wrap: break-word;
             overflow-wrap: break-word;
           }
           .item-detail {
             display: flex;
             justify-content: space-between;
-            font-size: 8px;
+            align-items: center;
+            font-size: 6.5px;
             padding-left: 2px;
           }
           .item-subtotal {
@@ -143,24 +146,26 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .summary {
             border-top: 1px dashed #000;
-            padding-top: 3px;
-            margin-top: 3px;
+            padding-top: 2px;
+            margin-top: 2px;
           }
           .summary-row {
             display: flex;
             justify-content: space-between;
-            font-size: 9px;
+            align-items: center;
+            font-size: 7px;
             padding: 1px 0;
           }
           .summary-row.total {
-            font-size: 10px;
+            font-size: 8px;
             font-weight: 900;
-            padding: 3px 0;
+            padding: 2px 0;
             border-bottom: 1px dashed #000;
             margin-bottom: 2px;
           }
           .summary-row .label {
             font-weight: 600;
+            white-space: nowrap;
           }
           .summary-row .value {
             font-weight: 700;
@@ -170,21 +175,21 @@ export function printBrowserReceipt(transaction: any): void {
           .footer {
             text-align: center;
             border-top: 1px double #000;
-            padding-top: 3px;
-            margin-top: 5px;
-            font-size: 7px;
+            padding-top: 2px;
+            margin-top: 3px;
+            font-size: 6px;
           }
           .footer .thanks {
             font-weight: 700;
-            font-size: 8px;
-            margin-bottom: 2px;
+            font-size: 7px;
+            margin-bottom: 1px;
           }
           .footer .note {
-            font-size: 7px;
+            font-size: 5.5px;
             color: #444;
           }
           .feed {
-            height: 6mm;
+            height: 5mm;
           }
         </style>
       </head>
