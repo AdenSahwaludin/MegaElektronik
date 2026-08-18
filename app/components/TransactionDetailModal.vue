@@ -114,14 +114,28 @@
                 </button>
               </template>
 
-              <!-- Android / Desktop Mode: Standard Print -->
+              <!-- Android / Desktop Mode: Bluetooth + Browser Print -->
               <template v-else>
                 <button
-                  @click="handlePrintStandard"
-                  class="px-4 py-2 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
+                  @click="handlePrintBluetooth"
+                  :disabled="isPrinting"
+                  class="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
+                  title="Cetak langsung via Bluetooth (ESC/POS)"
                 >
-                  <Icon name="lucide:printer" class="w-4 h-4" />
-                  <span>Cetak Struk</span>
+                  <Icon
+                    :name="isPrinting ? 'lucide:loader-2' : 'lucide:bluetooth'"
+                    :class="['w-4 h-4', { 'animate-spin': isPrinting }]"
+                  />
+                  <span>{{ isPrinting ? 'Mencetak...' : 'Cetak Struk' }}</span>
+                </button>
+                <button
+                  @click="handlePrintBrowser"
+                  :disabled="isPrinting"
+                  class="px-3 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 active:scale-95 text-gray-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-gray-200 cursor-pointer"
+                  title="Cetak format Browser / PDF"
+                >
+                  <Icon name="lucide:file-text" class="w-3.5 h-3.5 text-gray-500" />
+                  <span class="hidden sm:inline">PDF</span>
                 </button>
               </template>
             </div>
@@ -130,7 +144,7 @@
       </div>
     </div>
 
-    <!-- Fallback Modal for iPhone if Thermer is not detected / installed -->
+    <!-- Fallback Modal (Bluetooth failed / Thermer not detected) -->
     <Transition
       enter-active-class="transition-all duration-200 ease-out"
       enter-from-class="opacity-0 scale-95"
@@ -149,22 +163,44 @@
               <Icon name="lucide:alert-circle" class="w-6 h-6" />
             </div>
             <div>
-              <h4 class="font-bold text-base text-gray-900">Aplikasi Thermer Belum Terbuka</h4>
+              <h4 class="font-bold text-base text-gray-900">{{ isIOS ? 'Thermer Belum Terbuka' : 'Gagal Cetak Bluetooth' }}</h4>
               <p class="text-xs text-gray-500">Pilih opsi pencetakan struk di bawah</p>
             </div>
           </div>
 
+          <p v-if="printError" class="text-sm text-red-600 bg-red-50 rounded-lg p-3">
+            {{ printError }}
+          </p>
+
           <p class="text-sm text-gray-600 leading-relaxed">
-            Jika aplikasi <strong class="text-gray-900">Thermer</strong> belum terinstal di iPhone Anda, unduh gratis dari App Store untuk hasil cetak thermal yang besar dan jelas. Anda juga bisa tetap mencetak melalui format PDF browser.
+            <template v-if="isIOS">
+              Jika aplikasi <strong class="text-gray-900">Thermer</strong> belum terinstal di iPhone Anda, unduh gratis dari App Store.
+            </template>
+            <template v-else>
+              Pastikan printer Bluetooth sudah menyala dan dalam jangkauan. Anda bisa coba lagi atau cetak via browser.
+            </template>
           </p>
 
           <div class="flex flex-col gap-2.5 pt-2">
+            <!-- iOS: App Store button -->
             <button
+              v-if="isIOS"
               @click="openAppStore"
               class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
             >
               <Icon name="lucide:download" class="w-4 h-4" />
               <span>Buka Thermer di App Store</span>
+            </button>
+
+            <!-- Non-iOS: Retry Bluetooth -->
+            <button
+              v-if="!isIOS"
+              @click="retryBluetooth"
+              :disabled="isPrinting"
+              class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <Icon :name="isPrinting ? 'lucide:loader-2' : 'lucide:bluetooth'" :class="['w-4 h-4', { 'animate-spin': isPrinting }]" />
+              <span>{{ isPrinting ? 'Mencetak...' : 'Coba Lagi (Bluetooth)' }}</span>
             </button>
 
             <button
@@ -199,10 +235,12 @@ const { formatCurrency } = useCurrency();
 const {
   isIOS,
   isPrinting,
+  printError,
   isFallbackModalOpen,
   printReceipt,
   closeFallbackModal,
   printFallbackBrowser,
+  retryBluetooth,
   openAppStore,
 } = useReceiptPrinter();
 
@@ -258,8 +296,8 @@ const handlePrintBrowser = () => {
   printReceipt(transaction.value, "browser");
 };
 
-const handlePrintStandard = () => {
-  printReceipt(transaction.value);
+const handlePrintBluetooth = () => {
+  printReceipt(transaction.value, "bluetooth");
 };
 
 const close = () => emit("close");

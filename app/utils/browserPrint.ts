@@ -1,6 +1,7 @@
 /**
  * Browser Print Utility (Standard HTML / PDF Print)
- * Used for Desktop, Android, and fallback printing on iOS.
+ * Optimized for 58mm thermal receipt printer (~44mm printable width).
+ * Uses sans-serif font for narrower characters to prevent right-side clipping.
  */
 
 export function printBrowserReceipt(transaction: any): void {
@@ -26,187 +27,207 @@ export function printBrowserReceipt(transaction: any): void {
       minute: "2-digit",
     });
   const formatCurrency = (value: number): string =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+    "Rp " + new Intl.NumberFormat("id-ID").format(Math.round(value || 0));
 
+  // Build items HTML - receipt style (name on first line, qty x price = subtotal on second line)
   const itemsHtml = (transaction.transactionItems || [])
-    .map(
-      (it: any) => `
-        <tr>
-          <td style="padding: 10px 8px; font-weight: 600; text-align: left;">${it.product?.name || "Produk"}</td>
-          <td style="text-align: center; padding: 10px 8px; width: 90px;">${it.quantity}</td>
-          <td style="text-align: right; padding: 10px 8px; width: 160px;">${formatCurrency(it.soldPrice)}</td>
-          <td style="text-align: right; padding: 10px 8px; width: 160px; font-weight: 700;">${formatCurrency(it.subtotal)}</td>
-        </tr>
-      `
-    )
+    .map((it: any) => {
+      const name = it.product?.name || "Produk";
+      const qty = it.quantity || 1;
+      const price = it.soldPrice || 0;
+      const subtotal = it.subtotal || price * qty;
+      return `
+        <div class="item">
+          <div class="item-name">${name}</div>
+          <div class="item-detail">
+            <span>${qty} x ${formatCurrency(price)}</span>
+            <span class="item-subtotal">${formatCurrency(subtotal)}</span>
+          </div>
+        </div>
+      `;
+    })
     .join("");
 
   const tDate = transaction.createdAt
     ? formatDate(transaction.createdAt) + " " + formatTime(transaction.createdAt)
     : "";
 
+  const trxId = transaction.id ? `TRX-${transaction.id}` : "";
+
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Struk Pembayaran - MEGA ELEKTRONIK</title>
+        <title>Struk Pembayaran</title>
         <style>
           @page {
-            size: A4 portrait;
-            margin: 8mm 12mm;
+            size: auto;
+            margin: 0;
           }
           * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
           }
           body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             width: 100%;
             margin: 0;
             padding: 0;
-            font-size: 13px;
-            color: #111;
-            line-height: 1.4;
+            font-size: 8px;
+            color: #000;
+            line-height: 1.3;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .receipt {
+            width: 100%;
+            padding: 2px;
           }
           .header {
             text-align: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #111;
+            padding-bottom: 3px;
+            border-bottom: 1px dashed #000;
+            margin-bottom: 3px;
           }
           .logo {
             display: block;
-            margin: 0 auto 8px auto;
-            max-height: 70px;
+            margin: 0 auto 2px auto;
+            max-height: 28px;
             width: auto;
             object-fit: contain;
           }
-          .header h2 {
-            margin: 0 0 4px 0;
-            font-size: 22px;
+          .store-name {
+            font-size: 12px;
             font-weight: 900;
-            letter-spacing: 1px;
-            text-transform: uppercase;
           }
-          .header .subtitle {
-            margin: 0 0 4px 0;
-            font-size: 13px;
-            color: #444;
-            font-weight: 600;
+          .store-subtitle {
+            font-size: 8px;
+            color: #333;
           }
-          .header .date {
-            margin: 0;
-            font-size: 12px;
-            color: #666;
+          .info {
+            text-align: center;
+            font-size: 8px;
+            color: #333;
+            padding: 2px 0;
+            border-bottom: 1px dashed #000;
+            margin-bottom: 3px;
           }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 13px;
+          .info div {
+            margin: 1px 0;
           }
-          thead th {
-            border-top: 1px solid #111;
-            border-bottom: 2px solid #111;
-            padding: 10px 8px;
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: 800;
-            background-color: #f8fafc;
+          .item {
+            margin-bottom: 3px;
           }
-          tbody td {
-            border-bottom: 1px solid #e2e8f0;
+          .item-name {
+            font-weight: 700;
+            font-size: 8px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
           }
-          .summary-section {
-            margin-top: 16px;
-            border-top: 2px solid #111;
-            padding-top: 10px;
-            width: 100%;
+          .item-detail {
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+            padding-left: 2px;
+          }
+          .item-subtotal {
+            font-weight: 700;
+            text-align: right;
+            white-space: nowrap;
+          }
+          .summary {
+            border-top: 1px dashed #000;
+            padding-top: 3px;
+            margin-top: 3px;
           }
           .summary-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 5px 8px;
-            font-size: 14px;
+            font-size: 9px;
+            padding: 1px 0;
           }
           .summary-row.total {
-            font-size: 18px;
+            font-size: 10px;
             font-weight: 900;
-            border-bottom: 1px dashed #cbd5e1;
-            padding-bottom: 8px;
-            margin-bottom: 6px;
+            padding: 3px 0;
+            border-bottom: 1px dashed #000;
+            margin-bottom: 2px;
           }
-          .divider {
-            border-top: 1px dashed #94a3b8;
-            margin: 16px 0 12px 0;
+          .summary-row .label {
+            font-weight: 600;
+          }
+          .summary-row .value {
+            font-weight: 700;
+            text-align: right;
+            white-space: nowrap;
           }
           .footer {
             text-align: center;
-            font-size: 12px;
-            margin-top: 20px;
-            color: #555;
+            border-top: 1px double #000;
+            padding-top: 3px;
+            margin-top: 5px;
+            font-size: 7px;
           }
-          @media print {
-            body {
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
+          .footer .thanks {
+            font-weight: 700;
+            font-size: 8px;
+            margin-bottom: 2px;
+          }
+          .footer .note {
+            font-size: 7px;
+            color: #444;
+          }
+          .feed {
+            height: 6mm;
           }
         </style>
       </head>
       <body>
+        <div class="receipt">
         <div class="header">
-          <img src="${logoUrl}" alt="Logo Mega Elektronik" class="logo" onerror="this.style.display='none'" />
-          <h2>MEGA ELEKTRONIK</h2>
-          <p class="subtitle">Nota Pembayaran Toko</p>
-          <p class="date">${tDate}</p>
+          <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'" />
+          <div class="store-name">MEGA ELEKTRONIK</div>
+          <div class="store-subtitle">Nota Pembayaran Toko</div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th style="text-align: left;">Nama Produk</th>
-              <th style="text-align: center; width: 90px;">Qty</th>
-              <th style="text-align: right; width: 160px;">Harga Satuan</th>
-              <th style="text-align: right; width: 160px;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsHtml}
-          </tbody>
-        </table>
-        <div class="summary-section">
+        <div class="info">
+          ${tDate ? `<div>${tDate}</div>` : ""}
+          ${trxId ? `<div>No: ${trxId}</div>` : ""}
+        </div>
+        <div class="items">
+          ${itemsHtml}
+        </div>
+        <div class="summary">
           <div class="summary-row total">
-            <span>TOTAL PEMBAYARAN</span>
-            <span>${formatCurrency(transaction.totalAmount)}</span>
+            <span class="label">TOTAL</span>
+            <span class="value">${formatCurrency(transaction.totalAmount)}</span>
           </div>
           ${
-            transaction.paidAmount != null
+            transaction.paidAmount != null && Number(transaction.paidAmount) > 0
               ? `
             <div class="summary-row">
-              <span style="color: #475569; font-weight: 600;">JUMLAH BAYAR</span>
-              <span style="font-weight: 700;">${formatCurrency(transaction.paidAmount)}</span>
+              <span class="label">BAYAR</span>
+              <span class="value">${formatCurrency(transaction.paidAmount)}</span>
             </div>
             <div class="summary-row">
-              <span style="color: #ea580c; font-weight: 700;">KEMBALIAN</span>
-              <span style="font-weight: 800; color: #ea580c;">${formatCurrency(transaction.paidAmount - transaction.totalAmount)}</span>
+              <span class="label">KEMBALI</span>
+              <span class="value">${formatCurrency(Math.max(0, transaction.paidAmount - transaction.totalAmount))}</span>
             </div>
           `
               : ""
           }
         </div>
-        <div class="divider"></div>
         <div class="footer">
-          <p style="margin: 4px 0; font-weight: 700;">Terima Kasih Atas Kunjungan Anda!</p>
-          <p style="margin: 0; font-size: 11px; color: #64748b;">Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan.</p>
+          <div class="thanks">Terima Kasih!</div>
+          <div class="note">Barang yang sudah dibeli tidak dapat ditukar / dikembalikan.</div>
+        </div>
+        <div class="feed"></div>
         </div>
         <script>
           window.onload = function() {
-            setTimeout(function() { window.print(); }, 250);
+            setTimeout(function() { window.print(); }, 300);
           }
         <\/script>
       </body>
