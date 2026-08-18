@@ -97,8 +97,8 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .logo {
             display: block;
-            margin: 0 auto 2px auto;
-            max-height: 22px;
+            margin: 0 auto 3px auto;
+            max-height: 42px;
             width: auto;
             object-fit: contain;
           }
