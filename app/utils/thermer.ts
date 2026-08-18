@@ -219,9 +219,9 @@ export function generateThermerReceiptEntries(transaction: any): ThermerEntriesM
   addText("Barang yang sudah dibeli", 0, 1, 0);
   addText("tidak dapat ditukar / dikembalikan.", 0, 1, 0);
 
-  // 11. FEED DI PALING BAWAH
-  addText("", 0, 0, 0);
-  addText("", 0, 0, 0);
+  // // 11. FEED DI PALING BAWAH
+  // addText("", 0, 0, 0);
+  // addText("", 0, 0, 0);
 
   // Convert array to sequential integer dictionary with 3-digit zero-padding:
   // e.g. { "000": entry0, "001": entry1, ..., "018": entry18 }
