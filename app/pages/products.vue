@@ -1421,7 +1421,7 @@ function openSingleQrModal(product: any) {
 }
 
 function openBulkQrModal() {
-  qrModalProducts.value = filteredProducts.value;
+  qrModalProducts.value = productsList.value;
   isQrModalOpen.value = true;
 }
 
