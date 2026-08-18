@@ -148,10 +148,10 @@ export function generateThermerReceiptEntries(transaction: any): ThermerEntriesM
   const dateFormatted = formatReceiptDateTime(transaction?.createdAt || new Date());
   addText(dateFormatted, 0, 1, 0);
 
-  // 4. GARIS PEMBATAS (Left Align to prevent MCU buffer crash)
-  addText("--------------------------------", 0, 0, 0);
+  // 4. GARIS PEMBATAS (30 Karakter aman)
+  addText("------------------------------", 0, 0, 0);
 
-  // 5. DAFTAR ITEM (Nama Produk, lalu baris Qty x Harga dan Subtotal rata kanan-kiri 32 karakter)
+  // 5. DAFTAR ITEM (Digabung 1 entry per item dengan \n untuk mencegah BLE packet burst)
   const items = Array.isArray(transaction?.transactionItems) ? transaction.transactionItems : [];
   for (const it of items) {
     const rawName = it.product?.name || it.productName || "Produk";
@@ -180,42 +180,39 @@ export function generateThermerReceiptEntries(transaction: any): ThermerEntriesM
       displayName += " (Service)";
     }
 
-    // Baris 1: Nama Produk (Bold, Left Align)
-    addText(displayName, 1, 0, 0);
-
-    // Baris 2: Qty x Harga dan Subtotal (Rata Kiri-Kanan 32 Karakter)
     const qty = it.quantity || 1;
     const unitPrice = it.soldPrice || 0;
     const subtotal = it.subtotal || unitPrice * qty;
 
-    const leftPart = `  ${qty} x ${formatRupiah(unitPrice)}`;
+    const leftPart = ` ${qty} x ${formatRupiah(unitPrice)}`;
     const rightPart = formatRupiah(subtotal);
-    const itemLine = formatTwoColumns(leftPart, rightPart, 32);
+    const itemLine = formatTwoColumns(leftPart, rightPart, 30);
 
-    addText(itemLine, 0, 0, 0);
+    // Kirim Nama + Harga dalam 1 entry menggunakan \n agar tidak membanjiri buffer Bluetooth
+    addText(`${displayName}\n${itemLine}`, 0, 0, 0);
   }
 
-  // 6. GARIS PEMBATAS (Left Align)
-  addText("--------------------------------", 0, 0, 0);
+  // 6. GARIS PEMBATAS
+  addText("------------------------------", 0, 0, 0);
 
-  // 7. TOTAL PEMBAYARAN (Normal Height, Bold - sama seperti KEMBALIAN)
+  // 7. TOTAL PEMBAYARAN (30 Karakter)
   const totalAmount = transaction?.totalAmount || 0;
-  const totalLine = formatTwoColumns("TOTAL", formatRupiah(totalAmount), 32);
+  const totalLine = formatTwoColumns("TOTAL", formatRupiah(totalAmount), 30);
   addText(totalLine, 1, 0, 0);
 
   // 8. JUMLAH BAYAR & KEMBALIAN (Hanya jika ada data pembayaran)
   if (transaction?.paidAmount != null && Number(transaction.paidAmount) > 0) {
     const paidAmount = Number(transaction.paidAmount);
-    const paidLine = formatTwoColumns("JUMLAH BAYAR", formatRupiah(paidAmount), 32);
+    const paidLine = formatTwoColumns("JUMLAH BAYAR", formatRupiah(paidAmount), 30);
     addText(paidLine, 0, 0, 0);
 
     const changeVal = paidAmount - totalAmount;
-    const changeLine = formatTwoColumns("KEMBALIAN", formatRupiah(Math.max(0, changeVal)), 32);
+    const changeLine = formatTwoColumns("KEMBALIAN", formatRupiah(Math.max(0, changeVal)), 30);
     addText(changeLine, 1, 0, 0);
   }
 
-  // 9. GARIS PENUTUP (Left Align)
-  addText("================================", 0, 0, 0);
+  // 9. GARIS PENUTUP
+  addText("==============================", 0, 0, 0);
 
   // 10. FOOTER / UCAPAN (Center)
   addText("Terima Kasih Atas Kunjungan Anda!", 1, 1, 0);
