@@ -144,15 +144,12 @@ export function generateThermerReceiptEntries(transaction: any): ThermerEntriesM
   // 2. SUBTITLE / HEADER (Normal, Center)
   addText("Nota Pembayaran Toko", 0, 1, 0);
 
-  // 3. TANGGAL & NO TRANSAKSI (Normal, Center)
+  // 3. TANGGAL (Normal, Center)
   const dateFormatted = formatReceiptDateTime(transaction?.createdAt || new Date());
   addText(dateFormatted, 0, 1, 0);
 
-  const trxId = transaction?.id ? `TRX-${transaction.id}` : "TRX--";
-  addText(`No: ${trxId}`, 0, 1, 0);
-
-  // 4. GARIS PEMBATAS (32 Karakter, Center)
-  addText("--------------------------------", 0, 1, 0);
+  // 4. GARIS PEMBATAS (Left Align to prevent MCU buffer crash)
+  addText("--------------------------------", 0, 0, 0);
 
   // 5. DAFTAR ITEM (Nama Produk, lalu baris Qty x Harga dan Subtotal rata kanan-kiri 32 karakter)
   const items = Array.isArray(transaction?.transactionItems) ? transaction.transactionItems : [];
@@ -198,13 +195,13 @@ export function generateThermerReceiptEntries(transaction: any): ThermerEntriesM
     addText(itemLine, 0, 0, 0);
   }
 
-  // 6. GARIS PEMBATAS (32 Karakter, Center)
-  addText("--------------------------------", 0, 1, 0);
+  // 6. GARIS PEMBATAS (Left Align)
+  addText("--------------------------------", 0, 0, 0);
 
-  // 7. TOTAL PEMBAYARAN (Double Height, Bold, Rata Kiri-Kanan 32 Karakter)
+  // 7. TOTAL PEMBAYARAN (Normal Height, Bold - sama seperti KEMBALIAN)
   const totalAmount = transaction?.totalAmount || 0;
   const totalLine = formatTwoColumns("TOTAL", formatRupiah(totalAmount), 32);
-  addText(totalLine, 1, 0, 1);
+  addText(totalLine, 1, 0, 0);
 
   // 8. JUMLAH BAYAR & KEMBALIAN (Hanya jika ada data pembayaran)
   if (transaction?.paidAmount != null && Number(transaction.paidAmount) > 0) {
@@ -217,8 +214,8 @@ export function generateThermerReceiptEntries(transaction: any): ThermerEntriesM
     addText(changeLine, 1, 0, 0);
   }
 
-  // 9. GARIS PENUTUP (32 Karakter, Center)
-  addText("================================", 0, 1, 0);
+  // 9. GARIS PENUTUP (Left Align)
+  addText("================================", 0, 0, 0);
 
   // 10. FOOTER / UCAPAN (Center)
   addText("Terima Kasih Atas Kunjungan Anda!", 1, 1, 0);

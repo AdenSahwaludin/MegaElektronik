@@ -229,7 +229,6 @@ export function printBrowserReceipt(transaction: any): void {
         </div>
         <div class="info">
           ${tDate ? `<div>${tDate}</div>` : ""}
-          ${trxId ? `<div>No: ${trxId}</div>` : ""}
         </div>
         <div class="items">
           ${itemsHtml}
