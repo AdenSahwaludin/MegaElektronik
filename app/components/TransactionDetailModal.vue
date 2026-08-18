@@ -2,7 +2,7 @@
   <div class="fixed inset-0 z-50 flex items-center justify-center">
     <div class="fixed inset-0 bg-black/40" @click="close" />
 
-    <div class="bg-white rounded-lg w-11/12 max-w-3xl p-6 z-10 shadow-lg">
+    <div class="bg-white rounded-lg w-11/12 max-w-3xl p-6 z-10 shadow-lg relative">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-bold">Detail Transaksi</h3>
         <button @click="close" class="text-gray-500 hover:text-gray-700">
@@ -87,27 +87,124 @@
             <div>
               <p class="text-xs font-bold text-gray-700">No: TRX-{{ transaction.id }}</p>
             </div>
-            <button
-              @click="printReceipt"
-              class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition"
-            >
-              <Icon name="lucide:printer" class="w-4 h-4" />
-              <span>Cetak Struk</span>
-            </button>
+            
+            <div class="flex items-center gap-2">
+              <!-- iOS / iPhone Mode: Thermer Print with PDF Option -->
+              <template v-if="isIOS">
+                <button
+                  @click="handlePrintThermer"
+                  :disabled="isPrinting"
+                  class="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
+                  title="Cetak Struk Thermal langsung ke Aplikasi Thermer"
+                >
+                  <Icon
+                    :name="isPrinting ? 'lucide:loader-2' : 'lucide:printer'"
+                    :class="['w-4 h-4', { 'animate-spin': isPrinting }]"
+                  />
+                  <span>{{ isPrinting ? "Membuka Thermer..." : "Cetak Struk (Thermer)" }}</span>
+                </button>
+                <button
+                  @click="handlePrintBrowser"
+                  :disabled="isPrinting"
+                  class="px-3 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 active:scale-95 text-gray-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-gray-200 cursor-pointer"
+                  title="Cetak format Browser / PDF"
+                >
+                  <Icon name="lucide:file-text" class="w-3.5 h-3.5 text-gray-500" />
+                  <span class="hidden sm:inline">PDF</span>
+                </button>
+              </template>
+
+              <!-- Android / Desktop Mode: Standard Print -->
+              <template v-else>
+                <button
+                  @click="handlePrintStandard"
+                  class="px-4 py-2 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
+                >
+                  <Icon name="lucide:printer" class="w-4 h-4" />
+                  <span>Cetak Struk</span>
+                </button>
+              </template>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Fallback Modal for iPhone if Thermer is not detected / installed -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="isFallbackModalOpen"
+        class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+      >
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-gray-100 flex flex-col gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-orange-100 text-orange-600 rounded-xl">
+              <Icon name="lucide:alert-circle" class="w-6 h-6" />
+            </div>
+            <div>
+              <h4 class="font-bold text-base text-gray-900">Aplikasi Thermer Belum Terbuka</h4>
+              <p class="text-xs text-gray-500">Pilih opsi pencetakan struk di bawah</p>
+            </div>
+          </div>
+
+          <p class="text-sm text-gray-600 leading-relaxed">
+            Jika aplikasi <strong class="text-gray-900">Thermer</strong> belum terinstal di iPhone Anda, unduh gratis dari App Store untuk hasil cetak thermal yang besar dan jelas. Anda juga bisa tetap mencetak melalui format PDF browser.
+          </p>
+
+          <div class="flex flex-col gap-2.5 pt-2">
+            <button
+              @click="openAppStore"
+              class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <Icon name="lucide:download" class="w-4 h-4" />
+              <span>Buka Thermer di App Store</span>
+            </button>
+
+            <button
+              @click="printFallbackBrowser"
+              class="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 active:scale-98 text-gray-800 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition border border-gray-200 cursor-pointer"
+            >
+              <Icon name="lucide:file-text" class="w-4 h-4 text-gray-600" />
+              <span>Cetak via Browser (PDF)</span>
+            </button>
+
+            <button
+              @click="closeFallbackModal"
+              class="w-full py-2 text-gray-400 hover:text-gray-600 text-xs font-semibold text-center transition cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
+import { useReceiptPrinter } from "../composables/useReceiptPrinter";
 
 const props = defineProps<{ transactionId: string | number | null }>();
 const emit = defineEmits(["close"]);
 const { formatCurrency } = useCurrency();
+const {
+  isIOS,
+  isPrinting,
+  isFallbackModalOpen,
+  printReceipt,
+  closeFallbackModal,
+  printFallbackBrowser,
+  openAppStore,
+} = useReceiptPrinter();
 
 const transaction = ref<any>({ transactionItems: [] });
 const loading = ref(false);
@@ -140,6 +237,7 @@ const formatDate = (s: string) =>
     month: "long",
     year: "numeric",
   });
+
 const formatTime = (s: string) =>
   new Date(s).toLocaleTimeString("id-ID", {
     hour: "2-digit",
@@ -151,194 +249,18 @@ const calculateMargin = (it: any) => {
   return ((it.profitPerItem / it.soldPrice) * 100).toFixed(1);
 };
 
-const printReceipt = () => {
-  if (!transaction.value) return;
+// Print Handlers
+const handlePrintThermer = () => {
+  printReceipt(transaction.value, "thermer");
+};
 
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
+const handlePrintBrowser = () => {
+  printReceipt(transaction.value, "browser");
+};
 
-  const logoUrl = `${window.location.origin}/logo.png`;
-
-  const itemsHtml = (transaction.value.transactionItems || [])
-    .map(
-      (it: any) => `
-        <tr>
-          <td style="padding: 10px 8px; font-weight: 600; text-align: left;">${it.product?.name || 'Produk'}</td>
-          <td style="text-align: center; padding: 10px 8px; width: 90px;">${it.quantity}</td>
-          <td style="text-align: right; padding: 10px 8px; width: 160px;">${formatCurrency(it.soldPrice)}</td>
-          <td style="text-align: right; padding: 10px 8px; width: 160px; font-weight: 700;">${formatCurrency(it.subtotal)}</td>
-        </tr>
-      `
-    )
-    .join("");
-
-  const tDate = transaction.value.createdAt ? formatDate(transaction.value.createdAt) + " " + formatTime(transaction.value.createdAt) : "";
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Struk Pembayaran - MEGA ELEKTRONIK</title>
-        <style>
-          @page {
-            size: A4 portrait;
-            margin: 8mm 12mm;
-          }
-          * {
-            box-sizing: border-box;
-          }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            font-size: 13px;
-            color: #111;
-            line-height: 1.4;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #111;
-          }
-          .logo {
-            display: block;
-            margin: 0 auto 8px auto;
-            max-height: 70px;
-            width: auto;
-            object-fit: contain;
-          }
-          .header h2 {
-            margin: 0 0 4px 0;
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-          }
-          .header .subtitle {
-            margin: 0 0 4px 0;
-            font-size: 13px;
-            color: #444;
-            font-weight: 600;
-          }
-          .header .date {
-            margin: 0;
-            font-size: 12px;
-            color: #666;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 13px;
-          }
-          thead th {
-            border-top: 1px solid #111;
-            border-bottom: 2px solid #111;
-            padding: 10px 8px;
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: 800;
-            background-color: #f8fafc;
-          }
-          tbody td {
-            border-bottom: 1px solid #e2e8f0;
-          }
-          .summary-section {
-            margin-top: 16px;
-            border-top: 2px solid #111;
-            padding-top: 10px;
-            width: 100%;
-          }
-          .summary-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 8px;
-            font-size: 14px;
-          }
-          .summary-row.total {
-            font-size: 18px;
-            font-weight: 900;
-            border-bottom: 1px dashed #cbd5e1;
-            padding-bottom: 8px;
-            margin-bottom: 6px;
-          }
-          .divider {
-            border-top: 1px dashed #94a3b8;
-            margin: 16px 0 12px 0;
-          }
-          .footer {
-            text-align: center;
-            font-size: 12px;
-            margin-top: 20px;
-            color: #555;
-          }
-          @media print {
-            body {
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <img src="${logoUrl}" alt="Logo Mega Elektronik" class="logo" onerror="this.style.display='none'" />
-          <h2>MEGA ELEKTRONIK</h2>
-          <p class="subtitle">Nota Pembayaran Toko</p>
-          <p class="date">${tDate}</p>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th style="text-align: left;">Nama Produk</th>
-              <th style="text-align: center; width: 90px;">Qty</th>
-              <th style="text-align: right; width: 160px;">Harga Satuan</th>
-              <th style="text-align: right; width: 160px;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsHtml}
-          </tbody>
-        </table>
-        <div class="summary-section">
-          <div class="summary-row total">
-            <span>TOTAL PEMBAYARAN</span>
-            <span>${formatCurrency(transaction.value.totalAmount)}</span>
-          </div>
-          ${
-            transaction.value.paidAmount != null
-              ? `
-            <div class="summary-row">
-              <span style="color: #475569; font-weight: 600;">JUMLAH BAYAR</span>
-              <span style="font-weight: 700;">${formatCurrency(transaction.value.paidAmount)}</span>
-            </div>
-            <div class="summary-row">
-              <span style="color: #ea580c; font-weight: 700;">KEMBALIAN</span>
-              <span style="font-weight: 800; color: #ea580c;">${formatCurrency(transaction.value.paidAmount - transaction.value.totalAmount)}</span>
-            </div>
-          `
-              : ""
-          }
-        </div>
-        <div class="divider"></div>
-        <div class="footer">
-          <p style="margin: 4px 0; font-weight: 700;">Terima Kasih Atas Kunjungan Anda!</p>
-          <p style="margin: 0; font-size: 11px; color: #64748b;">Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan.</p>
-        </div>
-        <script>
-          window.onload = function() {
-            setTimeout(function() { window.print(); }, 250);
-          }
-        <\/script>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
+const handlePrintStandard = () => {
+  printReceipt(transaction.value);
 };
 
 const close = () => emit("close");
 </script>
-
