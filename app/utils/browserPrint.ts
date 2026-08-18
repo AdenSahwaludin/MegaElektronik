@@ -84,7 +84,10 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .receipt {
             width: 100%;
-            padding: 2px;
+            max-width: 44mm;
+            padding: 2px 6mm 2px 1mm;
+            margin-left: 0;
+            margin-right: auto;
           }
           .header {
             text-align: center;
