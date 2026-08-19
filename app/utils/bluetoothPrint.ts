@@ -217,23 +217,32 @@ export function buildReceiptBytes(transaction: any): Uint8Array {
 }
 
 // ─── Web Bluetooth Connection ────────────────────────────────────────
-// Known Bluetooth service/characteristic UUIDs for common thermal printers
+// Known Bluetooth service/characteristic UUIDs for thermal printers (VSC MP-58M, Zijiang, POS-58, etc.)
 const PRINTER_SERVICE_UUIDS = [
-  "000018f0-0000-1000-8000-00805f9b34fb", // Common POS printer service
-  "e7810a71-73ae-499d-8c15-faa9aef0c3f2", // Another common UUID
-  "49535343-fe7d-4ae5-8fa9-9fafd205e455", // Microchip/generic BLE UART
+  "000018f0-0000-1000-8000-00805f9b34fb", // Standard POS Printer Service
+  "e7810a71-73ae-499d-8c15-faa9aef0c3f2", // Common Chinese POS BLE Service (VSC MP-58M)
+  "49535343-fe7d-4ae5-8fa9-9fafd205e455", // Microchip / ISSC BLE UART
+  "0000ff00-0000-1000-8000-00805f9b34fb", // Custom FF00 Serial
+  "0000fee7-0000-1000-8000-00805f9b34fb", // Custom FEE7 Serial
+  "0000ffe0-0000-1000-8000-00805f9b34fb", // HM-10 / CC2541 BLE UART
+  "0000fff0-0000-1000-8000-00805f9b34fb", // FFF0 POS Service
 ];
 
 const PRINTER_CHAR_UUIDS = [
-  "00002af1-0000-1000-8000-00805f9b34fb", // Common write characteristic
-  "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f", // Another common UUID
-  "49535343-8841-43f4-a8d4-ecbe34729bb3", // Microchip/generic BLE UART TX
+  "00002af1-0000-1000-8000-00805f9b34fb",
+  "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f",
+  "49535343-8841-43f4-a8d4-ecbe34729bb3",
+  "0000ff02-0000-1000-8000-00805f9b34fb",
+  "0000fee8-0000-1000-8000-00805f9b34fb",
+  "0000ffe1-0000-1000-8000-00805f9b34fb",
+  "0000fff1-0000-1000-8000-00805f9b34fb",
+  "0000fff2-0000-1000-8000-00805f9b34fb",
 ];
 
 interface PrinterConnection {
-  device: BluetoothDevice;
-  server: BluetoothRemoteGATTServer;
-  characteristic: BluetoothRemoteGATTCharacteristic;
+  device: any;
+  server: any;
+  characteristic: any;
 }
 
 let cachedConnection: PrinterConnection | null = null;
@@ -243,6 +252,12 @@ let cachedConnection: PrinterConnection | null = null;
  * MUST be called from a user gesture (click event).
  */
 export async function connectPrinter(): Promise<PrinterConnection> {
+  if (!isWebBluetoothSupported()) {
+    throw new Error(
+      "Browser ini tidak mendukung Web Bluetooth. Buka di Google Chrome (Android/PC) dan pastikan Bluetooth aktif."
+    );
+  }
+
   // Try to reuse cached connection
   if (cachedConnection?.server?.connected) {
     try {
@@ -255,20 +270,20 @@ export async function connectPrinter(): Promise<PrinterConnection> {
   }
 
   // Request Bluetooth device - accept all devices that look like printers
-  const device = await navigator.bluetooth.requestDevice({
+  const device = await (navigator as any).bluetooth.requestDevice({
     // Accept any device - thermal printers often don't advertise standard services
     acceptAllDevices: true,
     optionalServices: PRINTER_SERVICE_UUIDS,
   });
 
   if (!device.gatt) {
-    throw new Error("Bluetooth GATT not available on this device");
+    throw new Error("Bluetooth GATT tidak tersedia di perangkat ini");
   }
 
   const server = await device.gatt.connect();
 
   // Try each known service UUID until we find one that works
-  let characteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  let characteristic: any = null;
 
   for (const serviceUuid of PRINTER_SERVICE_UUIDS) {
     try {
@@ -323,8 +338,7 @@ export async function connectPrinter(): Promise<PrinterConnection> {
   if (!characteristic) {
     server.disconnect();
     throw new Error(
-      "Tidak dapat menemukan characteristic printer Bluetooth. " +
-        "Pastikan printer dalam mode Bluetooth dan sudah di-pair."
+      "Gagal menemukan service write printer Bluetooth. Pastikan printer VSC MP-58M Pro / POS-58 menyala dan Bluetooth aktif."
     );
   }
 
@@ -339,15 +353,14 @@ export async function connectPrinter(): Promise<PrinterConnection> {
 }
 
 /**
- * Send raw bytes to printer in chunks.
- * BLE has a max packet size (usually 20 bytes, sometimes 512).
- * We chunk to 20 bytes to be safe with all printers.
+ * Send raw bytes to printer in safe chunk sizes (64 bytes with 25ms delay).
+ * Safe for 58mm thermal printers like VSC MP-58M Pro to prevent RX buffer overflow.
  */
 async function sendBytes(
-  characteristic: BluetoothRemoteGATTCharacteristic,
+  characteristic: any,
   data: Uint8Array
 ): Promise<void> {
-  const CHUNK_SIZE = 100; // Safe chunk size for most BLE printers
+  const CHUNK_SIZE = 64; // Safe chunk size
   for (let offset = 0; offset < data.length; offset += CHUNK_SIZE) {
     const chunk = data.slice(offset, offset + CHUNK_SIZE);
     if (characteristic.properties.writeWithoutResponse) {
@@ -357,19 +370,98 @@ async function sendBytes(
     }
     // Small delay between chunks to prevent buffer overflow on printer
     if (offset + CHUNK_SIZE < data.length) {
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 25));
     }
   }
 }
 
 /**
- * Print receipt via Bluetooth ESC/POS.
+ * Print receipt via Web Bluetooth ESC/POS (Direct Chrome Android / PC).
  * Must be called from a user click event handler.
  */
 export async function printBluetoothReceipt(transaction: any): Promise<void> {
   const connection = await connectPrinter();
   const receiptData = buildReceiptBytes(transaction);
   await sendBytes(connection.characteristic, receiptData);
+}
+
+/**
+ * Print receipt via RawBT app on Android (via official intent / custom scheme)
+ */
+export function printViaRawBT(transaction: any): boolean {
+  if (typeof window === "undefined" || !transaction) return false;
+
+  const formatDate = (s: string) =>
+    new Date(s).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }) +
+    " " +
+    new Date(s).toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const formatCurr = (val: number) =>
+    "Rp " + new Intl.NumberFormat("id-ID").format(Math.round(val || 0));
+
+  const center = (text: string, width = 32) => {
+    const t = text.trim();
+    if (t.length >= width) return t.slice(0, width);
+    const leftPad = Math.floor((width - t.length) / 2);
+    const rightPad = width - t.length - leftPad;
+    return " ".repeat(leftPad) + t + " ".repeat(rightPad);
+  };
+
+  const lines: string[] = [];
+  lines.push(center("MEGA ELEKTRONIK"));
+  lines.push(center("Nota Pembayaran Toko"));
+  lines.push(center(formatDate(transaction.createdAt || new Date())));
+  lines.push("-".repeat(32));
+
+  const items = Array.isArray(transaction.transactionItems) ? transaction.transactionItems : [];
+  for (const it of items) {
+    const name = it.product?.name || it.productName || "Produk";
+    const qty = it.quantity || 1;
+    const price = it.soldPrice || 0;
+    const subtotal = it.subtotal || price * qty;
+    lines.push(name);
+    const leftCol = ` ${qty} x ${formatCurr(price)}`;
+    const rightCol = formatCurr(subtotal);
+    lines.push(formatTwoColumns(leftCol, rightCol, 32));
+  }
+
+  lines.push("-".repeat(32));
+  lines.push(formatTwoColumns("TOTAL", formatCurr(transaction.totalAmount || 0), 32));
+  if (transaction.paidAmount != null && Number(transaction.paidAmount) > 0) {
+    lines.push(formatTwoColumns("BAYAR", formatCurr(transaction.paidAmount), 32));
+    lines.push(formatTwoColumns("KEMBALIAN", formatCurr(Math.max(0, transaction.paidAmount - transaction.totalAmount)), 32));
+  }
+  lines.push("=".repeat(32));
+  lines.push(center("Terima Kasih!"));
+  lines.push(center("Barang yg sudah dibeli"));
+  lines.push(center("tidak dapat ditukar/dikembalikan"));
+  lines.push("\n\n\n");
+
+  const plainText = lines.join("\n");
+  const encodedText = encodeURIComponent(plainText);
+
+  const rawbtIntentUrl = `intent:${encodedText}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`;
+  const rawbtSchemeUrl = `rawbt:${encodedText}`;
+
+  try {
+    const isAndroid = /android/i.test(navigator.userAgent);
+    if (isAndroid) {
+      window.location.href = rawbtIntentUrl;
+    } else {
+      window.location.href = rawbtSchemeUrl;
+    }
+    return true;
+  } catch (err) {
+    console.error("Error triggering RawBT print:", err);
+    return false;
+  }
 }
 
 /**

@@ -83,61 +83,83 @@
           </div>
 
           <!-- Action Print Struk -->
-          <div class="pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
+          <div class="pt-4 border-t border-gray-200 flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
               <p class="text-xs font-bold text-gray-700">No: TRX-{{ transaction.id }}</p>
-            </div>
-            
-            <div class="flex items-center gap-2">
-              <!-- iOS / iPhone Mode: Thermer Print with PDF Option -->
-              <template v-if="isIOS">
+              
+              <div class="flex items-center gap-2">
+                <!-- RawBT companion app button for Android -->
                 <button
-                  @click="handlePrintThermer"
-                  :disabled="isPrinting"
-                  class="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
-                  title="Cetak Struk Thermal langsung ke Aplikasi Thermer"
+                  v-if="!isIOS"
+                  @click="handlePrintRawBT"
+                  type="button"
+                  class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                  title="Cetak via Aplikasi RawBT di Android"
                 >
-                  <Icon
-                    :name="isPrinting ? 'lucide:loader-2' : 'lucide:printer'"
-                    :class="['w-4 h-4', { 'animate-spin': isPrinting }]"
-                  />
-                  <span>{{ isPrinting ? "Membuka Thermer..." : "Cetak Struk (Thermer)" }}</span>
+                  <Icon name="lucide:smartphone" class="w-3.5 h-3.5 text-emerald-600" />
+                  <span>RawBT</span>
                 </button>
-                <button
-                  @click="handlePrintBrowser"
-                  :disabled="isPrinting"
-                  class="px-3 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 active:scale-95 text-gray-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-gray-200 cursor-pointer"
-                  title="Cetak format Browser / PDF"
-                >
-                  <Icon name="lucide:file-text" class="w-3.5 h-3.5 text-gray-500" />
-                  <span class="hidden sm:inline">PDF</span>
-                </button>
-              </template>
 
-              <!-- Android / Desktop Mode: Bluetooth + Browser Print -->
-              <template v-else>
-                <button
-                  @click="handlePrintBluetooth"
-                  :disabled="isPrinting"
-                  class="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
-                  title="Cetak langsung via Bluetooth (ESC/POS)"
-                >
-                  <Icon
-                    :name="isPrinting ? 'lucide:loader-2' : 'lucide:bluetooth'"
-                    :class="['w-4 h-4', { 'animate-spin': isPrinting }]"
-                  />
-                  <span>{{ isPrinting ? 'Mencetak...' : 'Cetak Struk' }}</span>
-                </button>
+                <!-- PDF Browser Print -->
                 <button
                   @click="handlePrintBrowser"
                   :disabled="isPrinting"
-                  class="px-3 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 active:scale-95 text-gray-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-gray-200 cursor-pointer"
+                  type="button"
+                  class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 active:scale-95 text-gray-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-gray-200 cursor-pointer shadow-xs"
                   title="Cetak format Browser / PDF"
                 >
                   <Icon name="lucide:file-text" class="w-3.5 h-3.5 text-gray-500" />
-                  <span class="hidden sm:inline">PDF</span>
+                  <span>PDF</span>
                 </button>
-              </template>
+              </div>
+            </div>
+
+            <!-- iOS Mode: Thermer Print -->
+            <div v-if="isIOS">
+              <button
+                @click="handlePrintThermer"
+                :disabled="isPrinting"
+                type="button"
+                class="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed active:scale-98 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer text-left"
+                title="Cetak Struk Thermal langsung ke Aplikasi Thermer"
+              >
+                <Icon
+                  :name="isPrinting ? 'lucide:loader-2' : 'lucide:printer'"
+                  :class="['w-5 h-5 shrink-0', { 'animate-spin': isPrinting }]"
+                />
+                <div class="flex flex-col leading-tight">
+                  <span class="text-sm font-extrabold tracking-wide">
+                    {{ isPrinting ? "Membuka Thermer..." : "Cetak Struk (Thermer iOS)" }}
+                  </span>
+                  <span class="text-[10px] text-orange-100 font-medium">
+                    Aplikasi Thermer • Bluetooth POS-58
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Android / PC Desktop Mode: Direct Web Bluetooth Print (Matching Program Mega Tehnik) -->
+            <div v-else>
+              <button
+                @click="handlePrintBluetooth"
+                :disabled="isPrinting"
+                type="button"
+                class="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed active:scale-98 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer text-left"
+                title="Cetak langsung ke printer Bluetooth VSC MP-58M Pro via Web Bluetooth"
+              >
+                <Icon
+                  :name="isPrinting ? 'lucide:loader-2' : 'lucide:bluetooth'"
+                  :class="['w-5 h-5 shrink-0', { 'animate-spin': isPrinting }]"
+                />
+                <div class="flex flex-col leading-tight">
+                  <span class="text-sm font-extrabold tracking-wide">
+                    {{ isPrinting ? 'Menghubungkan Bluetooth...' : 'Cetak Bluetooth (Android / PC)' }}
+                  </span>
+                  <span class="text-[10px] text-sky-100 font-medium">
+                    Google Chrome (Android & PC Desktop) • VSC MP-58M
+                  </span>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -298,6 +320,10 @@ const handlePrintBrowser = () => {
 
 const handlePrintBluetooth = () => {
   printReceipt(transaction.value, "bluetooth");
+};
+
+const handlePrintRawBT = () => {
+  printReceipt(transaction.value, "rawbt");
 };
 
 const close = () => emit("close");

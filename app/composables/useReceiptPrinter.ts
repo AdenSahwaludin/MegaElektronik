@@ -9,6 +9,7 @@ import {
 import { printBrowserReceipt } from "~/utils/browserPrint";
 import {
   printBluetoothReceipt,
+  printViaRawBT,
   isWebBluetoothSupported,
   isPrinterConnected,
   disconnectPrinter,
@@ -33,13 +34,14 @@ export function useReceiptPrinter() {
    * Main print method.
    * Priority:
    *  1. "bluetooth" → Direct ESC/POS via Web Bluetooth (best for 58mm thermal)
-   *  2. "thermer"   → iOS Thermer app
-   *  3. "browser"   → window.print() fallback
-   *  4. Auto-detect based on device
+   *  2. "rawbt"     → RawBT app (Android)
+   *  3. "thermer"   → iOS Thermer app
+   *  4. "browser"   → window.print() fallback
+   *  5. Auto-detect based on device
    */
   const printReceipt = async (
     transaction: any,
-    forceMethod?: "bluetooth" | "thermer" | "browser"
+    forceMethod?: "bluetooth" | "rawbt" | "thermer" | "browser"
   ) => {
     if (!transaction || isPrinting.value) return;
 
@@ -48,6 +50,12 @@ export function useReceiptPrinter() {
     // Force browser print
     if (forceMethod === "browser") {
       printBrowserReceipt(transaction);
+      return;
+    }
+
+    // Force RawBT (Android)
+    if (forceMethod === "rawbt") {
+      printViaRawBT(transaction);
       return;
     }
 
@@ -92,8 +100,8 @@ export function useReceiptPrinter() {
     } catch (err: any) {
       console.error("Bluetooth print failed:", err);
       printError.value =
-        err?.message || "Gagal mencetak via Bluetooth. Coba lagi.";
-      // Show fallback modal so user can try browser print
+        err?.message || "Gagal koneksi Bluetooth. Pastikan Bluetooth aktif dan pilih printer.";
+      // Show fallback modal so user can try browser print / RawBT
       isFallbackModalOpen.value = true;
     } finally {
       isPrinting.value = false;
@@ -171,6 +179,7 @@ export function useReceiptPrinter() {
     // Actions
     printReceipt,
     printViaBluetooth,
+    printViaRawBT,
     printBrowserReceipt,
     closeFallbackModal,
     printFallbackBrowser,
