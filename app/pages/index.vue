@@ -129,6 +129,50 @@
                   <span>{{ brand }}</span>
                 </button>
               </div>
+
+              <!-- Quick Jenis (Sub-category Jenis Filter per Kategori) -->
+              <div
+                v-if="selectedCategory && availableJenisForSelectedCategory.length > 0"
+                class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+              >
+                <span class="text-[11px] font-bold text-gray-500 mr-1 flex items-center gap-1">
+                  <Icon name="lucide:layers" class="w-3.5 h-3.5 text-orange-500" />
+                  Jenis {{ selectedCategory }}:
+                </span>
+                <button
+                  @click="selectedJenis = ''"
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95',
+                    !selectedJenis
+                      ? 'bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-xs'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-orange-400 hover:text-orange-600'
+                  ]"
+                >
+                  Semua Jenis
+                </button>
+                <button
+                  v-for="j in availableJenisForSelectedCategory"
+                  :key="j.label"
+                  @click="selectedJenis = selectedJenis === j.label ? '' : j.label"
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1',
+                    selectedJenis === j.label
+                      ? 'bg-orange-600 text-white border-orange-600 shadow-xs font-bold'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600'
+                  ]"
+                >
+                  <span>{{ j.label }}</span>
+                  <span
+                    v-if="j.count > 0"
+                    :class="[
+                      'px-1.5 py-px text-[10px] rounded-full font-bold',
+                      selectedJenis === j.label ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
+                    ]"
+                  >
+                    {{ j.count }}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -836,6 +880,7 @@ import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
+import { getJenisList, matchesJenis } from "../utils/categoryJenis";
 
 definePageMeta({
   layout: "default",
@@ -1051,17 +1096,20 @@ const getProductSortName = (product: any) => {
   return name.trim();
 };
 
-// Category & Brand Selection State
+// Category & Brand & Jenis Selection State
 const selectedCategory = ref('');
 const selectedBrand = ref('');
+const selectedJenis = ref('');
 
 const selectCategory = (cat: string) => {
   if (selectedCategory.value === cat) {
     selectedCategory.value = '';
     selectedBrand.value = '';
+    selectedJenis.value = '';
   } else {
     selectedCategory.value = cat;
     selectedBrand.value = '';
+    selectedJenis.value = '';
   }
 };
 
@@ -1086,6 +1134,30 @@ const availableBrandsForSelectedCategory = computed(() => {
   return Array.from(brandMap.values()).sort((a, b) => a.localeCompare(b, 'id', { sensitivity: 'base' }));
 });
 
+const availableJenisForSelectedCategory = computed(() => {
+  if (!selectedCategory.value) return [] as { label: string; count: number }[];
+  const labels = getJenisList(selectedCategory.value);
+  if (labels.length === 0) return [] as { label: string; count: number }[];
+  const catLower = selectedCategory.value.trim().toLowerCase();
+  const brandLower = selectedBrand.value.trim().toLowerCase();
+  // Hitung count berdasarkan produk yang sudah lolos filter kategori (+ merek),
+  // supaya badge mencerminkan hasil yang akan tampil.
+  const base = (dataCacheStore.products || []).filter((p: any) => {
+    if (p.isActive === false) return false;
+    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+    if (!fullText.includes(catLower)) return false;
+    if (brandLower) {
+      const b = (p.brand || '').trim().toLowerCase();
+      if (b !== brandLower) return false;
+    }
+    return true;
+  });
+  return labels.map((label) => ({
+    label,
+    count: base.filter((p: any) => matchesJenis(p, selectedCategory.value, label)).length,
+  }));
+});
+
 // Computed
 const filteredProducts = computed(() => {
   let result = products.value;
@@ -1104,6 +1176,10 @@ const filteredProducts = computed(() => {
       const b = (p.brand || '').trim().toLowerCase();
       return b === brandLower;
     });
+  }
+
+  if (selectedJenis.value) {
+    result = result.filter((p: any) => matchesJenis(p, selectedCategory.value, selectedJenis.value));
   }
 
   if (debouncedSearchQuery.value.trim()) {
