@@ -17,6 +17,9 @@
     "fix:names": "npx tsx scripts/fix-product-names.ts"
   },
   "dependencies": {
+    "@capacitor/cli": "^8",
+    "@capacitor/core": "^8",
+    "@capacitor/ios": "^8",
     "@iconify-json/lucide": "^1.2.102",
     "@iconify-json/simple-icons": "^1.2.78",
     "@libsql/client": "^0.17.2",

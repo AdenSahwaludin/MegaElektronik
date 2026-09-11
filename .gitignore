@@ -6,6 +6,9 @@
 .cache
 dist
 
+# Xcode derived data & hasil packaging IPA
+build/
+
 # Node dependencies
 node_modules
 
