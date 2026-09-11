@@ -836,6 +836,180 @@
       @decrement-qty="handleScannerDecrementQty"
       @remove-item="(id) => cartStore.removeFromCart(id)"
     />
+
+    <!-- Tawaran Cetak Struk (muncul setelah checkout sukses) -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="showPrintOffer"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+      >
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-gray-100 flex flex-col gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-green-100 text-green-600 rounded-xl">
+              <Icon name="lucide:check-circle" class="w-6 h-6" />
+            </div>
+            <div>
+              <h4 class="font-bold text-base text-gray-900">Transaksi Berhasil!</h4>
+              <p class="text-xs text-gray-500">
+                Total:
+                <span class="font-bold text-gray-900">{{ formatCurrency(lastCheckoutSummary.totalAmount) }}</span>
+                <template v-if="lastCheckoutSummary.paidAmount != null && lastCheckoutSummary.paidAmount > 0">
+                  • Kembali:
+                  <span class="font-bold text-orange-600">{{ formatCurrency(Math.max(0, lastCheckoutSummary.paidAmount - lastCheckoutSummary.totalAmount)) }}</span>
+                </template>
+              </p>
+            </div>
+          </div>
+
+          <p v-if="isTrxFetchFailed" class="text-sm text-red-600 bg-red-50 rounded-lg p-3">
+            Gagal menyiapkan data struk. Cetak ulang dari menu Profit → pilih transaksi ini.
+          </p>
+
+          <!-- Cetak utama (auto-detect: Thermer di iOS, Web Bluetooth di Chrome, Browser selainnya) -->
+          <button
+            @click="printReceipt(lastTransaction)"
+            :disabled="isFetchingTrx || isTrxFetchFailed || !lastTransaction || isPrintingStruk"
+            type="button"
+            class="w-full px-4 py-3 bg-gradient-to-r disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed"
+            :class="isIOSFlag
+              ? 'from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600'
+              : 'from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600'"
+            :title="isIOSFlag ? 'Cetak Struk Thermal via Aplikasi Thermer' : 'Cetak langsung ke printer Bluetooth 58mm'"
+          >
+            <span class="w-full flex items-center justify-center gap-3 text-left">
+              <Icon
+                :name="isPrintingStruk ? 'lucide:loader-2' : 'lucide:printer'"
+                :class="['w-5 h-5 shrink-0 text-white', { 'animate-spin': isPrintingStruk }]"
+              />
+              <span class="flex flex-col leading-tight">
+                <span class="text-sm font-extrabold tracking-wide text-white">
+                  {{ isPrintingStruk ? 'Mencetak...' : (isIOSFlag ? 'Cetak Struk (Thermer iOS)' : 'Cetak Struk Thermal') }}
+                </span>
+                <span class="text-[10px] font-medium" :class="isIOSFlag ? 'text-orange-100' : 'text-sky-100'">
+                  {{ isIOSFlag ? 'Aplikasi Thermer • Bluetooth POS-58' : (hasBluetooth ? 'Printer Bluetooth 58mm (VSC MP-58M dll)' : 'Cetak via Browser (PDF)') }}
+                </span>
+              </span>
+            </span>
+          </button>
+
+          <!-- Opsi sekunder -->
+          <div class="flex items-center justify-center gap-2">
+            <button
+              v-if="!isIOSFlag"
+              @click="printViaRawBT(lastTransaction)"
+              :disabled="isFetchingTrx || isTrxFetchFailed || !lastTransaction"
+              type="button"
+              class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs disabled:opacity-50"
+              title="Cetak via Aplikasi RawBT di Android"
+            >
+              <Icon name="lucide:smartphone" class="w-3.5 h-3.5 text-emerald-600" />
+              <span>RawBT</span>
+            </button>
+            <button
+              @click="printReceipt(lastTransaction, 'browser')"
+              :disabled="isFetchingTrx || isTrxFetchFailed || !lastTransaction"
+              type="button"
+              class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs disabled:opacity-50"
+              title="Cetak format Browser / PDF"
+            >
+              <Icon name="lucide:file-text" class="w-3.5 h-3.5 text-gray-500" />
+              <span>PDF</span>
+            </button>
+          </div>
+
+          <button
+            @click="closePrintOffer"
+            type="button"
+            class="w-full py-2 text-gray-400 hover:text-gray-600 text-xs font-semibold text-center transition cursor-pointer"
+          >
+            Nanti saja — cetak ulang dari menu Profit
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Fallback modal: cetak gagal / Thermer belum terbuka -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="isFallbackModalOpen"
+        class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+      >
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-gray-100 flex flex-col gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-orange-100 text-orange-600 rounded-xl">
+              <Icon name="lucide:alert-circle" class="w-6 h-6" />
+            </div>
+            <div>
+              <h4 class="font-bold text-base text-gray-900">{{ isIOSFlag ? 'Thermer Belum Terbuka' : 'Gagal Cetak Bluetooth' }}</h4>
+              <p class="text-xs text-gray-500">Pilih opsi pencetakan struk di bawah</p>
+            </div>
+          </div>
+
+          <p v-if="strukPrintError" class="text-sm text-red-600 bg-red-50 rounded-lg p-3">
+            {{ strukPrintError }}
+          </p>
+
+          <p class="text-sm text-gray-600 leading-relaxed">
+            <template v-if="isIOSFlag">
+              Jika aplikasi <strong class="text-gray-900">Thermer</strong> belum terinstal di iPhone Anda, unduh gratis dari App Store.
+            </template>
+            <template v-else>
+              Pastikan printer Bluetooth sudah menyala dan dalam jangkauan. Anda bisa coba lagi atau cetak via browser.
+            </template>
+          </p>
+
+          <div class="flex flex-col gap-2.5 pt-2">
+            <button
+              v-if="isIOSFlag"
+              @click="openAppStore"
+              class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <Icon name="lucide:download" class="w-4 h-4" />
+              <span>Buka Thermer di App Store</span>
+            </button>
+
+            <button
+              v-else
+              @click="retryStrukBluetooth"
+              :disabled="isPrintingStruk"
+              class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <Icon :name="isPrintingStruk ? 'lucide:loader-2' : 'lucide:bluetooth'" :class="['w-4 h-4', { 'animate-spin': isPrintingStruk }]" />
+              <span>{{ isPrintingStruk ? 'Mencetak...' : 'Coba Lagi (Bluetooth)' }}</span>
+            </button>
+
+            <button
+              @click="printFallbackBrowser"
+              class="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 active:scale-98 text-gray-800 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition border border-gray-200 cursor-pointer"
+            >
+              <Icon name="lucide:file-text" class="w-4 h-4 text-gray-600" />
+              <span>Cetak via Browser (PDF)</span>
+            </button>
+
+            <button
+              @click="closeStrukFallback"
+              class="w-full py-2 text-gray-400 hover:text-gray-600 text-xs font-semibold text-center transition cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -846,6 +1020,7 @@ import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
+import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
 import { getJenisList, matchesJenis } from "../utils/categoryJenis";
 
 definePageMeta({
@@ -1340,18 +1515,64 @@ const handleCheckout = async () => {
       const localDate = new Date(transactionDateTime.value);
       finalDateStr = localDate.toISOString();
     }
-    
-    await cartStore.checkout(finalDateStr, paidAmountValue.value || null);
+
+    const response = await cartStore.checkout(finalDateStr, paidAmountValue.value || null);
     showToast("✓ Mantap, transaksi berhasil!");
     paidAmountInput.value = "";
     closePaymentModal();
     showCartDrawer.value = false;
     startLiveClock();
     await fetchProducts();
-    fetchBestSellers(); // Refresh best sellers after checkout 
+    fetchBestSellers(); // Refresh best sellers after checkout
+
+    // Tawarkan cetak struk: ambil data transaksi lengkap (dengan items) untuk printer
+    lastCheckoutSummary.value = {
+      totalAmount: response?.totalAmount ?? 0,
+      paidAmount: paidAmountValue.value || null,
+    };
+    lastTransaction.value = null;
+    isTrxFetchFailed.value = false;
+    showPrintOffer.value = true;
+    isFetchingTrx.value = true;
+    try {
+      lastTransaction.value = await $fetch<any>(`/api/transactions/${response.transactionId}`);
+    } catch (e) {
+      isTrxFetchFailed.value = true;
+    } finally {
+      isFetchingTrx.value = false;
+    }
   } catch (error: any) {
     showToast("❌ Duh, " + (error.message || "transaksinya gagal nih"));
   }
+};
+
+// ── Cetak struk setelah checkout (auto-detect: Thermer di iOS, Bluetooth di Chrome) ──
+const {
+  printReceipt,
+  printViaRawBT,
+  isPrinting: isPrintingStruk,
+  isFallbackModalOpen,
+  printError: strukPrintError,
+  closeFallbackModal: closeStrukFallback,
+  printFallbackBrowser,
+  retryBluetooth: retryStrukBluetooth,
+  openAppStore,
+  hasBluetooth,
+  isIOS: isIOSFlag,
+} = useReceiptPrinter();
+
+const showPrintOffer = ref(false);
+const isFetchingTrx = ref(false);
+const isTrxFetchFailed = ref(false);
+const lastTransaction = ref<any>(null);
+const lastCheckoutSummary = ref<{ totalAmount: number; paidAmount: number | null }>({
+  totalAmount: 0,
+  paidAmount: null,
+});
+
+const closePrintOffer = () => {
+  showPrintOffer.value = false;
+  lastTransaction.value = null;
 };
 
 const handleClearCart = () => {
