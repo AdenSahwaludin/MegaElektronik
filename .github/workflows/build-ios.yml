@@ -1,0 +1,66 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Kompilasi iOS WAJIB macOS + Xcode (syarat Apple) — jalan di runner macOS GitHub
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Sync Capacitor iOS
+        env:
+          # WAJIB diisi agar aplikasi memuat web Mega Elektronik:
+          # Settings > Secrets and variables > Actions > Variables > CAP_SERVER_URL
+          # Contoh: https://mega-elektronik.vercel.app  atau  http://192.168.1.10:3000
+          CAP_SERVER_URL: ${{ vars.CAP_SERVER_URL }}
+        run: npx cap sync ios
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      # Build TANPA tanda tangan (unsigned): .ipa-nya dipakai setelah ditandatangani
+      # gratis via Sideloadly/AltStore (Apple ID biasa, berlaku 7 hari), atau resmi
+      # via Apple Developer $99/tahun (TestFlight / App Store).
+      - name: Build iOS App (unsigned, device)
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build/ios-derived \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            -quiet build
+
+      - name: Package IPA
+        run: |
+          mkdir -p build/Payload
+          cp -r build/ios-derived/Build/Products/Release-iphoneos/App.app build/Payload/
+          cd build
+          zip -qry Mega-Elektronik-POS-iOS-unsigned.ipa Payload
+          ls -lh Mega-Elektronik-POS-iOS-unsigned.ipa
+
+      - name: Upload iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mega-Elektronik-POS-iOS-unsigned-IPA
+          path: build/Mega-Elektronik-POS-iOS-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
