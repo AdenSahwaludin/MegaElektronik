@@ -258,16 +258,14 @@ export async function connectPrinter(): Promise<PrinterConnection> {
     );
   }
 
-  // Try to reuse cached connection
+  // Reuse cached connection if still active. Tidak pakai probe write 0 byte —
+  // sebagian firmware printer merespons aneh terhadap write kosong. Kalau
+  // koneksi ternyata sudah basi, sendBytes gagal dan cache dibuang (lihat
+  // printBluetoothReceipt) sehingga percobaan berikutnya konek fresh.
   if (cachedConnection?.server?.connected) {
-    try {
-      // Test if still valid
-      await cachedConnection.characteristic.writeValue(new Uint8Array([]));
-      return cachedConnection;
-    } catch {
-      cachedConnection = null;
-    }
+    return cachedConnection;
   }
+  cachedConnection = null;
 
   // Request Bluetooth device - accept all devices that look like printers
   const device = await (navigator as any).bluetooth.requestDevice({
@@ -382,7 +380,14 @@ async function sendBytes(
 export async function printBluetoothReceipt(transaction: any): Promise<void> {
   const connection = await connectPrinter();
   const receiptData = buildReceiptBytes(transaction);
-  await sendBytes(connection.characteristic, receiptData);
+  try {
+    await sendBytes(connection.characteristic, receiptData);
+  } catch (err) {
+    // Koneksi cache kemungkinan sudah basi (event gattserverdisconnected
+    // kadang terlambat) — buang supaya percobaan berikutnya konek fresh.
+    cachedConnection = null;
+    throw err;
+  }
 }
 
 /**
