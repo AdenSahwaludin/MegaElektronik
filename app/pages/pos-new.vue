@@ -1527,7 +1527,7 @@ const handleCheckout = async () => {
 
     // Tawarkan cetak struk: ambil data transaksi lengkap (dengan items) untuk printer
     lastCheckoutSummary.value = {
-      totalAmount: response?.totalAmount ?? 0,
+      totalAmount: (response as any)?.totalAmount ?? 0,
       paidAmount: paidAmountValue.value || null,
     };
     lastTransaction.value = null;
@@ -1535,7 +1535,7 @@ const handleCheckout = async () => {
     showPrintOffer.value = true;
     isFetchingTrx.value = true;
     try {
-      lastTransaction.value = await $fetch<any>(`/api/transactions/${response.transactionId}`);
+      lastTransaction.value = await $fetch<any>(`/api/transactions/${(response as any)?.transactionId}`);
     } catch (e) {
       isTrxFetchFailed.value = true;
     } finally {

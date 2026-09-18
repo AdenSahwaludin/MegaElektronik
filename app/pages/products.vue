@@ -304,10 +304,10 @@
                     
                     <!-- "Semua Produk" Pill -->
                     <button
-                      @click="searchQuery = ''"
+                      @click="selectCategory('')"
                       :class="[
                         'h-9 px-3.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
-                        !searchQuery
+                        !selectedCategory && !searchQuery
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
                           : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
                       ]"
@@ -317,7 +317,7 @@
                       <span
                         :class="[
                           'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
-                          !searchQuery ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
+                          !selectedCategory && !searchQuery ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
                         ]"
                       >
                         {{ dataCacheStore.products.length }}
@@ -344,7 +344,7 @@
                           'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
                           isCategoryActive(cat.name) ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
                         ]"
-                  >
+                      >
                         {{ cat.count }}
                       </span>
                     </button>
@@ -384,10 +384,104 @@
                       <span>{{ brand }}</span>
                     </button>
                   </div>
+
+                  <!-- Quick Jenis (Sub-category Jenis Filter per Kategori) -->
+                  <div
+                    v-if="selectedCategory && availableJenisForSelectedCategory.length > 0"
+                    class="flex flex-wrap items-center justify-center gap-1.5 pt-2 mt-1 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+                  >
+                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1">
+                      <Icon name="lucide:layers" class="w-3.5 h-3.5 text-orange-500" />
+                      <span>Jenis {{ selectedCategory }}:</span>
+                    </span>
+                    <button
+                      @click="selectedJenis = ''"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95',
+                        !selectedJenis
+                          ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                    >
+                      Semua Jenis
+                    </button>
+                    <button
+                      v-for="j in availableJenisForSelectedCategory"
+                      :key="j.label"
+                      @click="selectedJenis = selectedJenis === j.label ? '' : j.label"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        selectedJenis === j.label
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                    >
+                      <span>{{ j.label }}</span>
+                      <span
+                        v-if="j.count > 0"
+                        :class="[
+                          'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
+                          selectedJenis === j.label ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
+                        ]"
+                      >
+                        {{ j.count }}
+                      </span>
+                    </button>
+                  </div>
+
+                  <!-- Price Sort Controls (Aktif saat Quick Category Dipilih) -->
+                  <div
+                    v-if="selectedCategory"
+                    class="flex flex-wrap items-center justify-center gap-1.5 pt-2 mt-1 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+                  >
+                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1">
+                      <Icon name="lucide:arrow-down-up" class="w-3.5 h-3.5 text-orange-500" />
+                      <span>Urutan Harga:</span>
+                    </span>
+                    <button
+                      @click="setPriceSort('cheapest')"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1.5',
+                        isCheapestActive
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                      title="Urutkan dari harga barang termurah"
+                    >
+                      <Icon name="lucide:arrow-down-narrow-wide" class="w-3.5 h-3.5" />
+                      <span>Harga Termurah</span>
+                      <span v-if="isCheapestActive" class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                    </button>
+                    <button
+                      @click="setPriceSort('expensive')"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1.5',
+                        isExpensiveActive
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                      title="Urutkan dari harga barang tertinggi"
+                    >
+                      <Icon name="lucide:arrow-up-narrow-wide" class="w-3.5 h-3.5" />
+                      <span>Harga Tertinggi</span>
+                    </button>
+                    <button
+                      @click="setPriceSort('default')"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        isDefaultSortActive
+                          ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                      title="Urutkan berdasarkan nama produk (A-Z)"
+                    >
+                      <span>Standar (Nama A-Z)</span>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Active Filter Pill Indicator if a query or category/brand filter is active -->
-                <div v-if="searchQuery || selectedCategory || selectedBrand" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
+                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis || isCheapestActive || isExpensiveActive" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
                   <div class="flex flex-wrap items-center gap-2 text-gray-600 font-medium">
                     <span class="text-gray-400">Filter Aktif:</span>
                     <span v-if="selectedCategory" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
@@ -395,6 +489,17 @@
                     </span>
                     <span v-if="selectedBrand" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-200">
                       Merek: {{ selectedBrand }}
+                    </span>
+                    <span v-if="selectedJenis" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
+                      Jenis: {{ selectedJenis }}
+                    </span>
+                    <span v-if="isCheapestActive" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
+                      <Icon name="lucide:arrow-down-narrow-wide" class="w-3 h-3 text-emerald-600" />
+                      Harga Termurah
+                    </span>
+                    <span v-if="isExpensiveActive" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold border border-blue-200">
+                      <Icon name="lucide:arrow-up-narrow-wide" class="w-3 h-3 text-blue-600" />
+                      Harga Tertinggi
                     </span>
                     <span v-if="searchQuery" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
                       <Icon name="lucide:filter" class="w-3 h-3 text-orange-600" />
@@ -1260,6 +1365,7 @@ import type { Ref } from "vue";
 import { watch, computed, ref, reactive, onMounted } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
+import { getJenisList, matchesJenis } from "../utils/categoryJenis";
 
 definePageMeta({
   layout: "default",
@@ -1314,6 +1420,11 @@ const productsList = computed(() => {
     });
   }
 
+  // Filter by selectedJenis
+  if (selectedJenis.value) {
+    list = list.filter((p: any) => matchesJenis(p, selectedCategory.value, selectedJenis.value));
+  }
+
   // Filter by debounced search query
   if (debouncedSearchQuery.value.trim()) {
     const keywords = debouncedSearchQuery.value.toLowerCase().trim().split(/\s+/).filter((k) => k.length > 0);
@@ -1340,17 +1451,36 @@ const productsList = computed(() => {
   const field = sortBy.value;
   const order = sortOrder.value === "desc" ? -1 : 1;
   const sorted = [...list];
+  const isNumericField = ["askingPrice", "fixedPrice", "buyPrice", "servicePrice", "stock"].includes(field);
+
   sorted.sort((a, b) => {
     let valA = a[field];
     let valB = b[field];
 
-    if (typeof valA === "string" && typeof valB === "string") {
-      return valA.localeCompare(valB, "id", { sensitivity: "base" }) * order;
+    if (isNumericField) {
+      const numA = (valA !== null && valA !== undefined && valA !== "") ? Number(valA) : null;
+      const numB = (valB !== null && valB !== undefined && valB !== "") ? Number(valB) : null;
+      if (numA === null && numB === null) return 0;
+      if (numA === null) return 1;
+      if (numB === null) return -1;
+      if (numA !== numB) {
+        return (numA - numB) * order;
+      }
+    } else if (typeof valA === "string" && typeof valB === "string") {
+      const cmp = valA.localeCompare(valB, "id", { sensitivity: "base" });
+      if (cmp !== 0) return cmp * order;
+    } else {
+      if (valA === null || valA === undefined) return 1;
+      if (valB === null || valB === undefined) return -1;
+      if (valA !== valB) {
+        return (valA < valB ? -1 : 1) * order;
+      }
     }
 
-    if (valA === null || valA === undefined) return 1;
-    if (valB === null || valB === undefined) return -1;
-    return (valA < valB ? -1 : valA > valB ? 1 : 0) * order;
+    // Secondary sort by name (A-Z)
+    const nameA = a.name || "";
+    const nameB = b.name || "";
+    return nameA.localeCompare(nameB, "id", { sensitivity: "base" });
   });
 
   return sorted;
@@ -1594,9 +1724,38 @@ const categoriesList = computed(() => {
   })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 });
 
-// Category & Brand Selection State
+// Category, Brand & Jenis Selection State
 const selectedCategory = ref('');
 const selectedBrand = ref('');
+const selectedJenis = ref('');
+
+const isCheapestActive = computed(() => sortBy.value === 'askingPrice' && sortOrder.value === 'asc');
+const isExpensiveActive = computed(() => sortBy.value === 'askingPrice' && sortOrder.value === 'desc');
+const isDefaultSortActive = computed(() => sortBy.value === 'name' && sortOrder.value === 'asc');
+
+const setPriceSort = (mode: 'cheapest' | 'expensive' | 'default') => {
+  if (mode === 'cheapest') {
+    if (isCheapestActive.value) {
+      sortBy.value = 'name';
+      sortOrder.value = 'asc';
+    } else {
+      sortBy.value = 'askingPrice';
+      sortOrder.value = 'asc';
+    }
+  } else if (mode === 'expensive') {
+    if (isExpensiveActive.value) {
+      sortBy.value = 'name';
+      sortOrder.value = 'asc';
+    } else {
+      sortBy.value = 'askingPrice';
+      sortOrder.value = 'desc';
+    }
+  } else {
+    sortBy.value = 'name';
+    sortOrder.value = 'asc';
+  }
+  currentPage.value = 1;
+};
 
 const isCategoryActive = (catName: string) => {
   if (!catName && !selectedCategory.value) return true;
@@ -1608,21 +1767,37 @@ const selectCategory = (catName: string) => {
   if (!catName) {
     selectedCategory.value = '';
     selectedBrand.value = '';
+    selectedJenis.value = '';
+    sortBy.value = 'name';
+    sortOrder.value = 'asc';
+    currentPage.value = 1;
     return;
   }
   if (selectedCategory.value.trim().toLowerCase() === catName.trim().toLowerCase()) {
     selectedCategory.value = '';
     selectedBrand.value = '';
+    selectedJenis.value = '';
+    sortBy.value = 'name';
+    sortOrder.value = 'asc';
   } else {
     selectedCategory.value = catName;
     selectedBrand.value = '';
+    selectedJenis.value = '';
+    // Ketika quick categories aktif, aktifkan filter harga barang termurah
+    sortBy.value = 'askingPrice';
+    sortOrder.value = 'asc';
   }
+  currentPage.value = 1;
 };
 
 const resetAllFilters = () => {
   searchQuery.value = '';
   selectedCategory.value = '';
   selectedBrand.value = '';
+  selectedJenis.value = '';
+  sortBy.value = 'name';
+  sortOrder.value = 'asc';
+  currentPage.value = 1;
 };
 
 const availableBrandsForSelectedCategory = computed(() => {
@@ -1646,6 +1821,30 @@ const availableBrandsForSelectedCategory = computed(() => {
   });
 
   return Array.from(brandMap.values()).sort((a, b) => a.localeCompare(b, 'id', { sensitivity: 'base' }));
+});
+
+const availableJenisForSelectedCategory = computed(() => {
+  if (!selectedCategory.value) return [] as { label: string; count: number }[];
+  const labels = getJenisList(selectedCategory.value);
+  if (labels.length === 0) return [] as { label: string; count: number }[];
+  const catLower = selectedCategory.value.trim().toLowerCase();
+  const brandLower = selectedBrand.value.trim().toLowerCase();
+  
+  const base = (dataCacheStore.products || []).filter((p: any) => {
+    if (p.isActive === false) return false;
+    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
+    if (!fullText.includes(catLower)) return false;
+    if (brandLower) {
+      const b = (p.brand || '').trim().toLowerCase();
+      if (b !== brandLower) return false;
+    }
+    return true;
+  });
+
+  return labels.map((label) => ({
+    label,
+    count: base.filter((p: any) => matchesJenis(p, selectedCategory.value, label)).length,
+  }));
 });
 
 const toggleSort = (field: string) => {

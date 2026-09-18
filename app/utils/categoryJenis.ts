@@ -37,8 +37,10 @@ function extractRiceCapacities(normText: string): number[] {
   const re = /(\d+(?:\.\d+)?)\s*(liter|litre|ltr|\bl\b)/g
   let m: RegExpExecArray | null
   while ((m = re.exec(normText)) !== null) {
-    const v = parseFloat(m[1])
-    if (!Number.isNaN(v)) out.push(v)
+    if (m[1]) {
+      const v = parseFloat(m[1])
+      if (!Number.isNaN(v)) out.push(v)
+    }
   }
   return out
 }
