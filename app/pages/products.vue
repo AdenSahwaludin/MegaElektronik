@@ -304,10 +304,10 @@
                     
                     <!-- "Semua Produk" Pill -->
                     <button
-                      @click="selectCategory('')"
+                      @click="resetAllFilters"
                       :class="[
                         'h-9 px-3.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
-                        !selectedCategory && !searchQuery
+                        !searchQuery && !selectedCategory && !selectedBrand && !selectedJenis
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
                           : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
                       ]"
@@ -317,7 +317,7 @@
                       <span
                         :class="[
                           'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
-                          !selectedCategory && !searchQuery ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
+                          !searchQuery && !selectedCategory && !selectedBrand && !selectedJenis ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
                         ]"
                       >
                         {{ dataCacheStore.products.length }}
@@ -344,7 +344,7 @@
                           'px-1.5 py-0.5 text-[10px] rounded-md font-extrabold',
                           isCategoryActive(cat.name) ? 'bg-white/25 text-white' : 'bg-orange-100/70 text-orange-700'
                         ]"
-                      >
+                  >
                         {{ cat.count }}
                       </span>
                     </button>
@@ -385,7 +385,7 @@
                     </button>
                   </div>
 
-                  <!-- Quick Jenis (Sub-category Jenis Filter per Kategori) -->
+                  <!-- Jenis Pills (Sub-category Jenis Filter per Kategori, sama seperti di Penjualan) -->
                   <div
                     v-if="selectedCategory && availableJenisForSelectedCategory.length > 0"
                     class="flex flex-wrap items-center justify-center gap-1.5 pt-2 mt-1 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
@@ -429,59 +429,59 @@
                     </button>
                   </div>
 
-                  <!-- Price Sort Controls (Aktif saat Quick Category Dipilih) -->
+                  <!-- Urutkan Harga (muncul saat quick categories aktif) -->
                   <div
                     v-if="selectedCategory"
                     class="flex flex-wrap items-center justify-center gap-1.5 pt-2 mt-1 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
                   >
                     <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1">
-                      <Icon name="lucide:arrow-down-up" class="w-3.5 h-3.5 text-orange-500" />
-                      <span>Urutan Harga:</span>
+                      <Icon name="lucide:arrow-down-wide-narrow" class="w-3.5 h-3.5 text-orange-500" />
+                      <span>Urutkan:</span>
                     </span>
                     <button
-                      @click="setPriceSort('cheapest')"
-                      :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1.5',
-                        isCheapestActive
-                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
-                      ]"
-                      title="Urutkan dari harga barang termurah"
-                    >
-                      <Icon name="lucide:arrow-down-narrow-wide" class="w-3.5 h-3.5" />
-                      <span>Harga Termurah</span>
-                      <span v-if="isCheapestActive" class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                    </button>
-                    <button
-                      @click="setPriceSort('expensive')"
-                      :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1.5',
-                        isExpensiveActive
-                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
-                      ]"
-                      title="Urutkan dari harga barang tertinggi"
-                    >
-                      <Icon name="lucide:arrow-up-narrow-wide" class="w-3.5 h-3.5" />
-                      <span>Harga Tertinggi</span>
-                    </button>
-                    <button
-                      @click="setPriceSort('default')"
+                      @click="setQuickSort('cheapest')"
                       :class="[
                         'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
-                        isDefaultSortActive
+                        isPriceAscActive
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                      title="Urutkan dari harga tawar termurah"
+                    >
+                      <Icon name="lucide:trending-down" class="w-3.5 h-3.5" />
+                      <span>Harga Termurah</span>
+                    </button>
+                    <button
+                      @click="setQuickSort('expensive')"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        isPriceDescActive
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ]"
+                      title="Urutkan dari harga tawar termahal"
+                    >
+                      <Icon name="lucide:trending-up" class="w-3.5 h-3.5" />
+                      <span>Harga Termahal</span>
+                    </button>
+                    <button
+                      @click="setQuickSort('name')"
+                      :class="[
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        isNameAscActive
                           ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600'
                       ]"
-                      title="Urutkan berdasarkan nama produk (A-Z)"
+                      title="Urutkan nama A-Z"
                     >
-                      <span>Standar (Nama A-Z)</span>
+                      <Icon name="lucide:sort-asc" class="w-3.5 h-3.5" />
+                      <span>Nama A-Z</span>
                     </button>
                   </div>
                 </div>
 
-                <!-- Active Filter Pill Indicator if a query or category/brand filter is active -->
-                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis || isCheapestActive || isExpensiveActive" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
+                <!-- Active Filter Pill Indicator if a query or category/brand/jenis filter is active -->
+                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
                   <div class="flex flex-wrap items-center gap-2 text-gray-600 font-medium">
                     <span class="text-gray-400">Filter Aktif:</span>
                     <span v-if="selectedCategory" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
@@ -490,16 +490,16 @@
                     <span v-if="selectedBrand" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-200">
                       Merek: {{ selectedBrand }}
                     </span>
-                    <span v-if="selectedJenis" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
+                    <span v-if="selectedJenis" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800 font-bold border border-yellow-200">
                       Jenis: {{ selectedJenis }}
                     </span>
-                    <span v-if="isCheapestActive" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
-                      <Icon name="lucide:arrow-down-narrow-wide" class="w-3 h-3 text-emerald-600" />
-                      Harga Termurah
+                    <span v-if="selectedCategory && isPriceAscActive" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-100 text-green-800 font-bold border border-green-200">
+                      <Icon name="lucide:trending-down" class="w-3 h-3 text-green-600" />
+                      Termurah
                     </span>
-                    <span v-if="isExpensiveActive" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold border border-blue-200">
-                      <Icon name="lucide:arrow-up-narrow-wide" class="w-3 h-3 text-blue-600" />
-                      Harga Tertinggi
+                    <span v-else-if="selectedCategory && isPriceDescActive" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold border border-blue-200">
+                      <Icon name="lucide:trending-up" class="w-3 h-3 text-blue-600" />
+                      Termahal
                     </span>
                     <span v-if="searchQuery" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
                       <Icon name="lucide:filter" class="w-3 h-3 text-orange-600" />
@@ -579,21 +579,21 @@
             class="flex flex-col items-center justify-center py-20 text-center"
           >
             <div class="bg-orange-100 p-4 rounded-full mb-4">
-              <Icon :name="searchQuery ? 'lucide:search-x' : 'lucide:inbox'" class="w-10 h-10 text-orange-600" />
+              <Icon :name="(searchQuery || selectedCategory) ? 'lucide:search-x' : 'lucide:inbox'" class="w-10 h-10 text-orange-600" />
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-1">
-              {{ searchQuery ? 'Produk Tidak Ditemukan' : 'Belum Ada Produk' }}
+              {{ searchQuery || selectedCategory ? 'Produk Tidak Ditemukan' : 'Belum Ada Produk' }}
             </h3>
             <p class="text-gray-500 max-w-xs mx-auto">
-              {{ searchQuery ? `Maaf, produk dengan kata kunci "${searchQuery}" tidak ditemukan.` : 'Daftar produk masih kosong. Silakan tambahkan produk baru melalui tombol di atas.' }}
+              {{ searchQuery || selectedCategory ? `Maaf, produk dengan filter saat ini tidak ditemukan.` : 'Daftar produk masih kosong. Silakan tambahkan produk baru melalui tombol di atas.' }}
             </p>
             <button 
-              v-if="searchQuery"
-              @click="searchQuery = ''"
-              class="mt-4 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition font-semibold flex items-center gap-2"
+              v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis"
+              @click="resetAllFilters"
+              class="mt-4 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition font-semibold flex items-center gap-2 cursor-pointer"
             >
               <Icon name="lucide:refresh-cw" class="w-4 h-4" />
-              Reset Pencarian
+              Reset Filter
             </button>
           </div>
 
@@ -1365,7 +1365,7 @@ import type { Ref } from "vue";
 import { watch, computed, ref, reactive, onMounted } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
-import { getJenisList, matchesJenis } from "../utils/categoryJenis";
+import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
 
 definePageMeta({
   layout: "default",
@@ -1404,11 +1404,7 @@ const productsList = computed(() => {
 
   // Filter by selectedCategory
   if (selectedCategory.value) {
-    const catLower = selectedCategory.value.trim().toLowerCase();
-    list = list.filter((p: any) => {
-      const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-      return searchStr.includes(catLower);
-    });
+    list = list.filter((p: any) => matchesCategory(p, selectedCategory.value));
   }
 
   // Filter by selectedBrand
@@ -1420,8 +1416,8 @@ const productsList = computed(() => {
     });
   }
 
-  // Filter by selectedJenis
-  if (selectedJenis.value) {
+  // Filter by selectedJenis (sub-kategori per quick category, sama seperti di Penjualan)
+  if (selectedJenis.value && selectedCategory.value) {
     list = list.filter((p: any) => matchesJenis(p, selectedCategory.value, selectedJenis.value));
   }
 
@@ -1451,36 +1447,17 @@ const productsList = computed(() => {
   const field = sortBy.value;
   const order = sortOrder.value === "desc" ? -1 : 1;
   const sorted = [...list];
-  const isNumericField = ["askingPrice", "fixedPrice", "buyPrice", "servicePrice", "stock"].includes(field);
-
   sorted.sort((a, b) => {
     let valA = a[field];
     let valB = b[field];
 
-    if (isNumericField) {
-      const numA = (valA !== null && valA !== undefined && valA !== "") ? Number(valA) : null;
-      const numB = (valB !== null && valB !== undefined && valB !== "") ? Number(valB) : null;
-      if (numA === null && numB === null) return 0;
-      if (numA === null) return 1;
-      if (numB === null) return -1;
-      if (numA !== numB) {
-        return (numA - numB) * order;
-      }
-    } else if (typeof valA === "string" && typeof valB === "string") {
-      const cmp = valA.localeCompare(valB, "id", { sensitivity: "base" });
-      if (cmp !== 0) return cmp * order;
-    } else {
-      if (valA === null || valA === undefined) return 1;
-      if (valB === null || valB === undefined) return -1;
-      if (valA !== valB) {
-        return (valA < valB ? -1 : 1) * order;
-      }
+    if (typeof valA === "string" && typeof valB === "string") {
+      return valA.localeCompare(valB, "id", { sensitivity: "base" }) * order;
     }
 
-    // Secondary sort by name (A-Z)
-    const nameA = a.name || "";
-    const nameB = b.name || "";
-    return nameA.localeCompare(nameB, "id", { sensitivity: "base" });
+    if (valA === null || valA === undefined) return 1;
+    if (valB === null || valB === undefined) return -1;
+    return (valA < valB ? -1 : valA > valB ? 1 : 0) * order;
   });
 
   return sorted;
@@ -1708,10 +1685,8 @@ const categoriesList = computed(() => {
   });
 
   products.forEach((p: any) => {
-    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-
     categoryMap.forEach((_, catName) => {
-      if (fullText.includes(catName.toLowerCase())) {
+      if (matchesCategory(p, catName)) {
         categoryMap.set(catName, (categoryMap.get(catName) || 0) + 1);
       }
     });
@@ -1724,38 +1699,10 @@ const categoriesList = computed(() => {
   })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 });
 
-// Category, Brand & Jenis Selection State
+// Category & Brand & Jenis Selection State (Jenis sama seperti di Penjualan)
 const selectedCategory = ref('');
 const selectedBrand = ref('');
 const selectedJenis = ref('');
-
-const isCheapestActive = computed(() => sortBy.value === 'askingPrice' && sortOrder.value === 'asc');
-const isExpensiveActive = computed(() => sortBy.value === 'askingPrice' && sortOrder.value === 'desc');
-const isDefaultSortActive = computed(() => sortBy.value === 'name' && sortOrder.value === 'asc');
-
-const setPriceSort = (mode: 'cheapest' | 'expensive' | 'default') => {
-  if (mode === 'cheapest') {
-    if (isCheapestActive.value) {
-      sortBy.value = 'name';
-      sortOrder.value = 'asc';
-    } else {
-      sortBy.value = 'askingPrice';
-      sortOrder.value = 'asc';
-    }
-  } else if (mode === 'expensive') {
-    if (isExpensiveActive.value) {
-      sortBy.value = 'name';
-      sortOrder.value = 'asc';
-    } else {
-      sortBy.value = 'askingPrice';
-      sortOrder.value = 'desc';
-    }
-  } else {
-    sortBy.value = 'name';
-    sortOrder.value = 'asc';
-  }
-  currentPage.value = 1;
-};
 
 const isCategoryActive = (catName: string) => {
   if (!catName && !selectedCategory.value) return true;
@@ -1770,7 +1717,6 @@ const selectCategory = (catName: string) => {
     selectedJenis.value = '';
     sortBy.value = 'name';
     sortOrder.value = 'asc';
-    currentPage.value = 1;
     return;
   }
   if (selectedCategory.value.trim().toLowerCase() === catName.trim().toLowerCase()) {
@@ -1783,34 +1729,50 @@ const selectCategory = (catName: string) => {
     selectedCategory.value = catName;
     selectedBrand.value = '';
     selectedJenis.value = '';
-    // Ketika quick categories aktif, aktifkan filter harga barang termurah
+    // Saat quick category dipilih, langsung urutkan dari harga termurah
     sortBy.value = 'askingPrice';
     sortOrder.value = 'asc';
   }
-  currentPage.value = 1;
 };
 
 const resetAllFilters = () => {
   searchQuery.value = '';
+  debouncedSearchQuery.value = '';
   selectedCategory.value = '';
   selectedBrand.value = '';
   selectedJenis.value = '';
   sortBy.value = 'name';
   sortOrder.value = 'asc';
+};
+
+// Quick sort dari harga termurah (muncul saat quick categories aktif)
+const isPriceAscActive = computed(() => sortBy.value === 'askingPrice' && sortOrder.value === 'asc');
+const isPriceDescActive = computed(() => sortBy.value === 'askingPrice' && sortOrder.value === 'desc');
+const isNameAscActive = computed(() => sortBy.value === 'name' && sortOrder.value === 'asc');
+
+const setQuickSort = (mode: 'cheapest' | 'expensive' | 'name') => {
+  if (mode === 'cheapest') {
+    sortBy.value = 'askingPrice';
+    sortOrder.value = 'asc';
+  } else if (mode === 'expensive') {
+    sortBy.value = 'askingPrice';
+    sortOrder.value = 'desc';
+  } else {
+    sortBy.value = 'name';
+    sortOrder.value = 'asc';
+  }
   currentPage.value = 1;
 };
 
 const availableBrandsForSelectedCategory = computed(() => {
   if (!selectedCategory.value) return [];
-  const catLower = selectedCategory.value.trim().toLowerCase();
   const allProds = dataCacheStore.products || [];
-  
+
   const brandMap = new Map<string, string>();
   allProds.forEach((p: any) => {
     if (p.isActive === false) return;
 
-    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-    if (fullText.includes(catLower)) {
+    if (matchesCategory(p, selectedCategory.value)) {
       const b = (p.brand || '').trim();
       if (b && b !== '-' && b.toLowerCase() !== 'no brand') {
         if (!brandMap.has(b.toLowerCase())) {
@@ -1827,20 +1789,16 @@ const availableJenisForSelectedCategory = computed(() => {
   if (!selectedCategory.value) return [] as { label: string; count: number }[];
   const labels = getJenisList(selectedCategory.value);
   if (labels.length === 0) return [] as { label: string; count: number }[];
-  const catLower = selectedCategory.value.trim().toLowerCase();
   const brandLower = selectedBrand.value.trim().toLowerCase();
-  
-  const base = (dataCacheStore.products || []).filter((p: any) => {
-    if (p.isActive === false) return false;
-    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-    if (!fullText.includes(catLower)) return false;
+  const allProds = dataCacheStore.products || [];
+  const base = allProds.filter((p: any) => {
+    if (!matchesCategory(p, selectedCategory.value)) return false;
     if (brandLower) {
       const b = (p.brand || '').trim().toLowerCase();
       if (b !== brandLower) return false;
     }
     return true;
   });
-
   return labels.map((label) => ({
     label,
     count: base.filter((p: any) => matchesJenis(p, selectedCategory.value, label)).length,
@@ -2446,8 +2404,12 @@ const changeItemsPerPage = (newLimit: number) => {
   currentPage.value = 1; // Reset to first page
 };
 
-// Watch for search query changes to reset pagination
+// Watch for search query / filter changes to reset pagination
 watch(searchQuery, () => {
+  currentPage.value = 1;
+});
+
+watch([selectedCategory, selectedBrand, selectedJenis], () => {
   currentPage.value = 1;
 });
 

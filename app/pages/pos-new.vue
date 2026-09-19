@@ -1021,7 +1021,7 @@ import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
-import { getJenisList, matchesJenis } from "../utils/categoryJenis";
+import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
 
 definePageMeta({
   layout: "default",
@@ -1141,10 +1141,8 @@ const categoriesList = computed(() => {
   });
 
   productsList.forEach((p: any) => {
-    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-
     categoryMap.forEach((_, catName) => {
-      if (fullText.includes(catName.toLowerCase())) {
+      if (matchesCategory(p, catName)) {
         categoryMap.set(catName, (categoryMap.get(catName) || 0) + 1);
       }
     });
@@ -1173,28 +1171,30 @@ const selectCategory = (catName: string) => {
     selectedCategory.value = '';
     selectedBrand.value = '';
     selectedJenis.value = '';
+    sortBy.value = 'best-seller';
     return;
   }
   if (selectedCategory.value.trim().toLowerCase() === catName.trim().toLowerCase()) {
     selectedCategory.value = '';
     selectedBrand.value = '';
     selectedJenis.value = '';
+    sortBy.value = 'best-seller';
   } else {
     selectedCategory.value = catName;
     selectedBrand.value = '';
     selectedJenis.value = '';
+    // Saat quick category dipilih, langsung urutkan dari harga termurah
+    sortBy.value = 'price-asc';
   }
 };
 
 const availableBrandsForSelectedCategory = computed(() => {
   if (!selectedCategory.value) return [];
-  const catLower = selectedCategory.value.trim().toLowerCase();
   const activeProds = products.value;
-  
+
   const brandMap = new Map<string, string>();
   activeProds.forEach((p: any) => {
-    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-    if (fullText.includes(catLower)) {
+    if (matchesCategory(p, selectedCategory.value)) {
       const b = (p.brand || '').trim();
       if (b && b !== '-' && b.toLowerCase() !== 'no brand') {
         if (!brandMap.has(b.toLowerCase())) {
@@ -1211,11 +1211,9 @@ const availableJenisForSelectedCategory = computed(() => {
   if (!selectedCategory.value) return [] as { label: string; count: number }[];
   const labels = getJenisList(selectedCategory.value);
   if (labels.length === 0) return [] as { label: string; count: number }[];
-  const catLower = selectedCategory.value.trim().toLowerCase();
   const brandLower = selectedBrand.value.trim().toLowerCase();
   const base = products.value.filter((p: any) => {
-    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-    if (!fullText.includes(catLower)) return false;
+    if (!matchesCategory(p, selectedCategory.value)) return false;
     if (brandLower) {
       const b = (p.brand || '').trim().toLowerCase();
       if (b !== brandLower) return false;
@@ -1383,11 +1381,7 @@ const filteredProducts = computed(() => {
   let result = products.value;
 
   if (selectedCategory.value) {
-    const catLower = selectedCategory.value.trim().toLowerCase();
-    result = result.filter((p: any) => {
-      const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-      return searchStr.includes(catLower);
-    });
+    result = result.filter((p: any) => matchesCategory(p, selectedCategory.value));
   }
 
   if (selectedBrand.value) {
@@ -1527,7 +1521,7 @@ const handleCheckout = async () => {
 
     // Tawarkan cetak struk: ambil data transaksi lengkap (dengan items) untuk printer
     lastCheckoutSummary.value = {
-      totalAmount: (response as any)?.totalAmount ?? 0,
+      totalAmount: response?.totalAmount ?? 0,
       paidAmount: paidAmountValue.value || null,
     };
     lastTransaction.value = null;
@@ -1535,7 +1529,7 @@ const handleCheckout = async () => {
     showPrintOffer.value = true;
     isFetchingTrx.value = true;
     try {
-      lastTransaction.value = await $fetch<any>(`/api/transactions/${(response as any)?.transactionId}`);
+      lastTransaction.value = await $fetch<any>(`/api/transactions/${response.transactionId}`);
     } catch (e) {
       isTrxFetchFailed.value = true;
     } finally {

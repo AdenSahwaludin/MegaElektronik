@@ -16,6 +16,32 @@ export function normalizeCategoryKey(category: string): string {
   return (category || '').trim().toLowerCase()
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Cek apakah sebuah produk termasuk kategori quick-category tertentu.
+ * Pencocokan dilakukan terhadap gabungan name + brand + model + otherName (case-insensitive).
+ *
+ * Kategori pendek (<= 3 huruf, mis. "AC") wajib cocok sebagai kata yang utuh
+ * (word-boundary), supaya produk seperti "Blender Kaca" atau "Speaker Active"
+ * tidak ikut kepilih hanya karena mengandung huruf "ac".
+ */
+export function matchesCategory(
+  product: { name?: string | null, brand?: string | null, model?: string | null, otherName?: string | null },
+  category: string
+): boolean {
+  const cat = (category || '').trim().toLowerCase()
+  if (!cat) return true
+  const text = `${product?.name || ''} ${product?.brand || ''} ${product?.model || ''} ${product?.otherName || ''}`.toLowerCase()
+  if (cat.length <= 3) {
+    const pattern = cat.split(/\s+/).map(escapeRegExp).join('\\s+')
+    return new RegExp(`(^|[^a-z0-9])${pattern}([^a-z0-9]|$)`).test(text)
+  }
+  return text.includes(cat)
+}
+
 export function getJenisList(category: string): string[] {
   return CATEGORY_JENIS_MAP[normalizeCategoryKey(category)] || []
 }
@@ -37,10 +63,8 @@ function extractRiceCapacities(normText: string): number[] {
   const re = /(\d+(?:\.\d+)?)\s*(liter|litre|ltr|\bl\b)/g
   let m: RegExpExecArray | null
   while ((m = re.exec(normText)) !== null) {
-    if (m[1]) {
-      const v = parseFloat(m[1])
-      if (!Number.isNaN(v)) out.push(v)
-    }
+    const v = parseFloat(m[1] ?? '')
+    if (!Number.isNaN(v)) out.push(v)
   }
   return out
 }

@@ -78,14 +78,14 @@
             </div>
 
             <!-- Quick Categories -->
-            <div v-show="showCategories" class="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div class="flex flex-wrap gap-2">
+            <div v-show="showCategories" class="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div class="flex flex-nowrap gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth pb-0.5 -mx-0.5 px-0.5">
                 <button
                   v-for="cat in ['Kipas', 'Kompor', 'Rice cooker', 'Blender', 'AC', 'Mesin cuci', 'Kulkas', 'Setrika', 'Dispenser', 'Teko', 'Exhaust', 'Speaker']"
                   :key="cat"
                   @click="selectCategory(cat)"
                   :class="[
-                    'px-3 py-1 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95',
+                    'px-3 py-1 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 shrink-0 whitespace-nowrap',
                     selectedCategory === cat
                       ? 'bg-orange-600 text-white border-orange-600 shadow-xs font-bold'
                       : 'bg-white text-gray-600 border-gray-300 hover:border-orange-500 hover:text-orange-600'
@@ -98,16 +98,16 @@
               <!-- Quick Brands (Sub-category Merek Filter based on DB) -->
               <div
                 v-if="selectedCategory && availableBrandsForSelectedCategory.length > 0"
-                class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+                class="flex flex-nowrap items-center gap-1.5 pt-1.5 border-t border-gray-200/60 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200"
               >
-                <span class="text-[11px] font-bold text-gray-500 mr-1 flex items-center gap-1">
+                <span class="text-[11px] font-bold text-gray-500 mr-1 flex items-center gap-1 shrink-0 whitespace-nowrap">
                   <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500" />
                   Merek {{ selectedCategory }}:
                 </span>
                 <button
                   @click="selectedBrand = ''"
                   :class="[
-                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95',
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 shrink-0 whitespace-nowrap',
                     !selectedBrand
                       ? 'bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-xs'
                       : 'bg-white text-gray-600 border-gray-300 hover:border-orange-400 hover:text-orange-600'
@@ -120,7 +120,7 @@
                   :key="brand"
                   @click="selectedBrand = selectedBrand === brand ? '' : brand"
                   :class="[
-                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1',
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
                     selectedBrand === brand
                       ? 'bg-orange-600 text-white border-orange-600 shadow-xs font-bold'
                       : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600'
@@ -133,16 +133,16 @@
               <!-- Quick Jenis (Sub-category Jenis Filter per Kategori) -->
               <div
                 v-if="selectedCategory && availableJenisForSelectedCategory.length > 0"
-                class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+                class="flex flex-nowrap items-center gap-1.5 pt-1.5 border-t border-gray-200/60 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200"
               >
-                <span class="text-[11px] font-bold text-gray-500 mr-1 flex items-center gap-1">
+                <span class="text-[11px] font-bold text-gray-500 mr-1 flex items-center gap-1 shrink-0 whitespace-nowrap">
                   <Icon name="lucide:layers" class="w-3.5 h-3.5 text-orange-500" />
                   Jenis {{ selectedCategory }}:
                 </span>
                 <button
                   @click="selectedJenis = ''"
                   :class="[
-                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95',
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 shrink-0 whitespace-nowrap',
                     !selectedJenis
                       ? 'bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-xs'
                       : 'bg-white text-gray-600 border-gray-300 hover:border-orange-400 hover:text-orange-600'
@@ -155,7 +155,7 @@
                   :key="j.label"
                   @click="selectedJenis = selectedJenis === j.label ? '' : j.label"
                   :class="[
-                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1',
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
                     selectedJenis === j.label
                       ? 'bg-orange-600 text-white border-orange-600 shadow-xs font-bold'
                       : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600'
@@ -171,6 +171,56 @@
                   >
                     {{ j.count }}
                   </span>
+                </button>
+              </div>
+
+              <!-- Urutkan Harga (muncul saat quick category aktif) -->
+              <div
+                v-if="selectedCategory"
+                class="flex flex-nowrap items-center gap-1.5 pt-1.5 border-t border-gray-200/60 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200"
+              >
+                <span class="text-[11px] font-bold text-gray-500 mr-1 flex items-center gap-1 shrink-0 whitespace-nowrap">
+                  <Icon name="lucide:arrow-down-wide-narrow" class="w-3.5 h-3.5 text-orange-500" />
+                  Urutkan:
+                </span>
+                <button
+                  @click="priceSort = 'cheapest'"
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
+                    priceSort === 'cheapest'
+                      ? 'bg-orange-600 text-white border-orange-600 shadow-xs font-bold'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600'
+                  ]"
+                  title="Urutkan dari harga termurah"
+                >
+                  <Icon name="lucide:trending-down" class="w-3.5 h-3.5" />
+                  <span>Harga Termurah</span>
+                </button>
+                <button
+                  @click="priceSort = 'expensive'"
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
+                    priceSort === 'expensive'
+                      ? 'bg-orange-600 text-white border-orange-600 shadow-xs font-bold'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600'
+                  ]"
+                  title="Urutkan dari harga termahal"
+                >
+                  <Icon name="lucide:trending-up" class="w-3.5 h-3.5" />
+                  <span>Harga Termahal</span>
+                </button>
+                <button
+                  @click="priceSort = 'default'"
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-xs font-semibold transition border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
+                    priceSort === 'default'
+                      ? 'bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-xs'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-orange-400 hover:text-orange-600'
+                  ]"
+                  title="Urutan standar (nama A-Z)"
+                >
+                  <Icon name="lucide:sort-asc" class="w-3.5 h-3.5" />
+                  <span>Nama A-Z</span>
                 </button>
               </div>
             </div>
@@ -880,7 +930,7 @@ import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
-import { getJenisList, matchesJenis } from "../utils/categoryJenis";
+import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
 
 definePageMeta({
   layout: "default",
@@ -1101,27 +1151,31 @@ const selectedCategory = ref('');
 const selectedBrand = ref('');
 const selectedJenis = ref('');
 
+// Urutan harga saat quick category aktif (default: termurah, sama seperti Menu Produk)
+const priceSort = ref<'default' | 'cheapest' | 'expensive'>('default');
+
 const selectCategory = (cat: string) => {
   if (selectedCategory.value === cat) {
     selectedCategory.value = '';
     selectedBrand.value = '';
     selectedJenis.value = '';
+    priceSort.value = 'default';
   } else {
     selectedCategory.value = cat;
     selectedBrand.value = '';
     selectedJenis.value = '';
+    // Saat quick category dipilih, langsung urutkan dari harga termurah
+    priceSort.value = 'cheapest';
   }
 };
 
 const availableBrandsForSelectedCategory = computed(() => {
   if (!selectedCategory.value) return [];
-  const catLower = selectedCategory.value.trim().toLowerCase();
   const activeProds = (dataCacheStore.products || []).filter((p: any) => p.isActive !== false);
-  
+
   const brandMap = new Map<string, string>();
   activeProds.forEach((p: any) => {
-    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-    if (fullText.includes(catLower)) {
+    if (matchesCategory(p, selectedCategory.value)) {
       const b = (p.brand || '').trim();
       if (b && b !== '-' && b.toLowerCase() !== 'no brand') {
         if (!brandMap.has(b.toLowerCase())) {
@@ -1138,14 +1192,12 @@ const availableJenisForSelectedCategory = computed(() => {
   if (!selectedCategory.value) return [] as { label: string; count: number }[];
   const labels = getJenisList(selectedCategory.value);
   if (labels.length === 0) return [] as { label: string; count: number }[];
-  const catLower = selectedCategory.value.trim().toLowerCase();
   const brandLower = selectedBrand.value.trim().toLowerCase();
   // Hitung count berdasarkan produk yang sudah lolos filter kategori (+ merek),
   // supaya badge mencerminkan hasil yang akan tampil.
   const base = (dataCacheStore.products || []).filter((p: any) => {
     if (p.isActive === false) return false;
-    const fullText = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-    if (!fullText.includes(catLower)) return false;
+    if (!matchesCategory(p, selectedCategory.value)) return false;
     if (brandLower) {
       const b = (p.brand || '').trim().toLowerCase();
       if (b !== brandLower) return false;
@@ -1163,11 +1215,7 @@ const filteredProducts = computed(() => {
   let result = products.value;
 
   if (selectedCategory.value) {
-    const catLower = selectedCategory.value.trim().toLowerCase();
-    result = result.filter((p: any) => {
-      const searchStr = `${p.name || ''} ${p.brand || ''} ${p.model || ''} ${p.otherName || ''}`.toLowerCase();
-      return searchStr.includes(catLower);
-    });
+    result = result.filter((p: any) => matchesCategory(p, selectedCategory.value));
   }
 
   if (selectedBrand.value) {
@@ -1189,9 +1237,15 @@ const filteredProducts = computed(() => {
       return keywords.every(k => searchStr.includes(k));
     });
   }
-  return [...result].sort((a, b) => 
-    getProductSortName(a).localeCompare(getProductSortName(b), 'id', { sensitivity: 'base' })
-  );
+  return [...result].sort((a, b) => {
+    if (priceSort.value === 'cheapest' || priceSort.value === 'expensive') {
+      const priceA = a.askingPrice || 0;
+      const priceB = b.askingPrice || 0;
+      const diff = priceSort.value === 'cheapest' ? priceA - priceB : priceB - priceA;
+      if (diff !== 0) return diff;
+    }
+    return getProductSortName(a).localeCompare(getProductSortName(b), 'id', { sensitivity: 'base' });
+  });
 });
 
 
@@ -1336,5 +1390,14 @@ onUnmounted(() => {
 .overscroll-contain {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Baris quick categories: scroll horizontal satu baris tanpa scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>
