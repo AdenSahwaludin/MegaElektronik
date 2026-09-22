@@ -300,13 +300,13 @@
               <div v-show="showCategories" class="pt-1">
                 <!-- Scrollable Category Chips Container -->
                 <div class="relative group">
-                  <div class="flex flex-wrap items-center justify-center gap-2 py-1.5 px-0.5">
+                  <div class="flex flex-nowrap items-center justify-start gap-2 py-1.5 px-0.5 overflow-x-auto scrollbar-hide scroll-smooth">
                     
                     <!-- "Semua Produk" Pill -->
                     <button
                       @click="resetAllFilters"
                       :class="[
-                        'h-9 px-3.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                        'h-9 px-3.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap shadow-sm border active:scale-95 cursor-pointer select-none',
                         !searchQuery && !selectedCategory && !selectedBrand && !selectedJenis
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
                           : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
@@ -330,7 +330,7 @@
                       :key="cat.name"
                       @click="selectCategory(cat.name)"
                       :class="[
-                        'h-9 px-3.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 shadow-sm border active:scale-95 cursor-pointer select-none',
+                        'h-9 px-3.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap shadow-sm border active:scale-95 cursor-pointer select-none',
                         isCategoryActive(cat.name)
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-orange-500/20 ring-2 ring-orange-400/30'
                           : 'bg-white hover:bg-orange-50/80 text-gray-700 hover:text-orange-600 border-gray-200 hover:border-orange-300'
@@ -353,16 +353,16 @@
                   <!-- Brand Pills (Sub-category Merek Filter based on DB) -->
                   <div
                     v-if="selectedCategory && availableBrandsForSelectedCategory.length > 0"
-                    class="flex flex-wrap items-center justify-center gap-1.5 pt-2 mt-1 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+                    class="flex flex-nowrap items-center justify-start gap-1.5 pt-2 mt-1 border-t border-gray-200/60 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200"
                   >
-                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1">
+                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1 shrink-0 whitespace-nowrap">
                       <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500" />
                       <span>Merek {{ selectedCategory }}:</span>
                     </span>
                     <button
                       @click="selectedBrand = ''"
                       :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95',
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 shrink-0 whitespace-nowrap',
                         !selectedBrand
                           ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600'
@@ -375,7 +375,7 @@
                       :key="brand"
                       @click="selectedBrand = selectedBrand === brand ? '' : brand"
                       :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
                         selectedBrand === brand
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
@@ -388,16 +388,16 @@
                   <!-- Jenis Pills (Sub-category Jenis Filter per Kategori, sama seperti di Penjualan) -->
                   <div
                     v-if="selectedCategory && availableJenisForSelectedCategory.length > 0"
-                    class="flex flex-wrap items-center justify-center gap-1.5 pt-2 mt-1 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+                    class="flex flex-nowrap items-center justify-start gap-1.5 pt-2 mt-1 border-t border-gray-200/60 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200"
                   >
-                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1">
+                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1 shrink-0 whitespace-nowrap">
                       <Icon name="lucide:layers" class="w-3.5 h-3.5 text-orange-500" />
                       <span>Jenis {{ selectedCategory }}:</span>
                     </span>
                     <button
                       @click="selectedJenis = ''"
                       :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95',
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 shrink-0 whitespace-nowrap',
                         !selectedJenis
                           ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600'
@@ -410,7 +410,7 @@
                       :key="j.label"
                       @click="selectedJenis = selectedJenis === j.label ? '' : j.label"
                       :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
                         selectedJenis === j.label
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
@@ -432,16 +432,16 @@
                   <!-- Urutkan Harga (muncul saat quick categories aktif) -->
                   <div
                     v-if="selectedCategory"
-                    class="flex flex-wrap items-center justify-center gap-1.5 pt-2 mt-1 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+                    class="flex flex-nowrap items-center justify-start gap-1.5 pt-2 mt-1 border-t border-gray-200/60 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200"
                   >
-                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1">
+                    <span class="text-xs font-bold text-gray-600 flex items-center gap-1 mr-1 shrink-0 whitespace-nowrap">
                       <Icon name="lucide:arrow-down-wide-narrow" class="w-3.5 h-3.5 text-orange-500" />
                       <span>Urutkan:</span>
                     </span>
                     <button
                       @click="setQuickSort('cheapest')"
                       :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
                         isPriceAscActive
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
@@ -454,7 +454,7 @@
                     <button
                       @click="setQuickSort('expensive')"
                       :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
                         isPriceDescActive
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 shadow-xs ring-2 ring-orange-400/30'
                           : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
@@ -467,7 +467,7 @@
                     <button
                       @click="setQuickSort('name')"
                       :class="[
-                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1',
+                        'h-7 px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap',
                         isNameAscActive
                           ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-600'
