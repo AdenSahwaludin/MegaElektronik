@@ -8,7 +8,7 @@
 
       <!-- Top Search & Categories Control Panel -->
       <div class="shrink-0 bg-white/80 backdrop-blur-md border-b border-orange-100/60 shadow-sm py-3 px-4 lg:px-6 z-20">
-        <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row md:items-start justify-between gap-3">
           
           <!-- Search Bar -->
           <div class="flex items-center gap-2 w-full md:w-[450px] lg:w-[520px] shrink-0">
@@ -125,7 +125,7 @@
             <!-- Brand Pills (Sub-category Merek Filter based on DB) -->
             <div
               v-if="selectedCategory && availableBrandsForSelectedCategory.length > 0"
-              class="flex items-center gap-1.5 pt-1.5 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200 border-t border-orange-200/50"
+              class="flex flex-wrap items-center gap-1.5 pt-1.5 animate-in fade-in slide-in-from-top-1 duration-200 border-t border-orange-200/50"
             >
               <span class="text-[11px] font-bold text-gray-600 shrink-0 flex items-center gap-1">
                 <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500" />
@@ -160,7 +160,7 @@
             <!-- Jenis Pills (Sub-category Jenis Filter per Kategori) -->
             <div
               v-if="selectedCategory && availableJenisForSelectedCategory.length > 0"
-              class="flex items-center gap-1.5 pt-1.5 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200 border-t border-orange-200/50"
+              class="flex flex-wrap items-center gap-1.5 pt-1.5 animate-in fade-in slide-in-from-top-1 duration-200 border-t border-orange-200/50"
             >
               <span class="text-[11px] font-bold text-gray-600 shrink-0 flex items-center gap-1">
                 <Icon name="lucide:layers" class="w-3.5 h-3.5 text-orange-500" />
@@ -1521,7 +1521,7 @@ const handleCheckout = async () => {
 
     // Tawarkan cetak struk: ambil data transaksi lengkap (dengan items) untuk printer
     lastCheckoutSummary.value = {
-      totalAmount: response?.totalAmount ?? 0,
+      totalAmount: (response as any)?.totalAmount ?? 0,
       paidAmount: paidAmountValue.value || null,
     };
     lastTransaction.value = null;
@@ -1529,7 +1529,7 @@ const handleCheckout = async () => {
     showPrintOffer.value = true;
     isFetchingTrx.value = true;
     try {
-      lastTransaction.value = await $fetch<any>(`/api/transactions/${response.transactionId}`);
+      lastTransaction.value = await $fetch<any>(`/api/transactions/${(response as any)?.transactionId}`);
     } catch (e) {
       isTrxFetchFailed.value = true;
     } finally {
