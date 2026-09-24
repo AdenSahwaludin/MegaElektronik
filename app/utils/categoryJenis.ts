@@ -12,6 +12,31 @@ export const CATEGORY_JENIS_MAP: Record<string, string[]> = {
   'kulkas': ['1 Pintu', '2 Pintu']
 }
 
+export const DEFAULT_QUICK_CATEGORIES = [
+  'AC', 'Blender', 'Dispenser', 'Exhaust', 'Kipas',
+  'Kompor', 'Kulkas', 'Mesin cuci', 'Rice cooker', 'Setrika',
+  'Speaker', 'Teko'
+];
+
+export function getCategoryIcon(catName: string): string {
+  const lower = (catName || '').toLowerCase();
+  if (lower.includes('kipas')) return 'lucide:fan';
+  if (lower.includes('kompor')) return 'lucide:flame';
+  if (lower.includes('rice') || lower.includes('magic')) return 'lucide:cooking-pot';
+  if (lower.includes('blender')) return 'lucide:plug-2';
+  if (lower.includes('ac') || lower.includes('air conditioner')) return 'lucide:snowflake';
+  if (lower.includes('mesin cuci') || lower.includes('cuci')) return 'lucide:washing-machine';
+  if (lower.includes('kulkas') || lower.includes('lemari es')) return 'lucide:refrigerator';
+  if (lower.includes('setrika') || lower.includes('iron')) return 'lucide:shirt';
+  if (lower.includes('dispenser')) return 'lucide:droplets';
+  if (lower.includes('teko') || lower.includes('kettle')) return 'lucide:coffee';
+  if (lower.includes('exhaust') || lower.includes('ventilating')) return 'lucide:wind';
+  if (lower.includes('pompa')) return 'lucide:gauge';
+  if (lower.includes('tv') || lower.includes('televisi')) return 'lucide:tv';
+  if (lower.includes('speaker') || lower.includes('audio') || lower.includes('sound')) return 'lucide:speaker';
+  return 'lucide:tag';
+}
+
 export function normalizeCategoryKey(category: string): string {
   return (category || '').trim().toLowerCase()
 }
