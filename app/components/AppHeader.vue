@@ -31,19 +31,6 @@
 
 
           <NuxtLink
-            to="/products"
-            :class="[
-              'px-3 lg:px-4 py-2 rounded-lg font-semibold text-sm lg:text-base transition flex items-center gap-2',
-              isActive('/products')
-                ? 'bg-white text-orange-600'
-                : 'hover:bg-orange-700 text-white',
-            ]"
-          >
-            <Icon name="lucide:package" class="w-4 h-4" />
-            <span class="hidden md:inline">Produk</span>
-          </NuxtLink>
-
-          <NuxtLink
             to="/profit"
             :class="[
               'px-3 lg:px-4 py-2 rounded-lg font-semibold text-sm lg:text-base transition flex items-center gap-2',
@@ -54,6 +41,19 @@
           >
             <Icon name="lucide:bar-chart-3" class="w-4 h-4" />
             <span class="hidden md:inline">Laporan</span>
+          </NuxtLink>
+
+          <NuxtLink
+            to="/products"
+            :class="[
+              'px-3 lg:px-4 py-2 rounded-lg font-semibold text-sm lg:text-base transition flex items-center gap-2',
+              isActive('/products')
+                ? 'bg-white text-orange-600'
+                : 'hover:bg-orange-700 text-white',
+            ]"
+          >
+            <Icon name="lucide:package" class="w-4 h-4" />
+            <span class="hidden md:inline">Produk</span>
           </NuxtLink>
 
           <NuxtLink

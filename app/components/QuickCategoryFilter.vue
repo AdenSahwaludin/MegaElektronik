@@ -55,10 +55,10 @@
     <!-- Sub-filters Bar (Merek & Jenis Dropdown Compact + Opsional Urutan Harga) -->
     <div
       v-if="category && (availableBrands.length > 0 || availableJenis.length > 0 || showSort)"
-      class="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1.5 border-t border-orange-200/60 animate-in fade-in slide-in-from-top-1 duration-200"
+      class="flex flex-nowrap items-center gap-1.5 sm:gap-2 pt-1.5 border-t border-orange-200/60 overflow-x-auto scrollbar-hide scroll-smooth animate-in fade-in slide-in-from-top-1 duration-200"
     >
       <!-- Category Indicator Badge -->
-      <div class="inline-flex items-center gap-1 px-2 py-1 bg-orange-100/80 text-orange-800 rounded-lg text-[11px] font-bold shrink-0">
+      <div class="inline-flex items-center gap-1 px-2 py-1 bg-orange-100/80 text-orange-800 rounded-lg text-[11px] font-bold shrink-0 whitespace-nowrap">
         <Icon :name="getCategoryIcon(category)" class="w-3.5 h-3.5 text-orange-600" />
         <span>{{ category }}</span>
         <button
@@ -74,160 +74,62 @@
       <!-- Dropdown Filter Merek -->
       <div
         v-if="availableBrands.length > 0"
-        class="relative"
+        class="relative shrink-0"
       >
         <button
+          ref="brandButtonRef"
           type="button"
           @click.stop="toggleBrandDropdown"
           :class="[
-            'h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1.5 shadow-2xs select-none',
+            'h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1.5 shadow-2xs select-none shrink-0 whitespace-nowrap',
             brand
               ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 ring-2 ring-orange-400/30'
               : 'bg-white text-gray-700 border-gray-200 hover:border-orange-400 hover:text-orange-600'
           ]"
         >
           <Icon name="lucide:tag" class="w-3.5 h-3.5" :class="brand ? 'text-white' : 'text-orange-500'" />
-          <span>{{ brand || 'Semua Merek' }}</span>
-          <span
-            v-if="!brand"
-            class="text-[10px] text-gray-400 font-normal"
-          >
-            ({{ availableBrands.length }})
-          </span>
+          <span>{{ brand || 'Merek' }}</span>
           <Icon
             name="lucide:chevron-down"
             class="w-3.5 h-3.5 transition-transform duration-200 ml-0.5 opacity-70"
             :class="{ 'rotate-180': isBrandDropdownOpen }"
           />
         </button>
-
-        <!-- Dropdown Menu Merek -->
-        <div
-          v-if="isBrandDropdownOpen"
-          class="absolute left-0 top-full mt-1.5 w-52 sm:w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-40 animate-in fade-in zoom-in-95 duration-150 select-none max-w-[calc(100vw-32px)]"
-        >
-          <div class="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between">
-            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Merek {{ category }}</span>
-            <button
-              v-if="brand"
-              type="button"
-              @click.stop="setBrand('')"
-              class="text-[10px] text-orange-600 hover:underline font-bold cursor-pointer"
-            >
-              Reset
-            </button>
-          </div>
-          <div class="max-h-56 overflow-y-auto overscroll-contain py-1">
-            <button
-              type="button"
-              @click.stop="setBrand('')"
-              class="w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-orange-50 transition cursor-pointer"
-              :class="!brand ? 'text-orange-600 font-bold bg-orange-50/60' : 'text-gray-700'"
-            >
-              <span>Semua Merek</span>
-              <Icon v-if="!brand" name="lucide:check" class="w-3.5 h-3.5 text-orange-600" />
-            </button>
-            <button
-              v-for="b in availableBrands"
-              :key="b"
-              type="button"
-              @click.stop="setBrand(b)"
-              class="w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-orange-50 transition cursor-pointer"
-              :class="brand === b ? 'text-orange-600 font-bold bg-orange-50/60' : 'text-gray-700'"
-            >
-              <span>{{ b }}</span>
-              <Icon v-if="brand === b" name="lucide:check" class="w-3.5 h-3.5 text-orange-600" />
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- Dropdown Filter Jenis -->
       <div
         v-if="availableJenis.length > 0"
-        class="relative"
+        class="relative shrink-0"
       >
         <button
+          ref="jenisButtonRef"
           type="button"
           @click.stop="toggleJenisDropdown"
           :class="[
-            'h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1.5 shadow-2xs select-none',
+            'h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1.5 shadow-2xs select-none shrink-0 whitespace-nowrap',
             jenis
               ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 ring-2 ring-orange-400/30'
               : 'bg-white text-gray-700 border-gray-200 hover:border-orange-400 hover:text-orange-600'
           ]"
         >
           <Icon name="lucide:layers" class="w-3.5 h-3.5" :class="jenis ? 'text-white' : 'text-orange-500'" />
-          <span>{{ jenis || 'Semua Jenis' }}</span>
-          <span
-            v-if="!jenis"
-            class="text-[10px] text-gray-400 font-normal"
-          >
-            ({{ availableJenis.length }})
-          </span>
+          <span>{{ jenis || 'Jenis' }}</span>
           <Icon
             name="lucide:chevron-down"
             class="w-3.5 h-3.5 transition-transform duration-200 ml-0.5 opacity-70"
             :class="{ 'rotate-180': isJenisDropdownOpen }"
           />
         </button>
-
-        <!-- Dropdown Menu Jenis -->
-        <div
-          v-if="isJenisDropdownOpen"
-          class="absolute left-0 top-full mt-1.5 w-52 sm:w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-40 animate-in fade-in zoom-in-95 duration-150 select-none max-w-[calc(100vw-32px)]"
-        >
-          <div class="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between">
-            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Jenis {{ category }}</span>
-            <button
-              v-if="jenis"
-              type="button"
-              @click.stop="setJenis('')"
-              class="text-[10px] text-orange-600 hover:underline font-bold cursor-pointer"
-            >
-              Reset
-            </button>
-          </div>
-          <div class="max-h-56 overflow-y-auto overscroll-contain py-1">
-            <button
-              type="button"
-              @click.stop="setJenis('')"
-              class="w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-orange-50 transition cursor-pointer"
-              :class="!jenis ? 'text-orange-600 font-bold bg-orange-50/60' : 'text-gray-700'"
-            >
-              <span>Semua Jenis</span>
-              <Icon v-if="!jenis" name="lucide:check" class="w-3.5 h-3.5 text-orange-600" />
-            </button>
-            <button
-              v-for="j in availableJenis"
-              :key="j.label"
-              type="button"
-              @click.stop="setJenis(j.label)"
-              class="w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-orange-50 transition cursor-pointer"
-              :class="jenis === j.label ? 'text-orange-600 font-bold bg-orange-50/60' : 'text-gray-700'"
-            >
-              <span class="flex items-center gap-1.5">
-                <span>{{ j.label }}</span>
-                <span
-                  v-if="j.count > 0"
-                  class="px-1.5 py-0.2 text-[9px] rounded-md font-bold bg-orange-100/80 text-orange-700"
-                >
-                  {{ j.count }}
-                </span>
-              </span>
-              <Icon v-if="jenis === j.label" name="lucide:check" class="w-3.5 h-3.5 text-orange-600" />
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- Quick Sort Buttons (Opsional jika showSort aktif) -->
-      <div v-if="showSort" class="inline-flex items-center gap-1 shrink-0">
+      <div v-if="showSort" class="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
         <button
           type="button"
           @click="setSort('cheapest')"
           :class="[
-            'h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shadow-2xs select-none',
+            'h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shadow-2xs select-none shrink-0 whitespace-nowrap',
             sortValue === 'cheapest'
               ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 ring-2 ring-orange-400/30'
               : 'bg-white text-gray-700 border-gray-200 hover:border-orange-400 hover:text-orange-600'
@@ -241,7 +143,7 @@
           type="button"
           @click="setSort('expensive')"
           :class="[
-            'h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shadow-2xs select-none',
+            'h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shadow-2xs select-none shrink-0 whitespace-nowrap',
             sortValue === 'expensive'
               ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 ring-2 ring-orange-400/30'
               : 'bg-white text-gray-700 border-gray-200 hover:border-orange-400 hover:text-orange-600'
@@ -258,7 +160,7 @@
         v-if="brand || jenis || (showSort && sortValue && sortValue !== 'cheapest' && sortValue !== 'default')"
         type="button"
         @click="resetSubFilters"
-        class="text-[11px] text-gray-500 hover:text-orange-600 font-bold flex items-center gap-1 px-2 py-1 rounded-md hover:bg-orange-50 transition cursor-pointer"
+        class="text-[11px] text-gray-500 hover:text-orange-600 font-bold flex items-center gap-1 px-2 py-1 rounded-md hover:bg-orange-50 transition cursor-pointer shrink-0 whitespace-nowrap"
         title="Hapus filter merek & jenis"
       >
         <Icon name="lucide:rotate-ccw" class="w-3 h-3 text-orange-500" />
@@ -266,17 +168,121 @@
       </button>
     </div>
 
+    <!-- Dropdown Menu Merek (Teleported to body to avoid overflow clipping) -->
+    <Teleport to="body">
+      <div
+        v-if="isBrandDropdownOpen"
+        :style="{
+          top: `${brandDropdownPos.top}px`,
+          left: `${brandDropdownPos.left}px`
+        }"
+        class="fixed w-52 sm:w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-150 select-none max-w-[calc(100vw-24px)]"
+        @click.stop
+      >
+        <div class="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between">
+          <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Merek {{ category }}</span>
+          <button
+            v-if="brand"
+            type="button"
+            @click.stop="setBrand('')"
+            class="text-[10px] text-orange-600 hover:underline font-bold cursor-pointer"
+          >
+            Reset
+          </button>
+        </div>
+        <div class="max-h-56 overflow-y-auto overscroll-contain py-1">
+          <button
+            type="button"
+            @click.stop="setBrand('')"
+            class="w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-orange-50 transition cursor-pointer"
+            :class="!brand ? 'text-orange-600 font-bold bg-orange-50/60' : 'text-gray-700'"
+          >
+            <span>Semua Merek</span>
+            <Icon v-if="!brand" name="lucide:check" class="w-3.5 h-3.5 text-orange-600" />
+          </button>
+          <button
+            v-for="b in availableBrands"
+            :key="b"
+            type="button"
+            @click.stop="setBrand(b)"
+            class="w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-orange-50 transition cursor-pointer"
+            :class="brand === b ? 'text-orange-600 font-bold bg-orange-50/60' : 'text-gray-700'"
+          >
+            <span>{{ b }}</span>
+            <Icon v-if="brand === b" name="lucide:check" class="w-3.5 h-3.5 text-orange-600" />
+          </button>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Dropdown Menu Jenis (Teleported to body to avoid overflow clipping) -->
+    <Teleport to="body">
+      <div
+        v-if="isJenisDropdownOpen"
+        :style="{
+          top: `${jenisDropdownPos.top}px`,
+          left: `${jenisDropdownPos.left}px`
+        }"
+        class="fixed w-52 sm:w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-150 select-none max-w-[calc(100vw-24px)]"
+        @click.stop
+      >
+        <div class="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between">
+          <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Jenis {{ category }}</span>
+          <button
+            v-if="jenis"
+            type="button"
+            @click.stop="setJenis('')"
+            class="text-[10px] text-orange-600 hover:underline font-bold cursor-pointer"
+          >
+            Reset
+          </button>
+        </div>
+        <div class="max-h-56 overflow-y-auto overscroll-contain py-1">
+          <button
+            type="button"
+            @click.stop="setJenis('')"
+            class="w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-orange-50 transition cursor-pointer"
+            :class="!jenis ? 'text-orange-600 font-bold bg-orange-50/60' : 'text-gray-700'"
+          >
+            <span>Semua Jenis</span>
+            <Icon v-if="!jenis" name="lucide:check" class="w-3.5 h-3.5 text-orange-600" />
+          </button>
+          <button
+            v-for="j in availableJenis"
+            :key="j.label"
+            type="button"
+            @click.stop="setJenis(j.label)"
+            class="w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-orange-50 transition cursor-pointer"
+            :class="jenis === j.label ? 'text-orange-600 font-bold bg-orange-50/60' : 'text-gray-700'"
+          >
+            <span class="flex items-center gap-1.5">
+              <span>{{ j.label }}</span>
+              <span
+                v-if="j.count > 0"
+                class="px-1.5 py-0.2 text-[9px] rounded-md font-bold bg-orange-100/80 text-orange-700"
+              >
+                {{ j.count }}
+              </span>
+            </span>
+            <Icon v-if="jenis === j.label" name="lucide:check" class="w-3.5 h-3.5 text-orange-600" />
+          </button>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Invisible backdrop to close dropdowns -->
-    <div
-      v-if="isBrandDropdownOpen || isJenisDropdownOpen"
-      class="fixed inset-0 z-30 bg-transparent"
-      @click="closeDropdowns"
-    />
+    <Teleport to="body">
+      <div
+        v-if="isBrandDropdownOpen || isJenisDropdownOpen"
+        class="fixed inset-0 z-40 bg-transparent"
+        @click="closeDropdowns"
+      />
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useDataCacheStore } from '~/stores/data-cache';
 import { DEFAULT_QUICK_CATEGORIES, getCategoryIcon, getJenisList, matchesCategory, matchesJenis } from '~/utils/categoryJenis';
 
@@ -344,8 +350,38 @@ const isCategoryActive = (catName: string) => {
   return props.category.trim().toLowerCase() === catName.trim().toLowerCase();
 };
 
+const brandButtonRef = ref<HTMLElement | null>(null);
+const jenisButtonRef = ref<HTMLElement | null>(null);
+
+const brandDropdownPos = ref({ top: 0, left: 0 });
+const jenisDropdownPos = ref({ top: 0, left: 0 });
+
 const isBrandDropdownOpen = ref(false);
 const isJenisDropdownOpen = ref(false);
+
+const updateBrandDropdownPos = () => {
+  if (brandButtonRef.value) {
+    const rect = brandButtonRef.value.getBoundingClientRect();
+    const dropdownWidth = 224;
+    const maxLeft = Math.max(8, window.innerWidth - dropdownWidth - 12);
+    brandDropdownPos.value = {
+      top: rect.bottom + 6,
+      left: Math.min(Math.max(8, rect.left), maxLeft),
+    };
+  }
+};
+
+const updateJenisDropdownPos = () => {
+  if (jenisButtonRef.value) {
+    const rect = jenisButtonRef.value.getBoundingClientRect();
+    const dropdownWidth = 224;
+    const maxLeft = Math.max(8, window.innerWidth - dropdownWidth - 12);
+    jenisDropdownPos.value = {
+      top: rect.bottom + 6,
+      left: Math.min(Math.max(8, rect.left), maxLeft),
+    };
+  }
+};
 
 const closeDropdowns = () => {
   isBrandDropdownOpen.value = false;
@@ -356,6 +392,7 @@ const toggleBrandDropdown = () => {
   isBrandDropdownOpen.value = !isBrandDropdownOpen.value;
   if (isBrandDropdownOpen.value) {
     isJenisDropdownOpen.value = false;
+    updateBrandDropdownPos();
   }
 };
 
@@ -363,8 +400,23 @@ const toggleJenisDropdown = () => {
   isJenisDropdownOpen.value = !isJenisDropdownOpen.value;
   if (isJenisDropdownOpen.value) {
     isBrandDropdownOpen.value = false;
+    updateJenisDropdownPos();
   }
 };
+
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', closeDropdowns);
+    window.addEventListener('scroll', closeDropdowns, true);
+  }
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', closeDropdowns);
+    window.removeEventListener('scroll', closeDropdowns, true);
+  }
+});
 
 const selectCategory = (catName: string) => {
   closeDropdowns();
@@ -443,3 +495,13 @@ const availableJenis = computed(() => {
   })).sort((a, b) => a.label.localeCompare(b.label, 'id', { numeric: true, sensitivity: 'base' }));
 });
 </script>
+
+<style scoped>
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+</style>

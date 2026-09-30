@@ -46,24 +46,6 @@
           </div>
         </NuxtLink>
 
-        <!-- Products Card -->
-        <NuxtLink
-          to="/products"
-          class="bg-orange-600 hover:bg-orange-700 text-white rounded-lg p-6 lg:p-8 shadow hover:shadow-lg transition active:scale-95"
-        >
-          <Icon name="lucide:package" class="w-8 lg:w-10 h-8 lg:h-10 mb-3" />
-          <h3 class="text-xl lg:text-2xl font-bold mb-2">Kelola Produk</h3>
-          <p class="text-orange-100 text-sm lg:text-base mb-4">
-            Tambah, edit, dan hapus produk dengan mudah. Pantau stok real-time.
-          </p>
-          <div
-            class="flex items-center text-orange-200 font-semibold text-sm lg:text-base"
-          >
-            <span>Kelola Produk</span>
-            <span class="ml-2">→</span>
-          </div>
-        </NuxtLink>
-
         <!-- Reports Card -->
         <NuxtLink
           to="/profit"
@@ -82,6 +64,24 @@
             class="flex items-center text-orange-200 font-semibold text-sm lg:text-base"
           >
             <span>Lihat Laporan</span>
+            <span class="ml-2">→</span>
+          </div>
+        </NuxtLink>
+
+        <!-- Products Card -->
+        <NuxtLink
+          to="/products"
+          class="bg-orange-600 hover:bg-orange-700 text-white rounded-lg p-6 lg:p-8 shadow hover:shadow-lg transition active:scale-95"
+        >
+          <Icon name="lucide:package" class="w-8 lg:w-10 h-8 lg:h-10 mb-3" />
+          <h3 class="text-xl lg:text-2xl font-bold mb-2">Kelola Produk</h3>
+          <p class="text-orange-100 text-sm lg:text-base mb-4">
+            Tambah, edit, dan hapus produk dengan mudah. Pantau stok real-time.
+          </p>
+          <div
+            class="flex items-center text-orange-200 font-semibold text-sm lg:text-base"
+          >
+            <span>Kelola Produk</span>
             <span class="ml-2">→</span>
           </div>
         </NuxtLink>
