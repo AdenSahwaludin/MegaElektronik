@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../../utils/prisma";
 import { getDateFilter, getProductLabel } from "../../utils/analytics";
 
@@ -8,64 +9,52 @@ export default defineEventHandler(async (event) => {
   const dateRange = (query.dateRange as string) || "month";
   const startDate = query.startDate as string;
   const endDate = query.endDate as string;
-  const limit = parseInt(query.limit as string) || 10;
+  const limit = Math.min(Math.max(parseInt(query.limit as string) || 10, 1), 50);
   const { filter: where } = getDateFilter(dateRange, startDate, endDate);
+  const createdAtFilter = (where as any)?.createdAt as
+    | { gte?: Date; lt?: Date }
+    | undefined;
+  const gteDate = createdAtFilter?.gte ? new Date(createdAtFilter.gte) : null;
+  const ltDate = createdAtFilter?.lt ? new Date(createdAtFilter.lt) : null;
 
-  const topProducts = await prisma.transactionItem.groupBy({
-    by: ['productId'],
-    where: {
-      transaction: where
-    },
-    _sum: {
-      quantity: true,
-      soldPrice: true // This is price per item, so we need to multiply in raw or handle differently
-    },
-    orderBy: {
-      _sum: {
-        quantity: 'desc'
-      }
-    },
-    take: limit
-  });
+  // Perf: sebelumnya groupBy + findMany SEMUA item (duplikat kerja, O(N) ke memori).
+  // Sekarang 1x agregasi SQL: qty + revenue (= qty*soldPrice) per produk.
+  const grouped = await prisma.$queryRaw<Array<{ productId: number; qty: number | bigint; revenue: number | bigint }>>(Prisma.sql`
+    SELECT ti."productId" AS productId,
+           SUM(ti."quantity") AS qty,
+           SUM(ti."quantity" * ti."soldPrice") AS revenue
+    FROM "TransactionItem" ti
+    JOIN "Transaction" t ON t."id" = ti."transactionId"
+    WHERE 1 = 1
+      ${gteDate ? Prisma.sql`AND t."createdAt" >= ${gteDate}` : Prisma.empty}
+      ${ltDate ? Prisma.sql`AND t."createdAt" < ${ltDate}` : Prisma.empty}
+    GROUP BY ti."productId"
+  `);
 
-  // Calculate revenue per product manually because soldPrice in schema is per unit
-  const items = await prisma.transactionItem.findMany({
-    where: {
-      transaction: where
-    },
-    select: {
-      productId: true,
-      quantity: true,
-      soldPrice: true,
-      product: { select: { name: true, brand: true, model: true } }
-    }
-  });
+  const sortedByQty = [...grouped].sort((a, b) => Number(b.qty) - Number(a.qty)).slice(0, limit);
+  const sortedByRev = [...grouped].sort((a, b) => Number(b.revenue) - Number(a.revenue)).slice(0, limit);
+  const needIds = Array.from(new Set([...sortedByQty.map((r) => r.productId), ...sortedByRev.map((r) => r.productId)]));
+  const products = needIds.length > 0
+    ? await prisma.product.findMany({
+        where: { id: { in: needIds } },
+        select: { id: true, name: true, brand: true, model: true },
+      })
+    : [];
+  const nameById = new Map(products.map((p) => [p.id, getProductLabel(p.name, p.brand, p.model)]));
 
-  const productStats: Record<number, { name: string, quantity: number, revenue: number }> = {};
-
-  items.forEach(item => {
-    if (!productStats[item.productId]) {
-      const productName = item.product
-        ? getProductLabel(item.product.name, item.product.brand, item.product.model)
-        : 'Unknown Product';
-      productStats[item.productId] = { name: productName, quantity: 0, revenue: 0 };
-    }
-    productStats[item.productId]!.quantity += item.quantity;
-    productStats[item.productId]!.revenue += item.quantity * item.soldPrice;
-  });
-
-  const sortedByQty = Object.values(productStats)
-    .sort((a, b) => b.quantity - a.quantity)
-    .slice(0, limit);
-
-  const sortedByRevenue = Object.values(productStats)
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, limit);
+  const finalByQty = sortedByQty.map((r) => ({
+    name: nameById.get(r.productId) ?? "Unknown Product",
+    quantity: Number(r.qty),
+  }));
+  const sortedByRevenue = sortedByRev.map((r) => ({
+    name: nameById.get(r.productId) ?? "Unknown Product",
+    revenue: Number(r.revenue),
+  }));
 
   return {
     byQuantity: {
-      labels: sortedByQty.map(p => p.name),
-      data: sortedByQty.map(p => p.quantity)
+      labels: finalByQty.map(p => p.name),
+      data: finalByQty.map(p => p.quantity)
     },
     byRevenue: {
       labels: sortedByRevenue.map(p => p.name),

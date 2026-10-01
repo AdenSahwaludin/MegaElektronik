@@ -11,10 +11,20 @@ export default defineEventHandler(async (event) => {
       // Check if it's bulk import (with products array) or single product
       const isBulkImport = body.products && Array.isArray(body.products);
 
-      let createdProducts = [];
-
       if (isBulkImport) {
-        // Bulk import mode
+        // Bulk import mode — dinormalisasi dulu, lalu 1x createMany
+        // (sebelumnya N roundtrip sequential, lambat untuk ratusan produk)
+        if (body.products.length === 0 || body.products.length > 1000) {
+          throw createError({
+            statusCode: 400,
+            statusMessage: "Jumlah produk import harus 1-1000 per request",
+          });
+        }
+        const toInt = (v: unknown, fallback = 0) => {
+          const n = parseInt(String(v), 10);
+          return Number.isFinite(n) ? n : fallback;
+        };
+        const normalized = [];
         for (const product of body.products) {
           // Validate required fields
           if (
@@ -29,43 +39,51 @@ export default defineEventHandler(async (event) => {
               statusMessage: `Format produk nggak bener: ${JSON.stringify(product)}`,
             });
           }
+          normalized.push({
+            barcode: product.barcode ? String(product.barcode).trim() || null : null,
+            name: String(product.name).trim(),
+            brand: String(product.brand).trim(),
+            model: String(product.model).trim(),
+            otherName: product.otherName ? String(product.otherName).trim() || null : null,
+            buyPrice: toInt(product.buyPrice),
+            askingPrice: toInt(product.askingPrice),
+            fixedPrice: product.fixedPrice !== undefined && product.fixedPrice !== null && product.fixedPrice !== ""
+              ? toInt(product.fixedPrice, toInt(product.askingPrice))
+              : toInt(product.askingPrice),
+            stock: toInt(product.stock),
+            servicePrice: (product.servicePrice !== undefined && product.servicePrice !== null && product.servicePrice !== "")
+              ? toInt(product.servicePrice)
+              : null,
+            isActive: product.isActive !== false, // Default to true
+          });
+        }
 
-          try {
-            const created = await (prisma.product as any).create({
-              data: {
-                barcode: product.barcode ? String(product.barcode).trim() : null,
-                name: product.name.trim(),
-                brand: product.brand.trim(),
-                model: product.model.trim(),
-                otherName: product.otherName ? product.otherName.trim() : null,
-                buyPrice: parseInt(product.buyPrice, 10),
-                askingPrice: parseInt(product.askingPrice, 10),
-                fixedPrice: product.fixedPrice
-                  ? parseInt(product.fixedPrice, 10)
-                  : parseInt(product.askingPrice, 10),
-                stock: parseInt(String(product.stock), 10) || 0,
-                servicePrice: (product.servicePrice !== undefined && product.servicePrice !== null) ? parseInt(String(product.servicePrice), 10) : null,
-                isActive: product.isActive !== false, // Default to true
-              },
-            });
-            createdProducts.push(created);
-          } catch (err: any) {
-            // Handle duplicate product name
-            if (err.code === "P2002") {
-              console.warn(
-                `Product "${product.name}" already exists, skipping...`,
-              );
-            } else {
-              throw err;
+        let importedCount = 0;
+        try {
+          const result = await prisma.product.createMany({ data: normalized });
+          importedCount = result.count;
+        } catch (err: any) {
+          // Fallback per-item agar duplikat (P2002) di-skip, bukan gagal total
+          if (err?.code === "P2002") {
+            importedCount = 0;
+            for (const data of normalized) {
+              try {
+                await (prisma.product as any).create({ data });
+                importedCount++;
+              } catch (e: any) {
+                if (e?.code !== "P2002") throw e;
+              }
             }
+          } else {
+            throw err;
           }
         }
 
         return {
           success: true,
-          importedCount: createdProducts.length,
-          skipped: body.products.length - createdProducts.length,
-          message: `Sip, berhasil import ${createdProducts.length} produk`,
+          importedCount,
+          skipped: body.products.length - importedCount,
+          message: `Sip, berhasil import ${importedCount} produk`,
         };
       } else {
         // Single product mode
@@ -114,9 +132,10 @@ export default defineEventHandler(async (event) => {
     // GET: Fetch all products with advanced search and pagination
     if (getMethod(event) === "GET") {
       const query = getQuery(event);
-      const search = (query.search as string) || "";
-      const page = parseInt(query.page as string) || 1;
-      const limit = Math.min(parseInt(query.limit as string) || 10, 10000);
+      const search = ((query.search as string) || "").slice(0, 200);
+      const page = Math.max(parseInt(query.page as string) || 1, 1);
+      // Perf: batasi page-size (sebelumnya sampai 10000 baris per request)
+      const limit = Math.min(Math.max(parseInt(query.limit as string) || 10, 1), 100);
       const offset = (page - 1) * limit;
 
       const activeOnly = query.activeOnly === "true";
@@ -178,7 +197,8 @@ export default defineEventHandler(async (event) => {
 
       const validSortFields = ["name", "brand", "model", "stock", "askingPrice", "fixedPrice", "buyPrice", "servicePrice", "isActive", "barcode", "createdAt"];
       const sortBy = validSortFields.includes(query.sortBy as string) ? (query.sortBy as string) : "name";
-      const sortOrder = (query.sortOrder as string) || "asc";
+      // Perf/validasi: hanya asc/desc yang diizinkan (sebelumnya string apa pun lolos ke orderBy)
+      const sortOrder = (query.sortOrder as string) === "desc" ? "desc" : "asc";
 
       // Fetch total count and paginated results in parallel
       const [total, products] = await Promise.all([
@@ -217,6 +237,10 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error: any) {
     console.error("API Handler error:", error);
+    // Jangan menelan status 4xx (validasi) menjadi 500
+    if (error?.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
+      throw error;
+    }
     const errorMsg = error?.message || "Yah, ada error di server nih";
     throw createError({
       statusCode: 500,

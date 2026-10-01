@@ -10,13 +10,22 @@ export default defineEventHandler(async (event) => {
   const endDate = query.endDate as string;
   const { filter: where } = getDateFilter(dateRange, startDate, endDate);
 
+  // Perf: hanya ambil kolom yang dibutuhkan untuk klasifikasi harga,
+  // bukan `include: { product: true }` (semua kolom produk).
   const items = await prisma.transactionItem.findMany({
     where: {
       transaction: where
     },
-    include: {
-      product: true
-    }
+    select: {
+      soldPrice: true,
+      product: {
+        select: {
+          askingPrice: true,
+          fixedPrice: true,
+          servicePrice: true,
+        },
+      },
+    },
   });
 
   const distribution = {

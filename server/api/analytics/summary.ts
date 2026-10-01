@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../../utils/prisma";
 import { getDateFilter, getProductLabel } from "../../utils/analytics";
 
@@ -10,8 +11,15 @@ export default defineEventHandler(async (event) => {
   const endDate = query.endDate as string;
 
   const { filter: where, days } = getDateFilter(dateRange, startDate, endDate);
+  const createdAtFilter = (where as any)?.createdAt as
+    | { gte?: Date; lt?: Date }
+    | undefined;
+  const gteDate = createdAtFilter?.gte ? new Date(createdAtFilter.gte) : null;
+  const ltDate = createdAtFilter?.lt ? new Date(createdAtFilter.lt) : null;
 
-  const [aggregateData, transactionCount, allItems] = await Promise.all([
+  // Perf: agregasi per-produk di DB (GROUP BY), bukan tarik semua
+  // transactionItem + join product ke memori lalu reduce di JS.
+  const [aggregateData, transactionCount, grouped] = await Promise.all([
     prisma.transaction.aggregate({
       where,
       _sum: {
@@ -20,38 +28,41 @@ export default defineEventHandler(async (event) => {
       }
     }),
     prisma.transaction.count({ where }),
-    prisma.transactionItem.findMany({
-      where: {
-        transaction: where
-      },
-      select: {
-        productId: true,
-        quantity: true,
-        profitPerItem: true,
-        product: { select: { name: true, brand: true, model: true } }
-      }
-    })
+    prisma.$queryRaw<Array<{ productId: number; qty: number | bigint; profit: number | bigint }>>(Prisma.sql`
+      SELECT ti."productId" AS productId,
+             SUM(ti."quantity") AS qty,
+             SUM(ti."quantity" * ti."profitPerItem") AS profit
+      FROM "TransactionItem" ti
+      JOIN "Transaction" t ON t."id" = ti."transactionId"
+      WHERE 1 = 1
+        ${gteDate ? Prisma.sql`AND t."createdAt" >= ${gteDate}` : Prisma.empty}
+        ${ltDate ? Prisma.sql`AND t."createdAt" < ${ltDate}` : Prisma.empty}
+      GROUP BY ti."productId"
+    `)
   ]);
 
-  const productStats: Record<number, { name: string, qty: number, profit: number }> = {};
-  allItems.forEach(item => {
-    if (!productStats[item.productId]) {
-      const productName = item.product
-        ? getProductLabel(item.product.name, item.product.brand, item.product.model)
-        : 'Produk Terhapus';
-      productStats[item.productId] = { name: productName, qty: 0, profit: 0 };
-    }
-    productStats[item.productId]!.qty += item.quantity;
-    productStats[item.productId]!.profit += (item.profitPerItem * item.quantity);
-  });
+  // Nama produk hanya diambil untuk kandidat teratas, bukan untuk semua item
+  const sortedByQty = [...grouped].sort((a, b) => Number(b.qty) - Number(a.qty));
+  const sortedByProfit = [...grouped].sort((a, b) => Number(b.profit) - Number(a.profit));
+  const topIds = Array.from(new Set([
+    ...sortedByQty.slice(0, 5).map((r) => r.productId),
+    ...sortedByProfit.slice(0, 5).map((r) => r.productId),
+  ]));
+  const products = topIds.length > 0
+    ? await prisma.product.findMany({
+        where: { id: { in: topIds } },
+        select: { id: true, name: true, brand: true, model: true },
+      })
+    : [];
+  const nameById = new Map(products.map((p) => [p.id, getProductLabel(p.name, p.brand, p.model)]));
 
-  const statsArray = Object.values(productStats);
-  const bestSeller = statsArray.length > 0
-    ? statsArray.sort((a, b) => b.qty - a.qty)[0]
+  const bestRow = sortedByQty[0];
+  const profitRow = sortedByProfit[0];
+  const bestSeller = bestRow
+    ? { name: nameById.get(bestRow.productId) ?? "Produk Terhapus", qty: Number(bestRow.qty), profit: Number(bestRow.profit) }
     : null;
-
-  const mostProfitable = statsArray.length > 0
-    ? statsArray.sort((a, b) => b.profit - a.profit)[0]
+  const mostProfitable = profitRow
+    ? { name: nameById.get(profitRow.productId) ?? "Produk Terhapus", qty: Number(profitRow.qty), profit: Number(profitRow.profit) }
     : null;
 
   const totalAmount = aggregateData._sum.totalAmount || 0;

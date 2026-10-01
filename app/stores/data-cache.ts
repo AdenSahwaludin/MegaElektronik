@@ -69,11 +69,25 @@ export const useDataCacheStore = defineStore("dataCache", () => {
   const fetchProductsFromNetwork = async () => {
     loadingProducts.value = true;
     try {
-      const response = await $fetch<any>("/api/products?limit=10000&activeOnly=false");
-      const fetchedProducts = response.products || [];
-      products.value = fetchedProducts;
+      // Perf: server membatasi limit=100 per request (sebelumnya 10000 sekaligus
+      // yang bikin payload raksasa & JSON parse localStorage lambat).
+      // Ambil via paginasi agar tetap dapat semua produk tanpa 1 response jumbo.
+      const PAGE_SIZE = 100;
+      const all: any[] = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const response = await $fetch<any>(
+          `/api/products?page=${page}&limit=${PAGE_SIZE}&activeOnly=false`,
+        );
+        const batch = response.products || [];
+        all.push(...batch);
+        totalPages = response.totalPages || 1;
+        page++;
+      } while (page <= totalPages && all.length < 10000);
+      products.value = all;
       isProductsLoaded.value = true;
-      saveProductsToStorage(fetchedProducts);
+      saveProductsToStorage(all);
     } catch (error) {
       console.error("Error loading products cache from server:", error);
     } finally {

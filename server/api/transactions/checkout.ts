@@ -30,11 +30,17 @@ export default defineEventHandler(async (event) => {
 
     // Start a transaction
     const transaction = await prisma.$transaction(async (tx: any) => {
-      // Verify stock for all items
+      // Perf: 1x bulk fetch produk (sebelumnya N findUnique sequential),
+      // update stok paralel, tanpa include product yang berat.
+      const productIds = [...new Set(body.items.map((item: any) => item.productId))];
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, name: true, stock: true },
+      });
+      const productById = new Map(products.map((p: any) => [p.id, p]));
+
       for (const item of body.items) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-        });
+        const product = productById.get(item.productId);
 
         if (!product) {
           throw new Error(`Product ID ${item.productId} not found`);
@@ -50,7 +56,7 @@ export default defineEventHandler(async (event) => {
       // Transaction date
       const createdAt = body.createdAt ? new Date(body.createdAt) : new Date();
 
-      // Create transaction record
+      // Create transaction record (tanpa include product yang berat)
       const transactionRecord = await tx.transaction.create({
         data: {
           customerId: body.customerId || null,
@@ -70,22 +76,22 @@ export default defineEventHandler(async (event) => {
         },
         include: {
           transactionItems: {
-            include: {
-              product: true,
-            },
+            select: { id: true },
           },
         },
       });
 
-      // Update product stock
-      for (const item of body.items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: { decrement: item.quantity }
-          },
-        });
-      }
+      // Update product stock — paralel dalam satu transaksi
+      await Promise.all(
+        body.items.map((item: any) =>
+          tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: { decrement: item.quantity },
+            },
+          }),
+        ),
+      );
 
       return transactionRecord;
     });

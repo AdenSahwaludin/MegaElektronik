@@ -1,10 +1,8 @@
+import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../../utils/prisma";
 import { getDateFilter } from "../../utils/analytics";
 
 const prisma = getPrismaClient();
-
-// WIB = UTC+7
-const WIB_OFFSET_HOURS = 7;
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -12,13 +10,24 @@ export default defineEventHandler(async (event) => {
   const startDate = query.startDate as string;
   const endDate = query.endDate as string;
   const { filter: where } = getDateFilter(dateRange, startDate, endDate);
+  const createdAtFilter = (where as any)?.createdAt as
+    | { gte?: Date; lt?: Date }
+    | undefined;
+  const gteDate = createdAtFilter?.gte ? new Date(createdAtFilter.gte) : null;
+  const ltDate = createdAtFilter?.lt ? new Date(createdAtFilter.lt) : null;
 
-  const transactions = await prisma.transaction.findMany({
-    where,
-    select: {
-      createdAt: true
-    }
-  });
+  // Perf: agregasi jam/hari di DB, bukan tarik semua createdAt ke memori.
+  const grouped = await prisma.$queryRaw<Array<{ h: string; d: string; c: number | bigint }>>(Prisma.sql`
+    SELECT
+      strftime('%H', datetime(t."createdAt", '+7 hours')) AS h,
+      strftime('%w', datetime(t."createdAt", '+7 hours')) AS d,
+      COUNT(*) AS c
+    FROM "Transaction" t
+    WHERE 1 = 1
+      ${gteDate ? Prisma.sql`AND t."createdAt" >= ${gteDate}` : Prisma.empty}
+      ${ltDate ? Prisma.sql`AND t."createdAt" < ${ltDate}` : Prisma.empty}
+    GROUP BY h, d
+  `);
 
   const hourDistribution: Record<number, number> = {};
   const dayDistribution: Record<number, number> = {};
@@ -27,22 +36,13 @@ export default defineEventHandler(async (event) => {
   for (let i = 0; i <= 23; i++) hourDistribution[i] = 0;
   for (let i = 0; i <= 6; i++) dayDistribution[i] = 0;
 
-  transactions.forEach(t => {
-    // Buat Date object dari createdAt
-    const date = new Date(t.createdAt);
-    
-    // Konversi dari UTC ke WIB (UTC+7)
-    // getUTCHours() selalu return UTC hour, lalu kita tambahkan offset WIB
-    const utcHours = date.getUTCHours();
-    const wibHours = (utcHours + WIB_OFFSET_HOURS) % 24;
-    
-    // Untuk hari, jika penambahan offset melewati midnight, hari juga berubah
-    const utcDay = date.getUTCDay(); // 0 = Sunday
-    const wibDay = (utcHours + WIB_OFFSET_HOURS >= 24) ? (utcDay + 1) % 7 : utcDay;
-
-    hourDistribution[wibHours]!++;
-    dayDistribution[wibDay]!++;
-  });
+  for (const row of grouped) {
+    const h = parseInt(row.h, 10);
+    const d = parseInt(row.d, 10);
+    const c = Number(row.c);
+    if (Number.isFinite(h)) hourDistribution[h] = (hourDistribution[h] || 0) + c;
+    if (Number.isFinite(d)) dayDistribution[d] = (dayDistribution[d] || 0) + c;
+  }
 
   // Filter jam yang ada transaksinya, atau tampilkan jam operasional 7-21
   const filteredHours: Record<number, number> = {};

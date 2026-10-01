@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../../utils/prisma";
 import { getDateFilter } from "../../utils/analytics";
 
@@ -59,31 +60,27 @@ export default defineEventHandler(async (event) => {
     safety++;
   }
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      createdAt: {
-        gte: start,
-        lte: end
-      }
-    },
-    select: {
-      createdAt: true,
-      totalAmount: true,
-      totalProfit: true
-    }
-  });
+  // Perf: agregasi harian di DB (GROUP BY tanggal WIB), bukan tarik
+  // semua transaksi ke memori lalu group di JS.
+  const grouped = await prisma.$queryRaw<Array<{ day: string; revenue: number | bigint; profit: number | bigint }>>(Prisma.sql`
+    SELECT date(datetime(t."createdAt", '+7 hours')) AS day,
+           SUM(t."totalAmount") AS revenue,
+           SUM(t."totalProfit") AS profit
+    FROM "Transaction" t
+    WHERE t."createdAt" >= ${start} AND t."createdAt" <= ${end}
+    GROUP BY day
+  `);
 
   const trend: Record<string, { revenue: number, profit: number }> = {};
   dates.forEach(date => {
     trend[date] = { revenue: 0, profit: 0 };
   });
 
-  transactions.forEach(t => {
-    // Group using local time
-    const date = toWibDateString(new Date(t.createdAt));
-    if (trend[date]) {
-      trend[date].revenue += t.totalAmount;
-      trend[date].profit += t.totalProfit;
+  // Samakan zona: day dari SQL sudah dalam tanggal WIB (YYYY-MM-DD)
+  grouped.forEach((row) => {
+    if (trend[row.day]) {
+      trend[row.day]!.revenue += Number(row.revenue || 0);
+      trend[row.day]!.profit += Number(row.profit || 0);
     }
   });
 

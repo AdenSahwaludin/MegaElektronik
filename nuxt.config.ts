@@ -50,20 +50,15 @@ export default defineNuxtConfig({
             expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }
           }
         },
+        // Perf & kesegaran data POS: produk pakai NetworkFirst TTL pendek
+        // (sebelumnya StaleWhileRevalidate 24 jam -> stok basi).
+        // Transaksi/laporan TIDAK di-cache agar selalu fresh.
         {
           urlPattern: "/api/products.*",
-          handler: "StaleWhileRevalidate",
-          options: {
-            cacheName: "api-products-cache",
-            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 }
-          }
-        },
-        {
-          urlPattern: "/api/transactions.*",
           handler: "NetworkFirst",
           options: {
-            cacheName: "api-transactions-cache",
-            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 12 }
+            cacheName: "api-products-cache",
+            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 }
           }
         }
       ]
@@ -79,7 +74,7 @@ export default defineNuxtConfig({
     mode: "svg"
   },
   devtools: {
-    enabled: true,
+    enabled: process.env.NODE_ENV === "development",
   },
 
   css: ["~/assets/css/main.css"],
