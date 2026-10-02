@@ -530,9 +530,8 @@
                 >
                   <td class="px-4 py-3 text-sm font-semibold text-gray-800 wrap-break-words max-w-75">
                     <div>{{ getProductDisplayName(product) }}</div>
-                    <div v-if="product.barcode && product.barcode.trim()" class="text-[11px] font-mono text-gray-500 font-normal flex items-center gap-1 mt-0.5">
-                      <Icon name="lucide:barcode" class="w-3 h-3 text-gray-400" />
-                      <span>{{ product.barcode }}</span>
+                    <div v-if="product.model && product.model.trim()" class="text-[11px] text-gray-500 font-normal mt-0.5">
+                      <span>{{ product.model }}</span>
                     </div>
                   </td>
                   <td
