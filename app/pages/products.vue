@@ -258,22 +258,35 @@
           <div class="px-4 lg:px-6 py-4 border-b border-gray-200 space-y-3.5 bg-gray-50/50">
             <!-- Search & Filter Actions -->
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-              <div class="relative flex-1">
+              <div class="relative flex-1" ref="searchWrapperRef">
                 <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <input
                   v-model="searchQuery"
+                  @focus="openSearchDropdown"
+                  @input="openSearchDropdown"
+                  @keydown="onSearchKeydown"
                   type="text"
                   placeholder="Cari produk berdasarkan nama, merek, atau model..."
                   class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-sm text-gray-800 placeholder-gray-400 shadow-sm transition"
                 />
                 <button
                   v-if="searchQuery"
-                  @click="searchQuery = ''"
+                  @click="searchQuery = ''; closeSearchDropdown()"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 hover:bg-gray-100 rounded-full"
                   title="Hapus pencarian"
                 >
                   <Icon name="lucide:x-circle" class="w-4 h-4" />
                 </button>
+
+                <!-- Search Suggestions Dropdown -->
+                <SearchAutocompleteDropdown
+                  v-if="isSearchDropdownOpen"
+                  :suggestions="searchSuggestions"
+                  :query="searchQuery"
+                  :highlighted-index="searchHighlightedIndex"
+                  @select="onSelectSearchSuggestion"
+                  @hover="(idx) => searchHighlightedIndex = idx"
+                />
               </div>
 
               <!-- Quick Categories Toggle Button -->
@@ -1193,6 +1206,7 @@ import { watch, computed, ref, reactive, onMounted } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
+import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 
 definePageMeta({
   layout: "default",
@@ -1214,6 +1228,23 @@ const dataCacheStore = useDataCacheStore();
 const searchQuery = ref("");
 const debouncedSearchQuery = ref("");
 let searchDebounceTimer: any = null;
+
+const allActiveProducts = computed(() => (dataCacheStore.products || []).filter((p: any) => p.isActive !== false));
+const {
+  isDropdownOpen: isSearchDropdownOpen,
+  highlightedIndex: searchHighlightedIndex,
+  suggestions: searchSuggestions,
+  searchWrapperRef,
+  selectSuggestion: onSelectSearchSuggestion,
+  handleKeydown: onSearchKeydown,
+  openDropdown: openSearchDropdown,
+  closeDropdown: closeSearchDropdown,
+} = useSearchAutocomplete(searchQuery, allActiveProducts, {
+  onSelect: (selectedText) => {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    debouncedSearchQuery.value = selectedText;
+  },
+});
 
 watch(searchQuery, (newVal) => {
   if (searchDebounceTimer) clearTimeout(searchDebounceTimer);

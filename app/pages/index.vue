@@ -34,22 +34,35 @@
           <!-- Search & Filter -->
           <div class="space-y-3 mb-4">
             <div class="flex gap-2">
-              <div class="relative flex-1">
+              <div class="relative flex-1" ref="searchWrapperRef">
                 <input
                   id="searchQueryInput"
                   name="searchQuery"
                   v-model="searchQuery"
+                  @focus="openSearchDropdown"
+                  @input="openSearchDropdown"
+                  @keydown="onSearchKeydown"
                   type="text"
                   placeholder="Cari produk..."
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-10"
                 />
                 <button
                   v-if="searchQuery"
-                  @click="searchQuery = ''"
+                  @click="searchQuery = ''; closeSearchDropdown()"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                 >
                   <Icon name="lucide:x" class="w-5 h-5" />
                 </button>
+
+                <!-- Search Suggestions Dropdown -->
+                <SearchAutocompleteDropdown
+                  v-if="isSearchDropdownOpen"
+                  :suggestions="searchSuggestions"
+                  :query="searchQuery"
+                  :highlighted-index="searchHighlightedIndex"
+                  @select="onSelectSearchSuggestion"
+                  @hover="(idx) => searchHighlightedIndex = idx"
+                />
               </div>
               <button
                 @click="refreshProducts"
@@ -795,6 +808,7 @@ import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
+import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 
 definePageMeta({
   layout: "default",
@@ -888,6 +902,22 @@ let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 const searchQuery = ref("");
 const debouncedSearchQuery = ref("");
 let searchDebounceTimer: any = null;
+
+const {
+  isDropdownOpen: isSearchDropdownOpen,
+  highlightedIndex: searchHighlightedIndex,
+  suggestions: searchSuggestions,
+  searchWrapperRef,
+  selectSuggestion: onSelectSearchSuggestion,
+  handleKeydown: onSearchKeydown,
+  openDropdown: openSearchDropdown,
+  closeDropdown: closeSearchDropdown,
+} = useSearchAutocomplete(searchQuery, products, {
+  onSelect: (selectedText) => {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    debouncedSearchQuery.value = selectedText;
+  },
+});
 
 watch(searchQuery, (newVal) => {
   if (searchDebounceTimer) clearTimeout(searchDebounceTimer);

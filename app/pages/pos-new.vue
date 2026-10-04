@@ -12,23 +12,36 @@
           
           <!-- Search Bar -->
           <div class="flex items-center gap-2 w-full md:w-[450px] lg:w-[520px] shrink-0">
-            <div class="relative flex-1">
+            <div class="relative flex-1" ref="searchWrapperRef">
               <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
               <input
                 id="searchQueryInput"
                 name="searchQuery"
                 v-model="searchQuery"
+                @focus="openSearchDropdown"
+                @input="openSearchDropdown"
+                @keydown="onSearchKeydown"
                 type="text"
                 placeholder="Cari produk..."
                 class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200"
               />
               <button
                 v-if="searchQuery"
-                @click="searchQuery = ''"
+                @click="searchQuery = ''; closeSearchDropdown()"
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-0.5"
               >
                 <Icon name="lucide:x-circle" class="w-4 h-4" />
               </button>
+
+              <!-- Search Suggestions Dropdown -->
+              <SearchAutocompleteDropdown
+                v-if="isSearchDropdownOpen"
+                :suggestions="searchSuggestions"
+                :query="searchQuery"
+                :highlighted-index="searchHighlightedIndex"
+                @select="onSelectSearchSuggestion"
+                @hover="(idx) => searchHighlightedIndex = idx"
+              />
             </div>
 
             <!-- Sort Select Dropdown -->
@@ -901,6 +914,7 @@ import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
+import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 
 definePageMeta({
   layout: "default",
@@ -1006,6 +1020,22 @@ const showDelayedLoading = ref(false);
 const searchQuery = ref("");
 const debouncedSearchQuery = ref("");
 let searchDebounceTimer: any = null;
+
+const {
+  isDropdownOpen: isSearchDropdownOpen,
+  highlightedIndex: searchHighlightedIndex,
+  suggestions: searchSuggestions,
+  searchWrapperRef,
+  selectSuggestion: onSelectSearchSuggestion,
+  handleKeydown: onSearchKeydown,
+  openDropdown: openSearchDropdown,
+  closeDropdown: closeSearchDropdown,
+} = useSearchAutocomplete(searchQuery, products, {
+  onSelect: (selectedText) => {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    debouncedSearchQuery.value = selectedText;
+  },
+});
 
 watch(searchQuery, (newVal) => {
   if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
