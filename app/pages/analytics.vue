@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, onActivated, computed } from 'vue'
 import { useCurrency } from '../../composables/useCurrency'
 import { useDataCacheStore } from '../stores/data-cache'
+import { getProductDisplayName } from '../utils/product'
 import RevenueTrendChart from '../components/charts/RevenueTrendChart.vue'
 import TopProductsChart from '../components/charts/TopProductsChart.vue'
 import PriceDistributionChart from '../components/charts/PriceDistributionChart.vue'
@@ -13,6 +14,20 @@ definePageMeta({
 
 const { formatCurrency } = useCurrency()
 const dataCacheStore = useDataCacheStore()
+
+const formatModel = (model?: string | null) => {
+  if (!model) return ''
+  const trimmed = model.trim()
+  if (
+    trimmed === '' ||
+    trimmed === '-' ||
+    trimmed.toLowerCase() === 'standar' ||
+    trimmed.toLowerCase() === 'standard'
+  ) {
+    return ''
+  }
+  return trimmed
+}
 
 const lowStockProducts = computed(() => {
   return (dataCacheStore.products || []).filter((p: any) => p.stock === 0 && p.isActive !== false)
@@ -335,6 +350,7 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
                 <thead class="bg-gray-50 text-gray-600 font-bold border-b">
                   <tr>
                     <th class="px-4 py-3">Nama Produk</th>
+                    <th class="px-4 py-3">Model</th>
                     <th class="px-4 py-3 text-right">Stok</th>
                     <th class="px-4 py-3 text-right">Avg. Margin</th>
                     <th class="px-4 py-3 text-right">Total Terjual</th>
@@ -343,7 +359,21 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                   <tr v-for="p in problemProducts" :key="p.id" class="hover:bg-red-50 transition">
-                    <td class="px-4 py-3 font-semibold text-gray-800">{{ p.name }}</td>
+                    <td class="px-4 py-3 font-semibold text-gray-800">
+                      <div>{{ getProductDisplayName(p) }}</div>
+                      <div v-if="formatModel(p.model)" class="text-xs text-gray-500 font-normal mt-0.5 sm:hidden">
+                        Model: <span class="font-medium text-gray-700">{{ formatModel(p.model) }}</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span
+                        v-if="formatModel(p.model)"
+                        class="inline-block px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-mono text-xs border border-gray-200"
+                      >
+                        {{ formatModel(p.model) }}
+                      </span>
+                      <span v-else class="text-gray-400 text-xs">-</span>
+                    </td>
                     <td class="px-4 py-3 text-right">
                       <span :class="p.stock < 5 ? 'text-red-600 font-bold' : 'text-gray-700'">{{ p.stock }}</span>
                     </td>
@@ -357,7 +387,7 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
                     </td>
                   </tr>
                   <tr v-if="problemProducts && problemProducts.length === 0">
-                    <td colspan="5" class="px-4 py-10 text-center text-gray-400">Semua aman, nggak ada produk bermasalah! ✨</td>
+                    <td colspan="6" class="px-4 py-10 text-center text-gray-400">Semua aman, nggak ada produk bermasalah! ✨</td>
                   </tr>
                 </tbody>
               </table>

@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const [lowStockProducts, salesStats, neverSoldProducts] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true, stock: { lt: 5 } },
-      select: { id: true, name: true, stock: true },
+      select: { id: true, name: true, brand: true, model: true, stock: true },
       orderBy: { stock: "asc" },
       take: 500,
     }),
@@ -33,21 +33,51 @@ export default defineEventHandler(async (event) => {
     `),
     prisma.product.findMany({
       where: { isActive: true, transactionItems: { none: {} } },
-      select: { id: true, name: true, stock: true },
+      select: { id: true, name: true, brand: true, model: true, stock: true },
       orderBy: { stock: "asc" },
       take: 200,
     }),
   ]);
 
   const now = Date.now();
-  const byId = new Map<number, { id: number; name: string; stock: number; avgMargin: number; soldCount: number; lastSold: Date | null; daysSinceLastSold: number }>();
+  const byId = new Map<number, {
+    id: number;
+    name: string;
+    brand: string | null;
+    model: string | null;
+    stock: number;
+    avgMargin: number;
+    soldCount: number;
+    lastSold: Date | null;
+    daysSinceLastSold: number;
+  }>();
 
   for (const p of lowStockProducts) {
-    byId.set(p.id, { id: p.id, name: p.name, stock: p.stock, avgMargin: 0, soldCount: 0, lastSold: null, daysSinceLastSold: 999 });
+    byId.set(p.id, {
+      id: p.id,
+      name: p.name,
+      brand: p.brand,
+      model: p.model,
+      stock: p.stock,
+      avgMargin: 0,
+      soldCount: 0,
+      lastSold: null,
+      daysSinceLastSold: 999,
+    });
   }
   for (const p of neverSoldProducts) {
     if (!byId.has(p.id)) {
-      byId.set(p.id, { id: p.id, name: p.name, stock: p.stock, avgMargin: 0, soldCount: 0, lastSold: null, daysSinceLastSold: 999 });
+      byId.set(p.id, {
+        id: p.id,
+        name: p.name,
+        brand: p.brand,
+        model: p.model,
+        stock: p.stock,
+        avgMargin: 0,
+        soldCount: 0,
+        lastSold: null,
+        daysSinceLastSold: 999,
+      });
     }
   }
 
@@ -55,7 +85,7 @@ export default defineEventHandler(async (event) => {
   const statProducts = statIds.length > 0
     ? await prisma.product.findMany({
         where: { id: { in: statIds } },
-        select: { id: true, name: true, stock: true },
+        select: { id: true, name: true, brand: true, model: true, stock: true },
       })
     : [];
   const productById = new Map(statProducts.map((p) => [p.id, p]));
@@ -78,6 +108,8 @@ export default defineEventHandler(async (event) => {
       byId.set(s.productId, {
         id: s.productId,
         name: info.name,
+        brand: info.brand,
+        model: info.model,
         stock: info.stock,
         avgMargin: revenue > 0 ? (profit / revenue) * 100 : 0,
         soldCount: Number(s.sold || 0),
