@@ -350,7 +350,6 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
                 <thead class="bg-gray-50 text-gray-600 font-bold border-b">
                   <tr>
                     <th class="px-4 py-3">Nama Produk</th>
-                    <th class="px-4 py-3">Model</th>
                     <th class="px-4 py-3 text-right">Stok</th>
                     <th class="px-4 py-3 text-right">Avg. Margin</th>
                     <th class="px-4 py-3 text-right">Total Terjual</th>
@@ -361,18 +360,9 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
                   <tr v-for="p in problemProducts" :key="p.id" class="hover:bg-red-50 transition">
                     <td class="px-4 py-3 font-semibold text-gray-800">
                       <div>{{ getProductDisplayName(p) }}</div>
-                      <div v-if="formatModel(p.model)" class="text-xs text-gray-500 font-normal mt-0.5 sm:hidden">
-                        Model: <span class="font-medium text-gray-700">{{ formatModel(p.model) }}</span>
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <span
-                        v-if="formatModel(p.model)"
-                        class="inline-block px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-mono text-xs border border-gray-200"
-                      >
+                      <div v-if="formatModel(p.model)" class="text-xs text-gray-500 font-normal mt-0.5">
                         {{ formatModel(p.model) }}
-                      </span>
-                      <span v-else class="text-gray-400 text-xs">-</span>
+                      </div>
                     </td>
                     <td class="px-4 py-3 text-right">
                       <span :class="p.stock < 5 ? 'text-red-600 font-bold' : 'text-gray-700'">{{ p.stock }}</span>
@@ -387,7 +377,7 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
                     </td>
                   </tr>
                   <tr v-if="problemProducts && problemProducts.length === 0">
-                    <td colspan="6" class="px-4 py-10 text-center text-gray-400">Semua aman, nggak ada produk bermasalah! ✨</td>
+                    <td colspan="5" class="px-4 py-10 text-center text-gray-400">Semua aman, nggak ada produk bermasalah! ✨</td>
                   </tr>
                 </tbody>
               </table>
