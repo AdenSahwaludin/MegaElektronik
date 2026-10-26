@@ -6,6 +6,13 @@ export default defineNuxtRouteMiddleware((to) => {
     sameSite: "lax",
   });
 
+  // Ambil preferensi tampilan POS (classic vs new)
+  const posMode = useCookie<string>("mega_pos_view_mode", {
+    path: "/",
+    sameSite: "lax",
+  });
+  const defaultPosPath = posMode.value === "new" ? "/pos-new" : "/";
+
   // Proteksi rute: jika belum login dan bukan ke halaman login
   if (!token.value && to.path !== "/login") {
     return navigateTo("/login", { replace: true });
@@ -13,7 +20,12 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // Jika sudah login dan mencoba ke halaman login
   if (token.value && to.path === "/login") {
-    return navigateTo("/", { replace: true });
+    return navigateTo(defaultPosPath, { replace: true });
+  }
+
+  // Jika sudah login dan membuka root "/", arahkan sesuai preferensi tampilan yang tersimpan
+  if (token.value && to.path === "/" && posMode.value === "new") {
+    return navigateTo("/pos-new", { replace: true });
   }
 
   // Sliding Session: Perbarui masa aktif cookie 7 hari setiap kali pengguna membuka / berpindah halaman

@@ -20,14 +20,15 @@
               </button>
               
               <!-- Tombol kecil nyempil ke POS New -->
-              <NuxtLink
-                to="/pos-new"
-                class="flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-full text-xs font-bold transition-all active:scale-95 border border-amber-200/50 shadow-sm"
-                title="Pindah ke Tampilan Baru (POS-New)"
+              <button
+                type="button"
+                @click="switchToNewPos"
+                class="flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-full text-xs font-bold transition-all active:scale-95 border border-amber-200/50 shadow-sm cursor-pointer"
+                title="Pindah ke Tampilan Baru (POS-New) dan simpan pilihan"
               >
                 <Icon name="lucide:sparkles" class="w-3.5 h-3.5 text-amber-500" />
                 <span>Tampilan Baru</span>
-              </NuxtLink>
+              </button>
             </div>
           </div>
 
@@ -896,6 +897,7 @@ import { useAudioBeep } from "~/composables/useAudioBeep";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
+import { usePosViewPreference } from "~/composables/usePosViewPreference";
 
 definePageMeta({
   layout: "default",
@@ -1319,7 +1321,15 @@ const showToast = (message: string) => {
 };
 
 // Lifecycle
+const { setMode: setPosMode } = usePosViewPreference();
+
+const switchToNewPos = () => {
+  setPosMode('new');
+  navigateTo('/pos-new');
+};
+
 onMounted(() => {
+  setPosMode('classic');
   startLiveClock();
   fetchProducts();
   if (typeof window !== 'undefined') {
@@ -1328,6 +1338,7 @@ onMounted(() => {
 });
 
 onActivated(() => {
+  setPosMode('classic');
   fetchProducts();
 });
 

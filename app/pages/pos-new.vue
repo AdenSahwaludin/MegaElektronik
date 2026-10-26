@@ -52,11 +52,11 @@
                 class="pl-3 pr-8 py-2.5 bg-white border border-gray-200 hover:border-orange-400 text-gray-600 rounded-xl shadow-sm text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 appearance-none cursor-pointer"
                 title="Urutkan Produk"
               >
-                <option value="best-seller">🔥 Terlaris</option>
                 <option value="name-asc">Nama A-Z</option>
                 <option value="name-desc">Nama Z-A</option>
                 <option value="price-asc">Harga Terendah</option>
                 <option value="price-desc">Harga Tertinggi</option>
+                <option value="best-seller">🔥 Terlaris</option>
               </select>
               <Icon name="lucide:chevron-down" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
@@ -73,14 +73,15 @@
             </button>
 
             <!-- Tombol kembali ke POS Biasa -->
-            <NuxtLink
-              to="/"
-              class="px-3 py-2.5 bg-white border border-gray-200 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1.5 shrink-0 text-xs font-bold"
-              title="Kembali ke POS Biasa"
+            <button
+              type="button"
+              @click="switchToClassicPos"
+              class="px-3 py-2.5 bg-white border border-gray-200 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1.5 shrink-0 text-xs font-bold cursor-pointer"
+              title="Kembali ke POS Biasa dan simpan pilihan"
             >
-              <Icon name="lucide:arrow-left" class="w-4 h-4 text-orange-600" />
+              <Icon name="lucide:arrow-left" class="w-4 h-4 text-orange-600 group-hover:text-white" />
               <span>POS Biasa</span>
-            </NuxtLink>
+            </button>
           </div>
 
           <!-- Quick Categories & Sub-filters Panel -->
@@ -924,6 +925,7 @@ import { useAudioBeep } from "~/composables/useAudioBeep";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
+import { usePosViewPreference } from "~/composables/usePosViewPreference";
 
 definePageMeta({
   layout: "default",
@@ -1012,13 +1014,30 @@ const selectedCategory = ref('');
 const selectedBrand = ref('');
 const selectedJenis = ref('');
 
+// Default sorting di POS New: Nama A-Z
+const sortBy = ref("name-asc");
+
 const onCategoryChange = (catName: string) => {
   if (catName) {
     sortBy.value = 'price-asc';
   } else {
-    sortBy.value = 'best-seller';
+    sortBy.value = 'name-asc';
   }
 };
+
+// Ketika filter (kategori/merek/jenis) aktif, otomatis default ke harga terendah (seperti di POS biasa)
+watch(
+  [selectedCategory, selectedBrand, selectedJenis],
+  ([cat, brand, jenis], [oldCat, oldBrand, oldJenis]) => {
+    const hasFilter = Boolean(cat || brand || jenis);
+    const hadFilter = Boolean(oldCat || oldBrand || oldJenis);
+    if (hasFilter && !hadFilter) {
+      sortBy.value = 'price-asc';
+    } else if (!hasFilter && hadFilter) {
+      sortBy.value = 'name-asc';
+    }
+  }
+);
 
 // Products from cache store (filtered by isActive)
 const products = computed(() => {
@@ -1056,8 +1075,6 @@ watch(searchQuery, (newVal) => {
     debouncedSearchQuery.value = newVal;
   }, 150);
 });
-
-const sortBy = ref("name-asc");
 
 // Best sellers data: { [productId]: totalQuantitySold }
 const bestSellersMap = ref<Record<number, number>>({});
@@ -1432,8 +1449,17 @@ const removeViewportListeners = () => {
   listenersActive = false;
 };
 
+// POS View Preference State & Actions
+const { setMode: setPosMode } = usePosViewPreference();
+
+const switchToClassicPos = () => {
+  setPosMode('classic');
+  navigateTo('/');
+};
+
 // Lifecycle
 onMounted(() => {
+  setPosMode('new');
   startLiveClock();
   fetchProducts();
   fetchBestSellers();
@@ -1444,6 +1470,7 @@ onMounted(() => {
 });
 
 onActivated(() => {
+  setPosMode('new');
   fetchProducts();
   fetchBestSellers();
   addViewportListeners();

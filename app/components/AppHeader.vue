@@ -16,10 +16,10 @@
         <!-- Navigation Menu (Center) -->
         <nav class="flex items-center gap-2 lg:gap-6 flex-1 justify-center">
           <NuxtLink
-            to="/"
+            :to="posTargetLink"
             :class="[
               'px-3 lg:px-4 py-2 rounded-lg font-semibold text-sm lg:text-base transition flex items-center gap-2',
-              isActive('/')
+              (isActive('/') || isActive('/pos-new'))
                 ? 'bg-white text-orange-600'
                 : 'hover:bg-orange-700 text-white',
             ]"
@@ -98,8 +98,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import pkg from "../../package.json";
+import { usePosViewPreference } from "~/composables/usePosViewPreference";
 
 const route = useRoute();
+const { targetPath: posTargetLink } = usePosViewPreference();
 
 const currentTime = ref(new Date());
 
