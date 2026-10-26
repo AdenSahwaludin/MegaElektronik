@@ -14,7 +14,10 @@ export default defineEventHandler(async (event) => {
   // bukan `include: { product: true }` (semua kolom produk).
   const items = await prisma.transactionItem.findMany({
     where: {
-      transaction: where
+      transaction: where,
+      product: {
+        isActive: true,
+      },
     },
     select: {
       soldPrice: true,

@@ -896,6 +896,7 @@
                     <th class="p-4 text-right">Harga Pas</th>
                     <th class="p-4 text-right">Harga Service</th>
                     <th class="p-4">Supplier & Catatan</th>
+                    <th class="p-4 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -946,6 +947,20 @@
                         {{ item.notes }}
                       </div>
                       <span v-if="!item.supplier && !item.notes" class="text-gray-400">-</span>
+                    </td>
+                    <td class="p-4 text-center whitespace-nowrap">
+                      <button
+                        @click="deleteArrivalItem(item)"
+                        :disabled="deletingArrivalId === item.id"
+                        class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition disabled:opacity-40 cursor-pointer"
+                        title="Hapus riwayat & kembalikan stok"
+                      >
+                        <Icon
+                          :name="deletingArrivalId === item.id ? 'lucide:loader-2' : 'lucide:trash-2'"
+                          class="w-4 h-4"
+                          :class="{ 'animate-spin': deletingArrivalId === item.id }"
+                        />
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -1148,11 +1163,15 @@
             <div class="flex gap-4 pt-4 border-t">
               <button
                 @click="saveArrival"
-                :disabled="!isArrivalFormValid"
+                :disabled="!isArrivalFormValid || isSavingArrival"
                 class="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition flex items-center justify-center gap-2"
               >
-                <Icon name="lucide:save" class="w-5 h-5" />
-                Simpan & Tambah Stok ({{ arrivalForm.items.length }} Item)
+                <Icon
+                  :name="isSavingArrival ? 'lucide:loader-2' : 'lucide:save'"
+                  :class="{ 'animate-spin': isSavingArrival }"
+                  class="w-5 h-5"
+                />
+                <span>{{ isSavingArrival ? 'Menyimpan & Menambah Stok...' : `Simpan & Tambah Stok (${arrivalForm.items.length} Item)` }}</span>
               </button>
             </div>
           </div>
@@ -1346,6 +1365,8 @@ const showArrivalModal = ref(false);
 const showHistoryModal = ref(false);
 const arrivalHistory = ref<any[]>([]);
 const loadingHistory = ref(false);
+const isSavingArrival = ref(false);
+const deletingArrivalId = ref<number | null>(null);
 const showMessage = ref(false);
 const message = ref("");
 
@@ -1758,10 +1779,12 @@ const closeHistoryAndGoBackToArrival = () => {
 };
 
 const saveArrival = async () => {
+  if (isSavingArrival.value) return;
   if (!isArrivalFormValid.value) {
     showToast("Pilih produk dan isi jumlahnya untuk semua baris ya.");
     return;
   }
+  isSavingArrival.value = true;
   try {
     const itemsToSave = arrivalForm.items.map(item => ({
       productId: item.productId,
@@ -1787,6 +1810,32 @@ const saveArrival = async () => {
     fetchLowStockProducts();
   } catch (error: any) {
     showToast(error.message || "Gagal mencatat kedatangan barang.");
+  } finally {
+    isSavingArrival.value = false;
+  }
+};
+
+const deleteArrivalItem = async (item: any) => {
+  const prodName = item.product?.name || "Produk ini";
+  const qty = item.quantity;
+  const ok = window.confirm(
+    `Hapus riwayat barang datang "${prodName}" (+${qty} unit)?\n\nStok produk akan dikurangi ${qty} kembali secara otomatis.`
+  );
+  if (!ok) return;
+
+  deletingArrivalId.value = item.id;
+  try {
+    await $fetch(`/api/arrivals/${item.id}`, {
+      method: "DELETE",
+    });
+    arrivalHistory.value = arrivalHistory.value.filter((a: any) => a.id !== item.id);
+    showToast(`✓ Riwayat barang datang dihapus, stok dikurangi ${qty}`);
+    fetchProducts();
+    fetchLowStockProducts();
+  } catch (err: any) {
+    showToast(err?.message || "Gagal menghapus riwayat kedatangan barang");
+  } finally {
+    deletingArrivalId.value = null;
   }
 };
 

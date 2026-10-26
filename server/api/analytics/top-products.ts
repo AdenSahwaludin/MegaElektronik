@@ -25,7 +25,8 @@ export default defineEventHandler(async (event) => {
            SUM(ti."quantity" * ti."soldPrice") AS revenue
     FROM "TransactionItem" ti
     JOIN "Transaction" t ON t."id" = ti."transactionId"
-    WHERE 1 = 1
+    JOIN "Product" p ON p."id" = ti."productId"
+    WHERE p."isActive" = 1
       ${gteDate ? Prisma.sql`AND t."createdAt" >= ${gteDate}` : Prisma.empty}
       ${ltDate ? Prisma.sql`AND t."createdAt" < ${ltDate}` : Prisma.empty}
     GROUP BY ti."productId"
@@ -36,7 +37,7 @@ export default defineEventHandler(async (event) => {
   const needIds = Array.from(new Set([...sortedByQty.map((r) => r.productId), ...sortedByRev.map((r) => r.productId)]));
   const products = needIds.length > 0
     ? await prisma.product.findMany({
-        where: { id: { in: needIds } },
+        where: { id: { in: needIds }, isActive: true },
         select: { id: true, name: true, brand: true, model: true },
       })
     : [];

@@ -18,7 +18,6 @@
                 id="searchQueryInput"
                 name="searchQuery"
                 v-model="searchQuery"
-                @focus="openSearchDropdown"
                 @input="openSearchDropdown"
                 @keydown="onSearchKeydown"
                 type="text"
@@ -695,20 +694,30 @@
           </div>
 
           <!-- Footer -->
-          <div class="bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
+          <div class="bg-gray-50 px-6 py-4 border-t flex flex-wrap sm:flex-nowrap justify-end gap-2.5">
             <button
               @click="closePaymentModal"
-              class="px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold rounded-xl transition active:scale-95 text-sm"
+              :disabled="cartStore.isProcessing || isPrintingStruk"
+              class="px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold rounded-xl transition active:scale-95 text-sm"
             >
               Batal
             </button>
             <button
-              @click="handleCheckout"
-              :disabled="cartStore.isProcessing || (paidAmountValue > 0 && changeAmount < 0)"
-              class="px-6 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition active:scale-95 text-sm flex items-center justify-center gap-2"
+              @click="handleCheckout(false)"
+              :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
+              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
             >
-              <Icon name="lucide:check-circle" class="w-4 h-4" />
-              Konfirmasi & Bayar
+              <Icon :name="cartStore.isProcessing && !willPrintReceipt ? 'lucide:loader-2' : 'lucide:check'" :class="{ 'animate-spin': cartStore.isProcessing && !willPrintReceipt }" class="w-4 h-4" />
+              <span>Bayar</span>
+            </button>
+            <button
+              @click="handleCheckout(true)"
+              :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
+              class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
+              title="Bayar dan langsung cetak struk via Bluetooth"
+            >
+              <Icon :name="(cartStore.isProcessing && willPrintReceipt) || isPrintingStruk ? 'lucide:loader-2' : 'lucide:printer'" :class="{ 'animate-spin': (cartStore.isProcessing && willPrintReceipt) || isPrintingStruk }" class="w-4 h-4" />
+              <span>Bayar & Cetak</span>
             </button>
           </div>
         </div>
@@ -1303,7 +1312,11 @@ const adjustPrice = (cartItemId: string, currentPrice: number, delta: number) =>
   cartStore.updateSoldPrice(cartItemId, newPrice);
 };
 
-const handleCheckout = async () => {
+const willPrintReceipt = ref(false);
+
+const handleCheckout = async (shouldPrint = false) => {
+  if (cartStore.isProcessing || isPrintingStruk.value) return;
+  willPrintReceipt.value = shouldPrint;
   try {
     let finalDateStr = undefined;
     if (transactionDateTime.value) {
@@ -1312,7 +1325,6 @@ const handleCheckout = async () => {
     }
 
     const response = await cartStore.checkout(finalDateStr, paidAmountValue.value || null);
-    showToast("✓ Mantap, transaksi berhasil!");
     paidAmountInput.value = "";
     closePaymentModal();
     showCartDrawer.value = false;
@@ -1320,24 +1332,22 @@ const handleCheckout = async () => {
     await fetchProducts();
     fetchBestSellers(); // Refresh best sellers after checkout
 
-    // Tawarkan cetak struk: ambil data transaksi lengkap (dengan items) untuk printer
-    lastCheckoutSummary.value = {
-      totalAmount: (response as any)?.totalAmount ?? 0,
-      paidAmount: paidAmountValue.value || null,
-    };
-    lastTransaction.value = null;
-    isTrxFetchFailed.value = false;
-    showPrintOffer.value = true;
-    isFetchingTrx.value = true;
-    try {
-      lastTransaction.value = await $fetch<any>(`/api/transactions/${(response as any)?.transactionId}`);
-    } catch (e) {
-      isTrxFetchFailed.value = true;
-    } finally {
-      isFetchingTrx.value = false;
+    if (shouldPrint && (response as any)?.transactionId) {
+      showToast("✓ Transaksi berhasil, menghubungkan Bluetooth...");
+      try {
+        const trx = await $fetch<any>(`/api/transactions/${(response as any).transactionId}`);
+        // Cetak Bluetooth langsung ke printer struk thermal (sama seperti Detail Transaksi)
+        await printReceipt(trx, "bluetooth");
+      } catch (err: any) {
+        console.error("Gagal cetak bluetooth:", err);
+      }
+    } else {
+      showToast("✓ Mantap, transaksi berhasil!");
     }
   } catch (error: any) {
     showToast("❌ Duh, " + (error.message || "transaksinya gagal nih"));
+  } finally {
+    willPrintReceipt.value = false;
   }
 };
 

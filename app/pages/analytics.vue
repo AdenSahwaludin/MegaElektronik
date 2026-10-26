@@ -30,7 +30,13 @@ const formatModel = (model?: string | null) => {
 }
 
 const lowStockProducts = computed(() => {
-  return (dataCacheStore.products || []).filter((p: any) => p.stock === 0 && p.isActive !== false)
+  return (dataCacheStore.products || []).filter((p: any) =>
+    p.stock === 0 &&
+    p.isActive !== false &&
+    p.isActive !== 0 &&
+    p.isActive !== 'false' &&
+    p.isActive !== '0'
+  )
 })
 
 // State
@@ -45,11 +51,13 @@ onMounted(() => {
   const today = new Date().toISOString().slice(0, 10)
   startDate.value = today
   endDate.value = today
+  dataCacheStore.fetchProducts()
   fetchAllAnalytics()
 })
 
 // Refresh when navigating back to this page (Keep-alive support)
 onActivated(() => {
+  dataCacheStore.fetchProducts()
   fetchAllAnalytics()
 })
 

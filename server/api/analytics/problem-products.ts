@@ -29,6 +29,8 @@ export default defineEventHandler(async (event) => {
              MAX(t."createdAt") AS lastSold
       FROM "TransactionItem" ti
       JOIN "Transaction" t ON t."id" = ti."transactionId"
+      JOIN "Product" p ON p."id" = ti."productId"
+      WHERE p."isActive" = 1
       GROUP BY ti."productId"
     `),
     prisma.product.findMany({
@@ -84,7 +86,7 @@ export default defineEventHandler(async (event) => {
   const statIds = salesStats.map((s) => s.productId);
   const statProducts = statIds.length > 0
     ? await prisma.product.findMany({
-        where: { id: { in: statIds } },
+        where: { id: { in: statIds }, isActive: true },
         select: { id: true, name: true, brand: true, model: true, stock: true },
       })
     : [];

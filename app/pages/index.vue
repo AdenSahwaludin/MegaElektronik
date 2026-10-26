@@ -763,20 +763,30 @@
           </div>
 
           <!-- Footer Actions -->
-          <div class="bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
+          <div class="bg-gray-50 px-6 py-4 border-t flex flex-wrap sm:flex-nowrap justify-end gap-2.5">
             <button
               @click="closePaymentModal"
-              class="px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold rounded-xl transition active:scale-95 text-sm"
+              :disabled="cartStore.isProcessing || isPrintingStruk"
+              class="px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold rounded-xl transition active:scale-95 text-sm"
             >
               Batal
             </button>
             <button
-              @click="handleCheckout"
-              :disabled="cartStore.isProcessing || (paidAmountValue > 0 && changeAmount < 0)"
-              class="px-6 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition active:scale-95 text-sm flex items-center justify-center gap-2"
+              @click="handleCheckout(false)"
+              :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
+              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
             >
-              <Icon name="lucide:check-circle" class="w-4 h-4" />
-              Konfirmasi & Bayar
+              <Icon :name="cartStore.isProcessing && !willPrintReceipt ? 'lucide:loader-2' : 'lucide:check'" :class="{ 'animate-spin': cartStore.isProcessing && !willPrintReceipt }" class="w-4 h-4" />
+              <span>Bayar</span>
+            </button>
+            <button
+              @click="handleCheckout(true)"
+              :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
+              class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
+              title="Bayar dan langsung cetak struk via Bluetooth"
+            >
+              <Icon :name="(cartStore.isProcessing && willPrintReceipt) || isPrintingStruk ? 'lucide:loader-2' : 'lucide:printer'" :class="{ 'animate-spin': (cartStore.isProcessing && willPrintReceipt) || isPrintingStruk }" class="w-4 h-4" />
+              <span>Bayar & Cetak</span>
             </button>
           </div>
 
@@ -797,6 +807,82 @@
       @decrement-qty="handleScannerDecrementQty"
       @remove-item="(id) => cartStore.removeFromCart(id)"
     />
+
+    <!-- Fallback modal: cetak gagal / Thermer belum terbuka -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="isFallbackModalOpen"
+        class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+      >
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-gray-100 flex flex-col gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-orange-100 text-orange-600 rounded-xl">
+              <Icon name="lucide:alert-circle" class="w-6 h-6" />
+            </div>
+            <div>
+              <h4 class="font-bold text-base text-gray-900">{{ isIOSFlag ? 'Thermer Belum Terbuka' : 'Gagal Cetak Bluetooth' }}</h4>
+              <p class="text-xs text-gray-500">Pilih opsi pencetakan struk di bawah</p>
+            </div>
+          </div>
+
+          <p v-if="strukPrintError" class="text-sm text-red-600 bg-red-50 rounded-lg p-3">
+            {{ strukPrintError }}
+          </p>
+
+          <p class="text-sm text-gray-600 leading-relaxed">
+            <template v-if="isIOSFlag">
+              Jika aplikasi <strong class="text-gray-900">Thermer</strong> belum terinstal di iPhone Anda, unduh gratis dari App Store.
+            </template>
+            <template v-else>
+              Pastikan printer Bluetooth sudah menyala dan dalam jangkauan. Anda bisa coba lagi atau cetak via browser.
+            </template>
+          </p>
+
+          <div class="flex flex-col gap-2.5 pt-2">
+            <button
+              v-if="isIOSFlag"
+              @click="openAppStore"
+              class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <Icon name="lucide:download" class="w-4 h-4" />
+              <span>Buka Thermer di App Store</span>
+            </button>
+
+            <button
+              v-else
+              @click="retryStrukBluetooth"
+              :disabled="isPrintingStruk"
+              class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <Icon :name="isPrintingStruk ? 'lucide:loader-2' : 'lucide:bluetooth'" :class="['w-4 h-4', { 'animate-spin': isPrintingStruk }]" />
+              <span>{{ isPrintingStruk ? 'Mencetak...' : 'Coba Lagi (Bluetooth)' }}</span>
+            </button>
+
+            <button
+              @click="printFallbackBrowser"
+              class="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 active:scale-98 text-gray-800 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition border border-gray-200 cursor-pointer"
+            >
+              <Icon name="lucide:file-text" class="w-4 h-4 text-gray-600" />
+              <span>Cetak via Browser (PDF)</span>
+            </button>
+
+            <button
+              @click="closeStrukFallback"
+              class="w-full py-2 text-gray-400 hover:text-gray-600 text-xs font-semibold text-center transition cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -809,6 +895,7 @@ import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
+import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
 
 definePageMeta({
   layout: "default",
@@ -818,6 +905,20 @@ const cartStore = useCartStore();
 const dataCacheStore = useDataCacheStore();
 const { formatCurrency, formatNumber, parseFromDisplay } = useCurrency();
 const { playSuccessBeep, playErrorBeep } = useAudioBeep();
+
+const {
+  printReceipt,
+  printViaRawBT,
+  isPrinting: isPrintingStruk,
+  isFallbackModalOpen,
+  printError: strukPrintError,
+  closeFallbackModal: closeStrukFallback,
+  printFallbackBrowser,
+  retryBluetooth: retryStrukBluetooth,
+  openAppStore,
+  hasBluetooth,
+  isIOS: isIOSFlag,
+} = useReceiptPrinter();
 
 const isScannerOpen = ref(false);
 const lastScannedName = ref("");
@@ -1169,7 +1270,11 @@ const adjustPrice = (cartItemId: string, currentPrice: number, delta: number) =>
   cartStore.updateSoldPrice(cartItemId, newPrice);
 };
 
-const handleCheckout = async () => {
+const willPrintReceipt = ref(false);
+
+const handleCheckout = async (shouldPrint = false) => {
+  if (cartStore.isProcessing || isPrintingStruk.value) return;
+  willPrintReceipt.value = shouldPrint;
   try {
     let finalDateStr = undefined;
     if (transactionDateTime.value) {
@@ -1177,14 +1282,27 @@ const handleCheckout = async () => {
       finalDateStr = localDate.toISOString();
     }
     
-    await cartStore.checkout(finalDateStr, paidAmountValue.value || null);
-    showToast("✓ Mantap, transaksi berhasil!");
+    const response = await cartStore.checkout(finalDateStr, paidAmountValue.value || null);
     paidAmountInput.value = "";
     closePaymentModal();
     startLiveClock();
     await fetchProducts(); 
+
+    if (shouldPrint && (response as any)?.transactionId) {
+      showToast("✓ Transaksi berhasil, menghubungkan Bluetooth...");
+      try {
+        const trx = await $fetch<any>(`/api/transactions/${(response as any).transactionId}`);
+        await printReceipt(trx, "bluetooth");
+      } catch (err: any) {
+        console.error("Gagal cetak bluetooth:", err);
+      }
+    } else {
+      showToast("✓ Mantap, transaksi berhasil!");
+    }
   } catch (error: any) {
     showToast("❌ Duh, " + (error.message || "transaksinya gagal nih"));
+  } finally {
+    willPrintReceipt.value = false;
   }
 };
 
