@@ -539,11 +539,25 @@
                 <tr
                   v-for="product in products"
                   :key="product.id"
-                  class="hover:bg-orange-50 transition"
+                  :class="[!product.isActive ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-orange-50', 'transition']"
                 >
                   <td class="px-4 py-3 text-sm font-semibold text-gray-800 wrap-break-words max-w-75">
-                    <div>{{ getProductDisplayName(product) }}</div>
-                    <div v-if="product.model && product.model.trim()" class="text-[11px] text-gray-500 font-normal mt-0.5">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <Icon
+                        v-if="!product.isActive"
+                        name="lucide:ban"
+                        class="w-4 h-4 text-red-500 shrink-0"
+                        title="Produk Non-Aktif (Dilarang / Tidak Tampil di Kasir)"
+                      />
+                      <span :class="{ 'text-gray-600': !product.isActive }">{{ getProductDisplayName(product) }}</span>
+                      <span
+                        v-if="!product.isActive"
+                        class="text-[10px] bg-red-100 text-red-700 border border-red-200 px-1.5 py-0.2 rounded font-bold sm:hidden"
+                      >
+                        Non-Aktif
+                      </span>
+                    </div>
+                    <div v-if="product.model && product.model.trim()" class="text-[11px] text-gray-500 font-normal mt-0.5" :class="{ 'pl-5.5': !product.isActive }">
                       <span>{{ product.model }}</span>
                     </div>
                   </td>
@@ -1055,7 +1069,15 @@
                       @mousedown.prevent="selectProduct(item, product)"
                       class="px-4 py-2 hover:bg-green-50 cursor-pointer border-b last:border-0 text-sm"
                     >
-                      <div class="font-semibold">{{ getProductDisplayName(product) }}</div>
+                      <div class="font-semibold flex items-center gap-1.5">
+                        <Icon
+                          v-if="!product.isActive"
+                          name="lucide:ban"
+                          class="w-3.5 h-3.5 text-red-500 shrink-0"
+                          title="Produk Non-Aktif"
+                        />
+                        <span>{{ getProductDisplayName(product) }}</span>
+                      </div>
                       <div class="text-xs text-gray-500">Stok: {{ product.stock }}</div>
                     </div>
                   </div>
