@@ -50,11 +50,19 @@ export function useSearchAutocomplete(
   })
 
   // Click outside to close
-  const handleClickOutside = (e: MouseEvent) => {
-    if (searchWrapperRef.value && !searchWrapperRef.value.contains(e.target as Node)) {
-      isDropdownOpen.value = false
-      highlightedIndex.value = -1
+  const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+    const target = e.target as HTMLElement | null
+    if (!target) return
+    // Don't close if clicked inside search input wrapper
+    if (searchWrapperRef.value && searchWrapperRef.value.contains(target)) {
+      return
     }
+    // Don't close if clicked inside autocomplete dropdown (teleported to body)
+    if (target.closest && target.closest('[data-search-autocomplete-dropdown]')) {
+      return
+    }
+    isDropdownOpen.value = false
+    highlightedIndex.value = -1
   }
 
   onMounted(() => {
@@ -187,7 +195,7 @@ export function useSearchAutocomplete(
     const seenProducts = new Set<string>()
 
     for (const p of products) {
-      const displayName = getProductDisplayName(p)
+      const displayName = getProductDisplayName({ name: p.name || '', brand: p.brand, model: p.model })
       const name = (p.name || '').trim()
       const brand = (p.brand || '').trim()
       const model = (p.model || '').trim()

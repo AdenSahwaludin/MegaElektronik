@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
         where: { id: { in: productIds } },
         select: { id: true, name: true, stock: true },
       });
-      const productById = new Map(products.map((p: any) => [p.id, p]));
+      const productById = new Map<number, any>(products.map((p: any) => [p.id, p]));
 
       for (const item of body.items) {
         const product = productById.get(item.productId);

@@ -11,13 +11,14 @@
         <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row md:items-start justify-between gap-3">
           
           <!-- Search Bar -->
-          <div class="flex items-center gap-2 w-full md:w-[450px] lg:w-[520px] shrink-0">
-            <div class="relative flex-1" ref="searchWrapperRef">
+          <div class="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto md:max-w-xl lg:max-w-2xl shrink-0">
+            <div class="relative flex-1 min-w-0 md:w-72 lg:w-80" ref="searchWrapperRef">
               <Icon name="lucide:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
               <input
                 id="searchQueryInput"
                 name="searchQuery"
                 v-model="searchQuery"
+                @focus="openSearchDropdown"
                 @input="openSearchDropdown"
                 @keydown="onSearchKeydown"
                 type="text"
@@ -49,7 +50,7 @@
                 id="sortSelect"
                 name="sortBy"
                 v-model="sortBy"
-                class="pl-3 pr-8 py-2.5 bg-white border border-gray-200 hover:border-orange-400 text-gray-600 rounded-xl shadow-sm text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 appearance-none cursor-pointer"
+                class="pl-2.5 sm:pl-3 pr-7 sm:pr-8 py-2.5 bg-white border border-gray-200 hover:border-orange-400 text-gray-600 rounded-xl shadow-sm text-xs font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 appearance-none cursor-pointer"
                 title="Urutkan Produk"
               >
                 <option value="name-asc">Nama A-Z</option>
@@ -65,7 +66,7 @@
             <button
               @click="isScannerOpen = true"
               type="button"
-              class="px-3 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1.5 shrink-0 text-xs font-bold cursor-pointer"
+              class="px-2.5 sm:px-3 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1.5 shrink-0 text-xs font-bold cursor-pointer"
               title="Scan Barcode Kamera"
             >
               <Icon name="lucide:scan-line" class="w-4 h-4" />
@@ -76,11 +77,11 @@
             <button
               type="button"
               @click="switchToClassicPos"
-              class="px-3 py-2.5 bg-white border border-gray-200 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1.5 shrink-0 text-xs font-bold cursor-pointer"
+              class="px-2.5 sm:px-3 py-2.5 bg-white border border-gray-200 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-500 rounded-xl shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1.5 shrink-0 text-xs font-bold cursor-pointer"
               title="Kembali ke POS Biasa dan simpan pilihan"
             >
               <Icon name="lucide:arrow-left" class="w-4 h-4 text-orange-600 group-hover:text-white" />
-              <span>POS Biasa</span>
+              <span class="hidden sm:inline">POS Biasa</span>
             </button>
           </div>
 
