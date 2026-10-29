@@ -24,12 +24,14 @@ model Product {
   stock        Int     @default(0)
   servicePrice Int?
   isActive     Boolean @default(true) // Product status: active or inactive
+  lastStockOpnameAt DateTime? // Timestamp of last stock opname check
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
   transactionItems TransactionItem[]
   productArrivals  ProductArrival[]
+  stockOpnames     StockOpname[]
 
   @@index([barcode])
   @@index([name])
@@ -37,6 +39,22 @@ model Product {
   @@index([model])
   @@index([otherName])
   @@index([isActive])
+  @@index([lastStockOpnameAt])
+}
+
+model StockOpname {
+  id            Int      @id @default(autoincrement())
+  productId     Int
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  systemStock   Int      // Stok tercatat di sistem saat opname
+  physicalStock Int      // Stok fisik aktual hasil hitungan
+  difference    Int      // physicalStock - systemStock
+  notes         String?  // Keterangan atau alasan selisih
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([productId])
+  @@index([createdAt])
 }
 
 model Customer {

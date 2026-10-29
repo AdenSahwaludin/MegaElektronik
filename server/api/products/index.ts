@@ -163,6 +163,12 @@ export default defineEventHandler(async (event) => {
         });
       }
 
+      if (query.opnameStatus === "opnamed") {
+        andConditions.push({ lastStockOpnameAt: { not: null } });
+      } else if (query.opnameStatus === "unopnamed") {
+        andConditions.push({ lastStockOpnameAt: null });
+      }
+
       // Advanced search: split by spaces and match ALL keywords
       if (search.trim()) {
         const keywords = search
@@ -219,6 +225,7 @@ export default defineEventHandler(async (event) => {
             stock: true,
             servicePrice: true,
             isActive: true,
+            lastStockOpnameAt: true,
             createdAt: true,
             updatedAt: true,
           },

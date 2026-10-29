@@ -218,7 +218,7 @@
               <Icon name="lucide:list" class="w-6 h-6" />
               <span>Daftar Produk ({{ totalItems }})</span>
             </h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full md:w-auto">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 w-full md:w-auto">
               <button
                 @click="showAddForm = !showAddForm"
                 class="h-11 px-3 py-2 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
@@ -236,6 +236,14 @@
                 <span class="truncate">Barang Datang</span>
               </button>
               <button
+                @click="isStockOpnameOpen = true"
+                class="h-11 px-3 py-2 bg-white hover:bg-amber-50 text-amber-700 border border-amber-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
+                title="Stock Opname (Pemeriksaan & Audit Stok Fisik)"
+              >
+                <Icon name="lucide:clipboard-check" class="w-4 h-4 text-amber-600 shrink-0" />
+                <span class="truncate">Stock Opname</span>
+              </button>
+              <button
                 @click="printProductList"
                 class="h-11 px-3 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
                 title="Cetak Semua Daftar Harga"
@@ -245,7 +253,7 @@
               </button>
               <button
                 @click="openBulkQrScanModal"
-                class="h-11 px-3 py-2 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
+                class="h-11 px-3 py-2 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95 col-span-2 sm:col-span-1"
                 title="Scan Barcode / QR Code Produk"
               >
                 <Icon name="lucide:qr-code" class="w-4 h-4 text-orange-600 shrink-0" />
@@ -289,6 +297,19 @@
                 />
               </div>
 
+              <!-- Quick Opname Filter Selector -->
+              <div class="relative shrink-0">
+                <select
+                  v-model="selectedOpnameFilter"
+                  class="h-10.5 px-3 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-700 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-xs transition cursor-pointer"
+                  title="Filter produk berdasarkan status stock opname"
+                >
+                  <option value="all">Opname: Semua</option>
+                  <option value="unopnamed">Belum di-Opname</option>
+                  <option value="opnamed">Sudah di-Opname</option>
+                </select>
+              </div>
+
               <!-- Quick Categories Toggle Button -->
               <button
                 @click="showCategories = !showCategories"
@@ -321,10 +342,13 @@
                   @change-category="onCategoryChange"
                 />
 
-                <!-- Active Filter Pill Indicator if a query or category/brand/jenis filter is active -->
-                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
+                <!-- Active Filter Pill Indicator if a query or category/brand/jenis/opname filter is active -->
+                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis || selectedOpnameFilter !== 'all'" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
                   <div class="flex flex-wrap items-center gap-2 text-gray-600 font-medium">
                     <span class="text-gray-400">Filter Aktif:</span>
+                    <span v-if="selectedOpnameFilter !== 'all'" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold border" :class="selectedOpnameFilter === 'opnamed' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-amber-100 text-amber-800 border-amber-200'">
+                      Opname: {{ selectedOpnameFilter === 'opnamed' ? 'Sudah Opname' : 'Belum Opname' }}
+                    </span>
                     <span v-if="selectedCategory" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
                       Kategori: {{ selectedCategory }}
                     </span>
@@ -557,8 +581,22 @@
                         Non-Aktif
                       </span>
                     </div>
-                    <div v-if="product.model && product.model.trim()" class="text-[11px] text-gray-500 font-normal mt-0.5" :class="{ 'pl-5.5': !product.isActive }">
+                    <div v-if="product.model && product.model.trim()" class="text-[11px] text-gray-500 font-normal mt-0.5 flex items-center gap-1.5 flex-wrap" :class="{ 'pl-5.5': !product.isActive }">
                       <span>{{ product.model }}</span>
+                      <span
+                        v-if="product.lastStockOpnameAt"
+                        class="sm:hidden inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200"
+                        title="Sudah Stock Opname"
+                      >
+                        <Icon name="lucide:check" class="w-2.5 h-2.5 text-emerald-600" />
+                        Opname
+                      </span>
+                    </div>
+                    <div v-else-if="product.lastStockOpnameAt" class="sm:hidden text-[10px] font-bold text-emerald-700 flex items-center gap-0.5 mt-0.5" :class="{ 'pl-5.5': !product.isActive }">
+                      <span class="inline-flex items-center gap-0.5 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                        <Icon name="lucide:check" class="w-2.5 h-2.5 text-emerald-600" />
+                        Opname
+                      </span>
                     </div>
                   </td>
                   <td
@@ -589,16 +627,34 @@
                     {{ formatCurrency(product.buyPrice) }}
                   </td>
                   <td class="lg:table-cell hidden px-4 py-3 text-center whitespace-nowrap">
-                    <span
-                      :class="[
-                        'px-2 py-1 text-xs font-bold rounded-full',
-                        product.isActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700',
-                      ]"
-                    >
-                      {{ product.isActive ? "Aktif" : "Non-Aktif" }}
-                    </span>
+                    <div class="flex flex-col items-center gap-1">
+                      <span
+                        :class="[
+                          'px-2 py-0.5 text-xs font-bold rounded-full',
+                          product.isActive
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700',
+                        ]"
+                      >
+                        {{ product.isActive ? "Aktif" : "Non-Aktif" }}
+                      </span>
+                      <span
+                        v-if="product.lastStockOpnameAt"
+                        class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200"
+                        :title="`Terakhir opname: ${formatShortDate(product.lastStockOpnameAt)}`"
+                      >
+                        <Icon name="lucide:check-circle-2" class="w-3 h-3 text-emerald-600" />
+                        Opname
+                      </span>
+                      <span
+                        v-else
+                        class="inline-flex items-center gap-1 text-[10px] font-medium text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200"
+                        title="Belum di-opname pada siklus ini"
+                      >
+                        <Icon name="lucide:circle-dashed" class="w-2.5 h-2.5 text-gray-400" />
+                        Belum
+                      </span>
+                    </div>
                   </td>
                   <td class="px-4 py-3 text-center whitespace-nowrap">
                     <div class="flex items-center justify-center gap-2">
@@ -1238,6 +1294,15 @@
       @close="isQrModalOpen = false"
       @scan-qr="handleScanQrFromModal"
     />
+
+    <!-- Stock Opname Modal -->
+    <StockOpnameModal
+      :is-open="isStockOpnameOpen"
+      :products="allProductsForSelect"
+      @close="isStockOpnameOpen = false"
+      @stock-updated="handleStockOpnameUpdated"
+      @show-toast="showToast"
+    />
   </div>
 </template>
 
@@ -1318,6 +1383,13 @@ const productsList = computed(() => {
   // Filter by selectedJenis (sub-kategori per quick category, sama seperti di Penjualan)
   if (selectedJenis.value && selectedCategory.value) {
     list = list.filter((p: any) => matchesJenis(p, selectedCategory.value, selectedJenis.value));
+  }
+
+  // Filter by selectedOpnameFilter
+  if (selectedOpnameFilter.value === "opnamed") {
+    list = list.filter((p: any) => Boolean(p.lastStockOpnameAt));
+  } else if (selectedOpnameFilter.value === "unopnamed") {
+    list = list.filter((p: any) => !p.lastStockOpnameAt);
   }
 
   // Filter by debounced search query
@@ -1573,6 +1645,20 @@ const getCategoryIcon = (catName: string) => {
 const selectedCategory = ref('');
 const selectedBrand = ref('');
 const selectedJenis = ref('');
+const selectedOpnameFilter = ref<'all' | 'unopnamed' | 'opnamed'>('all');
+const isStockOpnameOpen = ref(false);
+
+const formatShortDate = (dateStr: string | null | undefined) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+};
+
+const handleStockOpnameUpdated = (updatedProducts: any[]) => {
+  for (const p of updatedProducts) {
+    dataCacheStore.updateLocalProduct(p);
+  }
+};
 
 const onCategoryChange = (catName: string) => {
   if (catName) {
@@ -1588,6 +1674,7 @@ const resetAllFilters = () => {
   selectedCategory.value = '';
   selectedBrand.value = '';
   selectedJenis.value = '';
+  selectedOpnameFilter.value = 'all';
   sortBy.value = 'name';
   sortOrder.value = 'asc';
 };
