@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
         brand,
         model,
         otherName,
-        stock,
+        // Stok tidak dapat diedit langsung via edit produk, perubahan stok diarahkan ke Barang Datang
         servicePrice,
         buyPrice,
         askingPrice,

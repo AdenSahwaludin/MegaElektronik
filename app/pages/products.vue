@@ -817,16 +817,23 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Stok</label
-                >
-                <input
-                  :value="editingProduct.stock !== undefined ? formatNumber(editingProduct.stock) : ''"
-                  @input="editingProduct.stock = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                  type="text"
-                  inputmode="numeric"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
+                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center justify-between">
+                  <span>Stok</span>
+                  <span class="text-[11px] font-normal text-gray-500 flex items-center gap-1">
+                    <Icon name="lucide:lock" class="w-3 h-3 text-gray-400" />
+                    Terkunci
+                  </span>
+                </label>
+                <div class="relative">
+                  <input
+                    :value="editingProduct.stock !== undefined ? formatNumber(editingProduct.stock) : '0'"
+                    type="text"
+                    disabled
+                    readonly
+                    class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 font-mono font-bold cursor-not-allowed select-none focus:outline-none"
+                    title="Stok tidak dapat diedit langsung. Silakan gunakan Barang Datang."
+                  />
+                </div>
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
@@ -837,9 +844,30 @@
                   @input="editingProduct.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
                   type="text"
                   inputmode="numeric"
+                  placeholder="Khusus teknisi"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
+            </div>
+
+            <!-- Direct to Barang Datang Banner -->
+            <div class="p-3 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+              <div class="flex items-start gap-2">
+                <Icon name="lucide:info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div class="text-amber-900 leading-snug">
+                  <span class="font-bold">Stok tidak bisa diedit di sini.</span>
+                  <span class="text-amber-800 hidden sm:inline"> Tambah atau sesuaikan stok melalui menu Barang Datang.</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                @click="redirectToArrivalFromEdit"
+                class="px-3 py-1.5 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-lg transition flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer active:scale-95"
+                title="Buka Barang Datang untuk produk ini"
+              >
+                <Icon name="lucide:truck" class="w-3.5 h-3.5" />
+                <span>Ke Barang Datang</span>
+              </button>
             </div>
 
           
@@ -1826,6 +1854,26 @@ const editProduct = (product: any) => {
   showEditModal.value = true;
 };
 
+const redirectToArrivalFromEdit = () => {
+  const targetId = editingProduct.id ? editingProduct.id.toString() : "";
+  const targetName = editingProduct.name || "";
+
+  // Close the edit modal
+  showEditModal.value = false;
+
+  // Pre-fill the arrival form with this product so user can immediately input stock
+  arrivalForm.items = [
+    {
+      ...createEmptyArrivalItem(),
+      productId: targetId,
+      searchQuery: targetName,
+    },
+  ];
+
+  // Open the Barang Datang modal
+  showArrivalModal.value = true;
+};
+
 const saveProduct = async () => {
   try {
     const response = await $fetch<any>(`/api/products/${editingProduct.id}`, {
@@ -1836,7 +1884,6 @@ const saveProduct = async () => {
         brand: editingProduct.brand ? toTitleCase(editingProduct.brand) : null,
         model: editingProduct.model ? editingProduct.model.trim() : null,
         otherName: editingProduct.otherName || null,
-        stock: editingProduct.stock,
         servicePrice: editingProduct.servicePrice,
         buyPrice: editingProduct.buyPrice,
         fixedPrice: editingProduct.fixedPrice,
