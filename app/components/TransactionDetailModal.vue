@@ -132,7 +132,7 @@
                     {{ isPrinting ? "Membuka Thermer..." : "Cetak Struk (Thermer iOS)" }}
                   </span>
                   <span class="text-[10px] text-orange-100 font-medium">
-                    Aplikasi Thermer • Bluetooth POS-58
+                    Aplikasi Thermer • Bluetooth POS-80
                   </span>
                 </div>
               </button>
@@ -145,7 +145,7 @@
                 :disabled="isPrinting"
                 type="button"
                 class="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed active:scale-98 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer text-left"
-                title="Cetak langsung ke printer Bluetooth VSC MP-58M Pro via Web Bluetooth"
+                title="Cetak langsung ke printer Bluetooth 80mm via Web Bluetooth"
               >
                 <Icon
                   :name="isPrinting ? 'lucide:loader-2' : 'lucide:bluetooth'"
@@ -156,7 +156,7 @@
                     {{ isPrinting ? 'Menghubungkan Bluetooth...' : 'Cetak Bluetooth (Android / PC)' }}
                   </span>
                   <span class="text-[10px] text-sky-100 font-medium">
-                    Google Chrome (Android & PC Desktop) • VSC MP-58M
+                    Google Chrome (Android & PC Desktop) • Bluetooth 80mm
                   </span>
                 </div>
               </button>

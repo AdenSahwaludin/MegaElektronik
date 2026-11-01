@@ -773,14 +773,6 @@
               Batal
             </button>
             <button
-              @click="handleCheckout(false)"
-              :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
-              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
-            >
-              <Icon :name="cartStore.isProcessing && !willPrintReceipt ? 'lucide:loader-2' : 'lucide:check'" :class="{ 'animate-spin': cartStore.isProcessing && !willPrintReceipt }" class="w-4 h-4" />
-              <span>Bayar</span>
-            </button>
-            <button
               @click="handleCheckout(true)"
               :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
               class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
@@ -788,6 +780,14 @@
             >
               <Icon :name="(cartStore.isProcessing && willPrintReceipt) || isPrintingStruk ? 'lucide:loader-2' : 'lucide:printer'" :class="{ 'animate-spin': (cartStore.isProcessing && willPrintReceipt) || isPrintingStruk }" class="w-4 h-4" />
               <span>Bayar & Cetak</span>
+            </button>
+            <button
+              @click="handleCheckout(false)"
+              :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
+              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
+            >
+              <Icon :name="cartStore.isProcessing && !willPrintReceipt ? 'lucide:loader-2' : 'lucide:check'" :class="{ 'animate-spin': cartStore.isProcessing && !willPrintReceipt }" class="w-4 h-4" />
+              <span>Bayar</span>
             </button>
           </div>
 

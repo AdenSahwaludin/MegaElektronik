@@ -33,7 +33,7 @@ export function useReceiptPrinter() {
   /**
    * Main print method.
    * Priority:
-   *  1. "bluetooth" → Direct ESC/POS via Web Bluetooth (best for 58mm thermal)
+   *  1. "bluetooth" → Direct ESC/POS via Web Bluetooth (best for 80mm thermal)
    *  2. "rawbt"     → RawBT app (Android)
    *  3. "thermer"   → iOS Thermer app
    *  4. "browser"   → window.print() fallback
@@ -90,7 +90,7 @@ export function useReceiptPrinter() {
   };
 
   /**
-   * Print via Bluetooth ESC/POS (best practice for 58mm thermal)
+   * Print via Bluetooth ESC/POS (best practice for 80mm thermal)
    */
   const printViaBluetooth = async (transaction: any) => {
     isPrinting.value = true;

@@ -1,12 +1,12 @@
 /**
- * ESC/POS Bluetooth Print Utility for 58mm Thermal Printer
+ * ESC/POS Bluetooth Print Utility for 80mm Thermal Printer
  * Best practice: Direct ESC/POS commands via Web Bluetooth API
  * Bypasses window.print() entirely — no browser headers/footers, no clipping.
  *
- * POS-58 specs:
- *  - Paper width: 58mm
- *  - Printable width: ~48mm (384 dots at 203 DPI)
- *  - Character width: 32 chars (Font A) or 42 chars (Font B) per line
+ * POS-80 specs:
+ *  - Paper width: 80mm
+ *  - Printable width: ~72mm (576 dots at 203 DPI)
+ *  - Character width: 48 chars (Font A) or 64 chars (Font B) per line
  */
 
 // ─── ESC/POS Command Constants ───────────────────────────────────────
@@ -56,7 +56,7 @@ function encodeText(text: string): number[] {
 }
 
 // ─── Formatting Helpers ──────────────────────────────────────────────
-const LINE_WIDTH = 32; // 32 chars for 58mm Font A
+const LINE_WIDTH = 48; // 48 chars for 80mm Font A
 
 function formatRupiah(amount: number): string {
   return "Rp " + new Intl.NumberFormat("id-ID").format(Math.round(amount || 0));
@@ -217,7 +217,7 @@ export function buildReceiptBytes(transaction: any): Uint8Array {
 }
 
 // ─── Web Bluetooth Connection ────────────────────────────────────────
-// Known Bluetooth service/characteristic UUIDs for thermal printers (VSC MP-58M, Zijiang, POS-58, etc.)
+// Known Bluetooth service/characteristic UUIDs for thermal printers (POS-80, VSC, Zijiang, etc.)
 const PRINTER_SERVICE_UUIDS = [
   "000018f0-0000-1000-8000-00805f9b34fb", // Standard POS Printer Service
   "e7810a71-73ae-499d-8c15-faa9aef0c3f2", // Common Chinese POS BLE Service (VSC MP-58M)
@@ -336,7 +336,7 @@ export async function connectPrinter(): Promise<PrinterConnection> {
   if (!characteristic) {
     server.disconnect();
     throw new Error(
-      "Gagal menemukan service write printer Bluetooth. Pastikan printer VSC MP-58M Pro / POS-58 menyala dan Bluetooth aktif."
+      "Gagal menemukan service write printer Bluetooth. Pastikan printer Bluetooth 80mm menyala dan Bluetooth aktif."
     );
   }
 
@@ -352,7 +352,7 @@ export async function connectPrinter(): Promise<PrinterConnection> {
 
 /**
  * Send raw bytes to printer in safe chunk sizes (64 bytes with 25ms delay).
- * Safe for 58mm thermal printers like VSC MP-58M Pro to prevent RX buffer overflow.
+ * Safe for 80mm thermal printers to prevent RX buffer overflow.
  */
 async function sendBytes(
   characteristic: any,
@@ -411,7 +411,7 @@ export function printViaRawBT(transaction: any): boolean {
   const formatCurr = (val: number) =>
     "Rp " + new Intl.NumberFormat("id-ID").format(Math.round(val || 0));
 
-  const center = (text: string, width = 32) => {
+  const center = (text: string, width = 48) => {
     const t = text.trim();
     if (t.length >= width) return t.slice(0, width);
     const leftPad = Math.floor((width - t.length) / 2);
@@ -423,7 +423,7 @@ export function printViaRawBT(transaction: any): boolean {
   lines.push(center("MEGA ELEKTRONIK"));
   lines.push(center("Nota Pembayaran Toko"));
   lines.push(center(formatDate(transaction.createdAt || new Date())));
-  lines.push("-".repeat(32));
+  lines.push("-".repeat(48));
 
   const items = Array.isArray(transaction.transactionItems) ? transaction.transactionItems : [];
   for (const it of items) {
@@ -434,16 +434,16 @@ export function printViaRawBT(transaction: any): boolean {
     lines.push(name);
     const leftCol = ` ${qty} x ${formatCurr(price)}`;
     const rightCol = formatCurr(subtotal);
-    lines.push(formatTwoColumns(leftCol, rightCol, 32));
+    lines.push(formatTwoColumns(leftCol, rightCol, 48));
   }
 
-  lines.push("-".repeat(32));
-  lines.push(formatTwoColumns("TOTAL", formatCurr(transaction.totalAmount || 0), 32));
+  lines.push("-".repeat(48));
+  lines.push(formatTwoColumns("TOTAL", formatCurr(transaction.totalAmount || 0), 48));
   if (transaction.paidAmount != null && Number(transaction.paidAmount) > 0) {
-    lines.push(formatTwoColumns("BAYAR", formatCurr(transaction.paidAmount), 32));
-    lines.push(formatTwoColumns("KEMBALIAN", formatCurr(Math.max(0, transaction.paidAmount - transaction.totalAmount)), 32));
+    lines.push(formatTwoColumns("BAYAR", formatCurr(transaction.paidAmount), 48));
+    lines.push(formatTwoColumns("KEMBALIAN", formatCurr(Math.max(0, transaction.paidAmount - transaction.totalAmount)), 48));
   }
-  lines.push("=".repeat(32));
+  lines.push("=".repeat(48));
   lines.push(center("Terima Kasih!"));
   lines.push(center("Barang yg sudah dibeli"));
   lines.push(center("tidak dapat ditukar/dikembalikan"));

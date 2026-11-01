@@ -1,7 +1,7 @@
 /**
  * Browser Print Utility (Standard HTML / PDF Print)
- * Optimized for 58mm thermal receipt printer (~44mm printable width).
- * Uses sans-serif font for narrower characters to prevent right-side clipping.
+ * Optimized for 80mm thermal receipt printer (~72mm printable width).
+ * Uses sans-serif font for crisp readability on 80mm rolls.
  */
 
 export function printBrowserReceipt(transaction: any): void {
@@ -90,9 +90,9 @@ export function printBrowserReceipt(transaction: any): void {
             width: 100%;
             margin: 0;
             padding: 0;
-            font-size: 7px;
+            font-size: 10px;
             color: #000;
-            line-height: 1.25;
+            line-height: 1.3;
             word-wrap: break-word;
             overflow-wrap: break-word;
             -webkit-print-color-adjust: exact;
@@ -100,53 +100,53 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .receipt {
             width: 100%;
-            max-width: 48mm;
-            padding: 1mm 6.5mm 1mm 1mm;
+            max-width: 72mm;
+            padding: 2mm 4mm 2mm 2mm;
             margin-left: 0;
             margin-right: auto;
           }
           .header {
             text-align: center;
-            padding-bottom: 2px;
+            padding-bottom: 3px;
             border-bottom: 1px dashed #000;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
           }
           .logo {
             display: block;
-            margin: 0 auto -7px auto;
-            max-height: 42px;
+            margin: 0 auto -5px auto;
+            max-height: 48px;
             width: auto;
             object-fit: contain;
           }
           .store-name {
-            font-size: 8px;
+            font-size: 13px;
             font-weight: 900;
             white-space: nowrap;
             letter-spacing: -0.1px;
           }
           .store-subtitle {
-            font-size: 6.5px;
+            font-size: 9.5px;
             font-weight: 600;
             color: #000;
           }
           .info {
             text-align: center;
-            font-size: 6.5px;
+            font-size: 9.5px;
             font-weight: 600;
             color: #000;
-            padding: 2px 0;
+            padding: 3px 0;
             border-bottom: 1px dashed #000;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
           }
           .info div {
             margin: 1px 0;
           }
           .item {
-            margin-bottom: 2px;
+            margin-bottom: 3px;
           }
           .item-name {
             font-weight: 700;
-            font-size: 6.8px;
+            font-size: 10.5px;
             color: #000;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -155,10 +155,10 @@ export function printBrowserReceipt(transaction: any): void {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 6px;
+            font-size: 9.5px;
             font-weight: 600;
             color: #000;
-            padding-left: 1.5px;
+            padding-left: 2px;
           }
           .item-detail span {
             white-space: nowrap;
@@ -170,23 +170,23 @@ export function printBrowserReceipt(transaction: any): void {
           }
           .summary {
             border-top: 1px dashed #000;
-            padding-top: 2px;
-            margin-top: 2px;
+            padding-top: 3px;
+            margin-top: 3px;
           }
           .summary-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 7px;
+            font-size: 10px;
             color: #000;
-            padding: 1px 0;
+            padding: 2px 0;
           }
           .summary-row.total {
-            font-size: 8px;
+            font-size: 12px;
             font-weight: 900;
-            padding: 2px 0;
+            padding: 3px 0;
             border-bottom: 1px dashed #000;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
           }
           .summary-row .label {
             font-weight: 600;
@@ -200,23 +200,23 @@ export function printBrowserReceipt(transaction: any): void {
           .footer {
             text-align: center;
             border-top: 1px double #000;
-            padding-top: 2px;
-            margin-top: 3px;
-            font-size: 6.5px;
+            padding-top: 3px;
+            margin-top: 4px;
+            font-size: 9.5px;
             color: #000;
           }
           .footer .thanks {
             font-weight: 700;
-            font-size: 7.5px;
+            font-size: 11px;
             margin-bottom: 1px;
           }
           .footer .note {
-            font-size: 6px;
+            font-size: 8.5px;
             font-weight: 600;
             color: #000;
           }
           .feed {
-            height: 5mm;
+            height: 6mm;
           }
         </style>
       </head>

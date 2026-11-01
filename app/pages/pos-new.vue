@@ -705,14 +705,6 @@
               Batal
             </button>
             <button
-              @click="handleCheckout(false)"
-              :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
-              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
-            >
-              <Icon :name="cartStore.isProcessing && !willPrintReceipt ? 'lucide:loader-2' : 'lucide:check'" :class="{ 'animate-spin': cartStore.isProcessing && !willPrintReceipt }" class="w-4 h-4" />
-              <span>Bayar</span>
-            </button>
-            <button
               @click="handleCheckout(true)"
               :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
               class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
@@ -720,6 +712,14 @@
             >
               <Icon :name="(cartStore.isProcessing && willPrintReceipt) || isPrintingStruk ? 'lucide:loader-2' : 'lucide:printer'" :class="{ 'animate-spin': (cartStore.isProcessing && willPrintReceipt) || isPrintingStruk }" class="w-4 h-4" />
               <span>Bayar & Cetak</span>
+            </button>
+            <button
+              @click="handleCheckout(false)"
+              :disabled="cartStore.isProcessing || isPrintingStruk || (paidAmountValue > 0 && changeAmount < 0)"
+              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm transition active:scale-95 text-sm flex items-center justify-center gap-1.5"
+            >
+              <Icon :name="cartStore.isProcessing && !willPrintReceipt ? 'lucide:loader-2' : 'lucide:check'" :class="{ 'animate-spin': cartStore.isProcessing && !willPrintReceipt }" class="w-4 h-4" />
+              <span>Bayar</span>
             </button>
           </div>
         </div>
@@ -784,7 +784,7 @@
             :class="isIOSFlag
               ? 'from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600'
               : 'from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600'"
-            :title="isIOSFlag ? 'Cetak Struk Thermal via Aplikasi Thermer' : 'Cetak langsung ke printer Bluetooth 58mm'"
+            :title="isIOSFlag ? 'Cetak Struk Thermal via Aplikasi Thermer' : 'Cetak langsung ke printer Bluetooth 80mm'"
           >
             <span class="w-full flex items-center justify-center gap-3 text-left">
               <Icon
@@ -796,7 +796,7 @@
                   {{ isPrintingStruk ? 'Mencetak...' : (isIOSFlag ? 'Cetak Struk (Thermer iOS)' : 'Cetak Struk Thermal') }}
                 </span>
                 <span class="text-[10px] font-medium" :class="isIOSFlag ? 'text-orange-100' : 'text-sky-100'">
-                  {{ isIOSFlag ? 'Aplikasi Thermer • Bluetooth POS-58' : (hasBluetooth ? 'Printer Bluetooth 58mm (VSC MP-58M dll)' : 'Cetak via Browser (PDF)') }}
+                  {{ isIOSFlag ? 'Aplikasi Thermer • Bluetooth POS-80' : (hasBluetooth ? 'Printer Bluetooth 80mm' : 'Cetak via Browser (PDF)') }}
                 </span>
               </span>
             </span>

@@ -785,7 +785,7 @@ const initializeDrafts = () => {
     if (draftStocks.value[p.id] === undefined) {
       newDrafts[p.id] = p.stock ?? 0;
     } else {
-      newDrafts[p.id] = draftStocks.value[p.id];
+      newDrafts[p.id] = draftStocks.value[p.id]!;
     }
   }
   draftStocks.value = newDrafts;
@@ -838,7 +838,7 @@ const filteredSheetProducts = computed(() => {
 // Draft helper functions
 const getDraftStock = (product: any): number => {
   if (draftStocks.value[product.id] !== undefined) {
-    return draftStocks.value[product.id];
+    return draftStocks.value[product.id]!;
   }
   return product.stock ?? 0;
 };
