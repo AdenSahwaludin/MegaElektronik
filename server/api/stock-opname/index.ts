@@ -1,4 +1,5 @@
 import { getPrismaClient } from "../../utils/prisma";
+import { withIdempotency } from "../../utils/idempotency";
 
 const prisma = getPrismaClient();
 
@@ -9,6 +10,7 @@ export default defineEventHandler(async (event) => {
     // POST: Simpan Stock Opname (single atau multi-item)
     if (method === "POST") {
       const body = await readBody(event);
+      return await withIdempotency(event, body, "stock-opname", async () => {
       let items: Array<{ productId: number | string; physicalStock: number | string; notes?: string }> = [];
 
       if (body.items && Array.isArray(body.items)) {
@@ -122,6 +124,7 @@ export default defineEventHandler(async (event) => {
         updatedProducts,
         message: `Berhasil menyimpan stock opname untuk ${results.length} produk dan memperbarui stok fisik.`,
       };
+      });
     }
 
     // GET: Ambil daftar riwayat Stock Opname (dengan pagination & search)

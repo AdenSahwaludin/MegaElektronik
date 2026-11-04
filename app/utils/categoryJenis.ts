@@ -9,13 +9,14 @@ export const CATEGORY_JENIS_MAP: Record<string, string[]> = {
   'blender': ['Kaca', 'Plastik', '2 Gelas', '3 Gelas'],
   'ac': ['0,5 PK', '1 PK', '1,5 PK', '2 PK'],
   'mesin cuci': ['7 KG', '8 KG', '9 KG', '10 KG'],
-  'kulkas': ['1 Pintu', '2 Pintu']
+  'kulkas': ['1 Pintu', '2 Pintu'],
+  'tv': ['LED', 'LCD', 'Smart TV', 'Tabung', '14"', '21"', '24"', '32"', '43"', '50"']
 }
 
 export const DEFAULT_QUICK_CATEGORIES = [
   'AC', 'Blender', 'Dispenser', 'Exhaust', 'Kipas',
   'Kompor', 'Kulkas', 'Mesin cuci', 'Rice cooker', 'Setrika',
-  'Speaker', 'Teko'
+  'Speaker', 'Teko', 'TV'
 ];
 
 export function getCategoryIcon(catName: string): string {
@@ -192,6 +193,21 @@ export function matchesJenis(
   if (cat === 'kulkas') {
     if (j.includes('1') && j.includes('pintu')) return /\b1\s*pintu\b/.test(raw)
     if (j.includes('2') && j.includes('pintu')) return /\b2\s*pintu\b/.test(raw)
+    return raw.includes(j)
+  }
+
+  // ── TV ──
+  if (cat === 'tv') {
+    if (j === 'led') return /\bled\b/.test(raw)
+    if (j === 'lcd') return /\blcd\b/.test(raw)
+    if (j.includes('smart')) return /\bsmart\b/.test(raw)
+    if (j.includes('tabung')) return /\btabung\b|\bcrt\b/.test(raw)
+    // Ukuran: '14"', '21"',dll — angka harus utuh (word-boundary), satuan optional:
+    // nama produk bisa "LED TV 21 Inci", "TV 21\"", atau "TV POLOS 21" (tanpa satuan).
+    const sizeMatch = j.match(/(\d+)/)
+    if (sizeMatch) {
+      return new RegExp(`\\b${sizeMatch[1]}(\\.0)?\\b`).test(norm)
+    }
     return raw.includes(j)
   }
 

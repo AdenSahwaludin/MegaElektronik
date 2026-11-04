@@ -347,8 +347,13 @@
                 <button
                   @click="openPaymentModal"
                   :disabled="cartStore.isProcessing"
-                  class="px-4 lg:px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-xs lg:text-sm rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:cursor-not-allowed"
+                  class="px-4 lg:px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-xs lg:text-sm rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
+                  <Icon
+                    name="lucide:loader-2"
+                    v-if="cartStore.isProcessing"
+                    class="w-4 h-4 animate-spin"
+                  />
                   {{ cartStore.isProcessing ? "Proses..." : "Bayar" }}
                 </button>
               </div>
@@ -576,8 +581,13 @@
           <button
             @click="openPaymentModal"
             :disabled="cartStore.items.length === 0 || cartStore.isProcessing"
-            class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold text-base rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-[0.98]"
+            class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold text-base rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           >
+            <Icon
+              name="lucide:loader-2"
+              v-if="cartStore.isProcessing"
+              class="w-5 h-5 animate-spin"
+            />
             {{ cartStore.isProcessing ? "Memproses..." : "Bayar Sekarang" }}
           </button>
           <button

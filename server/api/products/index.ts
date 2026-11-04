@@ -1,4 +1,5 @@
 import { getPrismaClient } from "../../utils/prisma";
+import { withIdempotency } from "../../utils/idempotency";
 
 const prisma = getPrismaClient();
 
@@ -8,6 +9,7 @@ export default defineEventHandler(async (event) => {
     if (getMethod(event) === "POST") {
       const body = await readBody(event);
 
+      const processPost = async () => {
       // Check if it's bulk import (with products array) or single product
       const isBulkImport = body.products && Array.isArray(body.products);
 
@@ -103,6 +105,43 @@ export default defineEventHandler(async (event) => {
           });
         }
 
+        // Proteksi tambahan (fallback tanpa idempotency key):
+        // produk yang PERSIS sama dan baru dibuat < 10 detik tidak dibuat ulang.
+        const recentCutoff = new Date(Date.now() - 10_000);
+        const recentCandidates = await (prisma.product as any).findMany({
+          where: { name: body.name.trim(), createdAt: { gte: recentCutoff } },
+          select: {
+            id: true, name: true, brand: true, model: true, otherName: true,
+            barcode: true, buyPrice: true, askingPrice: true, fixedPrice: true,
+            stock: true, servicePrice: true, isActive: true, createdAt: true, updatedAt: true,
+          },
+          take: 20,
+        });
+        const incomingBarcode = body.barcode ? String(body.barcode).trim() : "";
+        const incomingBrand = (body.brand !== undefined && body.brand !== null) ? String(body.brand).trim() : " ";
+        const incomingModel = (body.model !== undefined && body.model !== null) ? String(body.model).trim() : " ";
+        const incomingBuyPrice = parseInt(String(body.buyPrice), 10) || 0;
+        const incomingAskingPrice = parseInt(String(body.askingPrice), 10) || 0;
+        const duplicate = recentCandidates.find((p: any) => {
+          const pBarcode = p.barcode ? String(p.barcode).trim() : "";
+          if (pBarcode && incomingBarcode && pBarcode !== incomingBarcode) return false;
+          return (
+            String(p.name || "").trim().toLowerCase() === String(body.name).trim().toLowerCase() &&
+            String(p.brand || "").trim() === incomingBrand &&
+            String(p.model || "").trim() === incomingModel &&
+            p.buyPrice === incomingBuyPrice &&
+            p.askingPrice === incomingAskingPrice
+          );
+        });
+        if (duplicate) {
+          return {
+            success: true,
+            product: duplicate,
+            deduped: true,
+            message: "Produk ini baru saja disimpan — tidak diduplikasi",
+          };
+        }
+
         const product = await (prisma.product as any).create({
           data: {
             barcode: body.barcode ? String(body.barcode).trim() : null,
@@ -127,6 +166,9 @@ export default defineEventHandler(async (event) => {
           message: "Produk berhasil ditambah",
         };
       }
+      };
+
+      return await withIdempotency(event, body, "products", processPost);
     }
 
     // GET: Fetch all products with advanced search and pagination

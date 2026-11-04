@@ -192,12 +192,17 @@
                     !newProduct.name ||
                     newProduct.stock === undefined ||
                     !newProduct.buyPrice ||
-                    !newProduct.askingPrice
+                    !newProduct.askingPrice ||
+                    isSavingProduct
                   "
                   class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Icon name="lucide:check" class="w-5 h-5" />
-                  <span>Simpan Produk</span>
+                  <Icon
+                    :name="isSavingProduct ? 'lucide:loader-2' : 'lucide:check'"
+                    class="w-5 h-5"
+                    :class="{ 'animate-spin': isSavingProduct }"
+                  />
+                  <span>{{ isSavingProduct ? 'Menyimpan...' : 'Simpan Produk' }}</span>
                 </button>
                 <button
                   @click="resetForm"
@@ -921,10 +926,15 @@
             <div class="flex gap-4 pt-4">
               <button
                 @click="saveProduct"
-                class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
+                :disabled="isSavingEdit"
+                class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
               >
-                <Icon name="lucide:save" class="w-5 h-5" />
-                Simpan
+                <Icon
+                  :name="isSavingEdit ? 'lucide:loader-2' : 'lucide:save'"
+                  class="w-5 h-5"
+                  :class="{ 'animate-spin': isSavingEdit }"
+                />
+                {{ isSavingEdit ? 'Menyimpan...' : 'Simpan' }}
               </button>
               <button
                 @click="showEditModal = false"
@@ -1340,6 +1350,7 @@ import { watch, computed, ref, reactive, onMounted } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
+import { getIdempotencyKey, renewIdempotencyKey } from "../utils/idempotency";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 
 definePageMeta({
@@ -1800,6 +1811,9 @@ const fetchLowStockProducts = async () => {
   // Low stock products is now a computed property locally!
 };
 
+const isSavingProduct = ref(false);
+const isSavingEdit = ref(false);
+
 const addProduct = async () => {
   if (
     !newProduct.name ||
@@ -1811,9 +1825,14 @@ const addProduct = async () => {
     return;
   }
 
+  // Guard anti dobel-klik / dobel-submit
+  if (isSavingProduct.value) return;
+  isSavingProduct.value = true;
+
   try {
     const response = await $fetch<any>("/api/products", {
       method: "POST",
+      headers: { "x-idempotency-key": getIdempotencyKey("add-product") },
       body: {
         barcode: newProduct.barcode ? newProduct.barcode.trim() : null,
         name: toTitleCase(newProduct.name),
@@ -1832,9 +1851,13 @@ const addProduct = async () => {
     dataCacheStore.addLocalProduct(response.product);
     resetForm();
     showAddForm.value = false;
-    showToast("Sip, produk udah ditambah!");
+    // Sukses → pakai key baru agar produk berikutnya tidak ikut ter-replay
+    renewIdempotencyKey("add-product");
+    showToast(response.deduped ? "Produk ini tadi sudah tersimpan, tidak diduplikasi" : "Sip, produk udah ditambah!");
   } catch (error: any) {
     showToast(error.message || "Yah, gagal nambahin produk");
+  } finally {
+    isSavingProduct.value = false;
   }
 };
 
@@ -1875,9 +1898,14 @@ const redirectToArrivalFromEdit = () => {
 };
 
 const saveProduct = async () => {
+  // Guard anti dobel-klik / dobel-submit
+  if (isSavingEdit.value) return;
+  isSavingEdit.value = true;
+
   try {
     const response = await $fetch<any>(`/api/products/${editingProduct.id}`, {
       method: "PUT",
+      headers: { "x-idempotency-key": getIdempotencyKey("edit-product") },
       body: {
         barcode: editingProduct.barcode ? editingProduct.barcode.trim() : null,
         name: toTitleCase(editingProduct.name),
@@ -1894,9 +1922,12 @@ const saveProduct = async () => {
 
     dataCacheStore.updateLocalProduct(response.product);
     showEditModal.value = false;
+    renewIdempotencyKey("edit-product");
     showToast("Sip, produk udah diupdate!");
   } catch (error: any) {
     showToast(error.message || "Yah, gagal update produk");
+  } finally {
+    isSavingEdit.value = false;
   }
 };
 
@@ -1955,6 +1986,7 @@ const saveArrival = async () => {
 
     await $fetch("/api/arrivals", {
       method: "POST",
+      headers: { "x-idempotency-key": getIdempotencyKey("arrival") },
       body: { items: itemsToSave }
     });
     
@@ -1962,6 +1994,7 @@ const saveArrival = async () => {
     arrivalForm.items = [createEmptyArrivalItem()];
     
     showToast(`Kedatangan ${itemsToSave.length} barang berhasil dicatat.`);
+    renewIdempotencyKey("arrival");
     fetchProducts();
     fetchLowStockProducts();
   } catch (error: any) {

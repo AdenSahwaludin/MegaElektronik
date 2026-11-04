@@ -419,9 +419,14 @@
           <button
             @click="openPaymentModal"
             :disabled="cartStore.items.length === 0 || cartStore.isProcessing"
-            class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-lg rounded-lg transition"
+            class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-lg rounded-lg transition flex items-center justify-center gap-2"
           >
-            {{ cartStore.isProcessing ? "Sabar..." : "Bayar Sekarang" }}
+            <Icon
+              name="lucide:loader-2"
+              v-if="cartStore.isProcessing"
+              class="w-5 h-5 animate-spin"
+            />
+            {{ cartStore.isProcessing ? "Memproses..." : "Bayar Sekarang" }}
           </button>
           <button
             @click="handleClearCart"
@@ -666,9 +671,14 @@
             <button
               @click="openPaymentModal"
               :disabled="cartStore.items.length === 0 || cartStore.isProcessing"
-              class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
+              class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition flex items-center justify-center gap-2"
             >
-              {{ cartStore.isProcessing ? "Sabar..." : "Bayar Sekarang" }}
+              <Icon
+                name="lucide:loader-2"
+                v-if="cartStore.isProcessing"
+                class="w-5 h-5 animate-spin"
+              />
+              {{ cartStore.isProcessing ? "Memproses..." : "Bayar Sekarang" }}
             </button>
             <button
               @click="handleClearCart"

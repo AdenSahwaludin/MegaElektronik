@@ -1,4 +1,5 @@
 import { getPrismaClient } from "../../../utils/prisma";
+import { withIdempotency } from "../../../utils/idempotency";
 
 const prisma = getPrismaClient();
 
@@ -21,6 +22,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event);
+
+    return await withIdempotency(event, body, "barcode-patch", async () => {
     const barcode = body?.barcode ? String(body.barcode).trim() : '';
     const force = Boolean(body?.force);
 
@@ -80,6 +83,7 @@ export default defineEventHandler(async (event) => {
       product: updatedProduct,
       message: 'Barcode produk berhasil diperbarui',
     };
+    });
   } catch (error: any) {
     if (error.statusCode) {
       throw error;

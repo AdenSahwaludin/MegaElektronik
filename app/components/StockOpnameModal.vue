@@ -98,11 +98,16 @@
             <!-- Reset Cycle Button -->
             <button
               @click="confirmResetSession"
-              class="px-2.5 py-1 text-gray-500 hover:text-orange-700 hover:bg-orange-50 rounded-lg border border-gray-200 hover:border-orange-200 transition font-semibold flex items-center gap-1 cursor-pointer active:scale-95"
+              :disabled="isResettingSession"
+              class="px-2.5 py-1 text-gray-500 hover:text-orange-700 hover:bg-orange-50 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg border border-gray-200 hover:border-orange-200 transition font-semibold flex items-center gap-1 cursor-pointer active:scale-95"
               title="Reset penandaan agar produk ditandai belum di-opname untuk periode baru"
             >
-              <Icon name="lucide:rotate-ccw" class="w-3.5 h-3.5" />
-              <span class="hidden md:inline">Reset Siklus</span>
+              <Icon
+                :name="isResettingSession ? 'lucide:loader-2' : 'lucide:rotate-ccw'"
+                class="w-3.5 h-3.5"
+                :class="{ 'animate-spin': isResettingSession }"
+              />
+              <span class="hidden md:inline">{{ isResettingSession ? 'Mereset...' : 'Reset Siklus' }}</span>
             </button>
           </div>
         </div>
@@ -733,6 +738,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { getIdempotencyKey, renewIdempotencyKey } from "../utils/idempotency";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -756,6 +762,7 @@ const draftNotes = ref<Record<number, string>>({});
 const showNoteForId = ref<number | null>(null);
 const savingProductId = ref<number | null>(null);
 const isSavingBatch = ref(false);
+const isResettingSession = ref(false);
 
 // History state
 const stockOpnameHistory = ref<any[]>([]);
@@ -902,6 +909,8 @@ const resetAllDrafts = () => {
 
 // Save single product opname
 const saveSingleProductOpname = async (product: any) => {
+  // Guard anti dobel-klik / dobel-submit
+  if (savingProductId.value !== null) return;
   try {
     savingProductId.value = product.id;
     const physicalStock = getDraftStock(product);
@@ -909,6 +918,7 @@ const saveSingleProductOpname = async (product: any) => {
 
     const res = await $fetch<any>("/api/stock-opname", {
       method: "POST",
+      headers: { "x-idempotency-key": getIdempotencyKey(`opname-single:${product.id}`) },
       body: {
         productId: product.id,
         physicalStock,
@@ -921,6 +931,8 @@ const saveSingleProductOpname = async (product: any) => {
       emit("show-toast", `Stock opname "${product.name}" berhasil disimpan!`);
       // Clear notes draft for this item
       delete draftNotes.value[product.id];
+      // Key baru untuk simpanan berikutnya
+      renewIdempotencyKey(`opname-single:${product.id}`);
       // Refresh history list in background
       fetchHistory();
     }
@@ -934,6 +946,8 @@ const saveSingleProductOpname = async (product: any) => {
 
 // Save all modified products in batch
 const saveAllModifiedOpnames = async () => {
+  // Guard anti dobel-klik / dobel-submit
+  if (isSavingBatch.value) return;
   const itemsToSave: Array<{ productId: number; physicalStock: number; notes?: string }> = [];
 
   for (const p of props.products) {
@@ -952,6 +966,7 @@ const saveAllModifiedOpnames = async () => {
     isSavingBatch.value = true;
     const res = await $fetch<any>("/api/stock-opname", {
       method: "POST",
+      headers: { "x-idempotency-key": getIdempotencyKey("opname-batch") },
       body: { items: itemsToSave },
     });
 
@@ -959,6 +974,7 @@ const saveAllModifiedOpnames = async () => {
       emit("stock-updated", res.updatedProducts);
       emit("show-toast", `Berhasil menyimpan stock opname untuk ${itemsToSave.length} produk!`);
       resetAllDrafts();
+      renewIdempotencyKey("opname-batch");
       fetchHistory();
     }
   } catch (error: any) {
@@ -1026,10 +1042,14 @@ const openEditModal = (record: any) => {
 const saveEditRecord = async () => {
   if (!editingRecord.value) return;
 
+  // Guard anti dobel-klik / dobel-submit
+  if (isUpdatingRecord.value) return;
+
   try {
     isUpdatingRecord.value = true;
     const res = await $fetch<any>(`/api/stock-opname/${editingRecord.value.id}`, {
       method: "PUT",
+      headers: { "x-idempotency-key": getIdempotencyKey(`opname-edit:${editingRecord.value.id}`) },
       body: {
         physicalStock: editDraftStock.value,
         notes: editDraftNotes.value || undefined,
@@ -1043,6 +1063,7 @@ const saveEditRecord = async () => {
         emit("stock-updated", [res.product]);
         draftStocks.value[res.product.id] = res.product.stock;
       }
+      renewIdempotencyKey(`opname-edit:${editingRecord.value.id}`);
       fetchHistory();
     }
   } catch (error: any) {
@@ -1088,9 +1109,14 @@ const confirmResetSession = async () => {
   );
   if (!ok) return;
 
+  // Guard anti dobel-klik / dobel-submit
+  if (isResettingSession.value) return;
+
   try {
+    isResettingSession.value = true;
     const res = await $fetch<any>("/api/stock-opname/reset-session", {
       method: "POST",
+      headers: { "x-idempotency-key": getIdempotencyKey("opname-reset") },
     });
 
     if (res.success) {
@@ -1102,10 +1128,13 @@ const confirmResetSession = async () => {
       }));
       emit("stock-updated", updated);
       initializeDrafts();
+      renewIdempotencyKey("opname-reset");
     }
   } catch (error: any) {
     console.error("Reset session error:", error);
     alert(error?.statusMessage || error?.message || "Gagal mereset siklus opname");
+  } finally {
+    isResettingSession.value = false;
   }
 };
 

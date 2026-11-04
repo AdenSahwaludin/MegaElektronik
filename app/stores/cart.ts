@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useDataCacheStore } from "./data-cache";
+import { getIdempotencyKey, renewIdempotencyKey } from "../utils/idempotency";
 
 export interface CartItem {
   id: string; // unique cart item ID (uuid or same as product id)
@@ -135,14 +136,19 @@ export const useCartStore = defineStore("cart", () => {
 
   // Checkout
   const checkout = async (createdAt?: string, paidAmount?: number | null) => {
+    // Guard anti dobel-klik / dobel-submit
     if (items.value.length === 0) {
       throw new Error("Keranjang masih kosong nih");
+    }
+    if (isProcessing.value) {
+      throw new Error("Transaksi sedang diproses, sabar ya...");
     }
 
     isProcessing.value = true;
     try {
       const response = await $fetch("/api/transactions/checkout", {
         method: "POST",
+        headers: { "x-idempotency-key": getIdempotencyKey("checkout") },
         body: {
           customerId: selectedCustomer.value?.id || null,
           items: items.value.map((item) => ({
@@ -160,6 +166,8 @@ export const useCartStore = defineStore("cart", () => {
       });
 
       clearCart();
+      // Sukses → key baru untuk transaksi berikutnya
+      renewIdempotencyKey("checkout");
       
       // Clear reports/analytics caches and update products cache (stock changed)
       try {

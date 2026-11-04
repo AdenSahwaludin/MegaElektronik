@@ -1,4 +1,5 @@
 import { getPrismaClient } from "../../utils/prisma";
+import { withIdempotency } from "../../utils/idempotency";
 
 const prisma = getPrismaClient();
 
@@ -13,6 +14,7 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
 
+    return await withIdempotency(event, body, "checkout", async () => {
     // Validate input
     if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
       throw createError({
@@ -104,6 +106,7 @@ export default defineEventHandler(async (event) => {
       totalProfit: transaction.totalProfit,
       itemCount: transaction.transactionItems.length,
     };
+    });
   } catch (error: any) {
     console.error("Checkout error:", error);
     throw createError({

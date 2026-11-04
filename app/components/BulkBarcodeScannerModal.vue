@@ -525,10 +525,16 @@
               </button>
               <button
                 @click="confirmOverwrite"
+                :disabled="isSaving"
                 type="button"
-                class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-amber-600/30 cursor-pointer"
+                class="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-lg shadow-amber-600/30 cursor-pointer flex items-center gap-1.5"
               >
-                Ya, Timpa Barcode
+                <Icon
+                  :name="isSaving ? 'lucide:loader-2' : 'lucide:check'"
+                  class="w-3.5 h-3.5"
+                  :class="{ 'animate-spin': isSaving }"
+                />
+                <span>{{ isSaving ? 'Menyimpan...' : 'Ya, Timpa Barcode' }}</span>
               </button>
             </div>
           </div>
@@ -565,6 +571,7 @@
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useAudioBeep } from '~/composables/useAudioBeep'
 import { useDataCacheStore } from '~/stores/data-cache'
+import { getIdempotencyKey, renewIdempotencyKey } from '~/utils/idempotency'
 
 interface ProductProp {
   id: number | string
@@ -1238,6 +1245,8 @@ function closeProductSelectionModal() {
 }
 
 async function handleConfirmProductSave(force = false) {
+  // Guard anti dobel-klik / dobel-submit
+  if (isSaving.value) return
   if (!selectedTargetProduct.value || !scannedBarcodeResult.value) return
   if (duplicateWarning.value && !force) {
     playErrorBeep()
@@ -1255,6 +1264,7 @@ async function saveBarcodeToProduct(product: any, code: string, force = false) {
   try {
     const res = await $fetch<any>(`/api/products/${product.id}/barcode`, {
       method: 'PATCH',
+      headers: { 'x-idempotency-key': getIdempotencyKey(`barcode-save:${code}`) },
       body: {
         barcode: code,
         force
@@ -1290,6 +1300,9 @@ async function saveBarcodeToProduct(product: any, code: string, force = false) {
         itemMatch.scannedBarcode = code
       }
 
+      // Key baru agar scan berikutnya tidak ter-replay
+      renewIdempotencyKey(`barcode-save:${code}`)
+
       advanceToNextPending()
       closeProductSelectionModal()
     } else {
@@ -1314,6 +1327,8 @@ async function saveBarcodeToProduct(product: any, code: string, force = false) {
 }
 
 async function confirmOverwrite() {
+  // Guard anti dobel-klik / dobel-submit
+  if (isSaving.value) return
   if (!overwriteTarget.value) return
   const { barcode: code, item: product } = overwriteTarget.value
   overwriteTarget.value = null
