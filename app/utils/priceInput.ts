@@ -31,7 +31,7 @@ export function onPriceInput(event: Event, apply: (value: number) => void): void
   // Jumlah digit sebelum posisi kursor (tanda titik diabaikan)
   let digitsBefore = 0;
   for (let i = 0; i < caret && i < raw.length; i++) {
-    if (raw[i] >= "0" && raw[i] <= "9") digitsBefore++;
+    if (raw.charAt(i) >= "0" && raw.charAt(i) <= "9") digitsBefore++;
   }
 
   apply(parseDisplayNumber(raw));
@@ -46,7 +46,7 @@ export function onPriceInput(event: Event, apply: (value: number) => void): void
     let seen = 0;
     let pos = newValue.length;
     for (let i = 0; i < newValue.length; i++) {
-      if (newValue[i] >= "0" && newValue[i] <= "9") {
+      if (newValue.charAt(i) >= "0" && newValue.charAt(i) <= "9") {
         seen++;
         if (seen >= digitsBefore) {
           pos = i + 1;
