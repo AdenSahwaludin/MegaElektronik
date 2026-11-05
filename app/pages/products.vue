@@ -539,7 +539,7 @@
                   </th>
                   <th
                     @click="toggleSort('servicePrice')"
-                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden md:table-cell cursor-pointer hover:bg-gray-200 transition"
+                    class="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition"
                   >
                     <div class="flex items-center justify-end gap-1">
                       Harga Teknisi
@@ -623,13 +623,37 @@
                     <span :class="product.stock < 5 ? 'text-red-600' : 'text-green-600'">{{ product.stock }}</span>
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
-                    {{ formatCurrency(product.askingPrice) }}
+                    <div>{{ formatCurrency(product.askingPrice) }}</div>
+                    <div
+                      v-if="profitPercentOf(product.askingPrice, product.buyPrice) !== null"
+                      class="text-[10px] font-bold leading-tight"
+                      :class="profitPercentOf(product.askingPrice, product.buyPrice) >= 0 ? 'text-emerald-600' : 'text-red-500'"
+                      :title="`Profit harga tawar dari modal: ${formatCurrency(product.askingPrice - product.buyPrice)}`"
+                    >
+                      {{ profitPercentOf(product.askingPrice, product.buyPrice) >= 0 ? '+' : '' }}{{ profitPercentOf(product.askingPrice, product.buyPrice).toFixed(1) }}%
+                    </div>
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
-                    {{ formatCurrency(product.fixedPrice) }}
+                    <div>{{ formatCurrency(product.fixedPrice) }}</div>
+                    <div
+                      v-if="profitPercentOf(product.fixedPrice, product.buyPrice) !== null"
+                      class="text-[10px] font-bold leading-tight"
+                      :class="profitPercentOf(product.fixedPrice, product.buyPrice) >= 0 ? 'text-emerald-600' : 'text-red-500'"
+                      :title="`Profit harga pas dari modal: ${formatCurrency(product.fixedPrice - product.buyPrice)}`"
+                    >
+                      {{ profitPercentOf(product.fixedPrice, product.buyPrice) >= 0 ? '+' : '' }}{{ profitPercentOf(product.fixedPrice, product.buyPrice).toFixed(1) }}%
+                    </div>
                   </td>
-                  <td class="px-4 py-3 text-right text-sm font-mono hidden md:table-cell">
-                    {{ product.servicePrice ? formatCurrency(product.servicePrice) : "-" }}
+                  <td class="px-4 py-3 text-right text-sm font-mono">
+                    <div>{{ product.servicePrice ? formatCurrency(product.servicePrice) : "-" }}</div>
+                    <div
+                      v-if="product.servicePrice && profitPercentOf(product.servicePrice, product.buyPrice) !== null"
+                      class="text-[10px] font-bold leading-tight"
+                      :class="profitPercentOf(product.servicePrice, product.buyPrice) >= 0 ? 'text-emerald-600' : 'text-red-500'"
+                      :title="`Profit harga teknisi dari modal: ${formatCurrency(product.servicePrice - product.buyPrice)}`"
+                    >
+                      {{ profitPercentOf(product.servicePrice, product.buyPrice) >= 0 ? '+' : '' }}{{ profitPercentOf(product.servicePrice, product.buyPrice).toFixed(1) }}%
+                    </div>
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
                     {{ formatCurrency(product.buyPrice) }}
@@ -1435,7 +1459,7 @@ const productsList = computed(() => {
 
   // Filter by selectedJenis (sub-kategori per quick category, sama seperti di Penjualan)
   if (selectedJenis.value && selectedCategory.value) {
-    list = list.filter((p: any) => matchesJenis(p, selectedCategory.value, selectedJenis.value));
+    list = list.filter((p: any) => matchesJenis(p, selectedCategory.value, selectedJenis.value))
   }
 
   // Filter by selectedOpnameFilter
@@ -1760,6 +1784,15 @@ const toggleSort = (field: string) => {
     sortBy.value = field;
     sortOrder.value = "asc";
   }
+};
+
+// Persen untung/rugi suatu harga jual dibanding harga beli (modal).
+// null = salah satu harga belum diisi (jangan tampilkan).
+const profitPercentOf = (price: number | null | undefined, buyPrice: number | null | undefined): number | null => {
+  const priceNum = Number(price) || 0;
+  const buyNum = Number(buyPrice) || 0;
+  if (!priceNum || !buyNum) return null;
+  return ((priceNum - buyNum) / buyNum) * 100;
 };
 
 const newProduct = reactive({
