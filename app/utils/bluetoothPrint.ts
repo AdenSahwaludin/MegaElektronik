@@ -89,8 +89,105 @@ function formatReceiptDate(dateStr?: string | Date): string {
   return `${date} ${time}`;
 }
 
+// ─── Logo Raster Helper ──────────────────────────────────────────────
+// Logo dipakai sebagai header struk (dicetak di tengah atas).
+// Konversi PNG → 1-bit bitmap ESC/POS (GS v 0) lewat canvas.
+const LOGO_URL =
+  typeof window !== "undefined" ? window.location.origin + "/logo.png" : "/logo.png";
+
+// Lebar cetak penuh 80mm = 576 dot (72 byte). Logo dibungkus padding putih
+// supaya benar-benar ke tengah (posisi raster tidak selalu ikut ESC a).
+const FULL_WIDTH_BYTES = 72;
+
+interface LogoRaster {
+  widthBytes: number;
+  height: number;
+  rows: Uint8Array;
+}
+
+export async function loadLogoRaster(): Promise<LogoRaster | null> {
+  try {
+    if (typeof window === "undefined") return null;
+    const img = new Image();
+    img.src = LOGO_URL;
+    await img.decode();
+
+    const targetWidth = 144; // ~18mm pada 203 DPI — proporsional utk 80mm
+    const targetHeight = Math.max(
+      1,
+      Math.round((img.naturalHeight / img.naturalWidth) * targetWidth)
+    );
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    // Latar putih (logo PNG bisa punya background transparan)
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
+    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+    const pixelData = ctx.getImageData(0, 0, targetWidth, targetHeight).data;
+    const widthBytes = Math.ceil(targetWidth / 8);
+    const rows = new Uint8Array(widthBytes * targetHeight);
+
+    for (let y = 0; y < targetHeight; y++) {
+      for (let x = 0; x < targetWidth; x++) {
+        const i = (y * targetWidth + x) * 4;
+        // Piksel transparan dianggap putih (tidak dicetak)
+        const alpha = pixelData[i + 3] ?? 255;
+        if (alpha < 128) continue;
+        const lum =
+          0.299 * (pixelData[i] ?? 255) +
+          0.587 * (pixelData[i + 1] ?? 255) +
+          0.114 * (pixelData[i + 2] ?? 255);
+        if (lum < 170) {
+          const byteIdx = y * widthBytes + (x >> 3);
+          rows[byteIdx] = (rows[byteIdx] ?? 0) | (0x80 >> (x & 7));
+        }
+      }
+    }
+
+    return { widthBytes, height: targetHeight, rows };
+  } catch (err) {
+    console.warn("Gagal memuat logo struk:", err);
+    return null;
+  }
+}
+
+/**
+ * Bangun command GS v 0 (raster bitmap) yang sudah di-center ke lebar 576 dot.
+ */
+function buildLogoRasterCommand(logo: LogoRaster): number[] {
+  const leftPadBytes = Math.floor((FULL_WIDTH_BYTES - logo.widthBytes) / 2);
+  const rightPadBytes = FULL_WIDTH_BYTES - logo.widthBytes - leftPadBytes;
+
+  const bytes: number[] = [
+    GS, 0x76, 0x30, 0x00,
+    FULL_WIDTH_BYTES & 0xff,
+    (FULL_WIDTH_BYTES >> 8) & 0xff,
+    logo.height & 0xff,
+    (logo.height >> 8) & 0xff,
+  ];
+
+  for (let y = 0; y < logo.height; y++) {
+    const rowStart = y * logo.widthBytes;
+    for (let p = 0; p < leftPadBytes; p++) bytes.push(0x00);
+    for (let b = 0; b < logo.widthBytes; b++) bytes.push(logo.rows[rowStart + b] || 0x00);
+    for (let p = 0; p < rightPadBytes; p++) bytes.push(0x00);
+  }
+
+  bytes.push(0x0a); // LF agar teks berikutnya mulai di baris baru
+  return bytes;
+}
+
 // ─── Receipt Builder ─────────────────────────────────────────────────
-export function buildReceiptBytes(transaction: any): Uint8Array {
+export function buildReceiptBytes(
+  transaction: any,
+  logoRaster?: LogoRaster | null
+): Uint8Array {
   const bytes: number[] = [];
 
   const add = (...cmds: number[][]) => {
@@ -111,14 +208,22 @@ export function buildReceiptBytes(transaction: any): Uint8Array {
   // ── Initialize ──
   add(CMD.INIT);
 
+  // ── Logo toko (tengah atas) — dikirim sebagai raster bitmap ──
+  if (logoRaster) {
+    add(buildLogoRasterCommand(logoRaster));
+  }
+
   // ── Store Name (center, bold, double size) ──
   add(CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.DOUBLE_ON);
   line("MEGA ELEKTRONIK");
   add(CMD.SIZE_NORMAL, CMD.BOLD_OFF);
 
-  // ── Subtitle ──
+  // ── Subtitle + Alamat & WhatsApp ──
   add(CMD.ALIGN_CENTER);
   line("Nota Pembayaran Toko");
+  line("Blok Gebangmampang Desa Margamulya");
+  line("Kecamatan Bongas");
+  line("WhatsApp : 083115603569");
 
   // ── Date & Transaction ID ──
   const dateStr = formatReceiptDate(transaction?.createdAt || new Date());
@@ -379,7 +484,9 @@ async function sendBytes(
  */
 export async function printBluetoothReceipt(transaction: any): Promise<void> {
   const connection = await connectPrinter();
-  const receiptData = buildReceiptBytes(transaction);
+  // Load logo struk dulu (kalau gagal group, lanjut tanpa logo)
+  const logoRaster = await loadLogoRaster();
+  const receiptData = buildReceiptBytes(transaction, logoRaster);
   try {
     await sendBytes(connection.characteristic, receiptData);
   } catch (err) {
@@ -422,6 +529,9 @@ export function printViaRawBT(transaction: any): boolean {
   const lines: string[] = [];
   lines.push(center("MEGA ELEKTRONIK"));
   lines.push(center("Nota Pembayaran Toko"));
+  lines.push(center("Blok Gebangmampang Desa Margamulya"));
+  lines.push(center("Kecamatan Bongas"));
+  lines.push(center("WhatsApp : 083115603569"));
   lines.push(center(formatDate(transaction.createdAt || new Date())));
   lines.push("-".repeat(48));
 

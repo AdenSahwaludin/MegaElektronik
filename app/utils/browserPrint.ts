@@ -129,6 +129,12 @@ export function printBrowserReceipt(transaction: any): void {
             font-weight: 600;
             color: #000;
           }
+          .store-address {
+            font-size: 8.5px;
+            font-weight: 600;
+            color: #000;
+            white-space: nowrap;
+          }
           .info {
             text-align: center;
             font-size: 9.5px;
@@ -226,6 +232,9 @@ export function printBrowserReceipt(transaction: any): void {
           <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'" />
           <div class="store-name">MEGA ELEKTRONIK</div>
           <div class="store-subtitle">Nota Pembayaran Toko</div>
+          <div class="store-address">Blok Gebangmampang Desa Margamulya</div>
+          <div class="store-address">Kecamatan Bongas</div>
+          <div class="store-address">WhatsApp : 083115603569</div>
         </div>
         <div class="info">
           ${tDate ? `<div>${tDate}</div>` : ""}

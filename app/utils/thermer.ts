@@ -107,17 +107,18 @@ export function formatReceiptDateTime(dateStr?: string | Date): string {
 /**
  * Build Thermer Print Entries for a given transaction with strict sequential indexing (0, 1, 2, ...).
  * Follows the standard receipt layout optimized for 80mm thermal printers:
- *  1. Nama Toko
- *  2. Subtitle / Header
- *  3. Tanggal & No Transaksi
- *  4. Garis Pembatas
- *  5. Daftar Item (Nama Produk, baris Qty x Harga & Subtotal 48 kolom)
- *  6. Garis Pembatas
- *  7. Total Pembayaran
- *  8. Jumlah Bayar & Kembalian
- *  9. Garis Penutup
- * 10. Footer / Ucapan
- * 11. Feed 3 baris di paling bawah
+ *  1. Logo Toko (terpusat di atas)
+ *  2. Nama Toko
+ *  3. Subtitle / Header + Alamat & WhatsApp
+ *  4. Tanggal & No Transaksi
+ *  5. Garis Pembatas
+ *  6. Daftar Item (Nama Produk, baris Qty x Harga & Subtotal 48 kolom)
+ *  7. Garis Pembatas
+ *  8. Total Pembayaran
+ *  9. Jumlah Bayar & Kembalian
+ * 10. Garis Penutup
+ * 11. Footer / Ucapan
+ * 12. Feed 3 baris di paling bawah
  */
 export function generateThermerReceiptEntries(transaction: any): ThermerEntriesMap {
   const list: ThermerPrintEntry[] = [];
@@ -137,18 +138,33 @@ export function generateThermerReceiptEntries(transaction: any): ThermerEntriesM
     });
   };
 
-  // 1. NAMA TOKO (Double Height + Width, Bold, Center)
+  // 1. LOGO TOKO (Image Entry, Center) — dipakai di paling atas struk
+  if (typeof window !== "undefined") {
+    list.push({
+      type: 1,
+      path: `${window.location.origin}/logo.png`,
+      align: 1,
+    });
+  }
+
+  // 2. NAMA TOKO (Double Height + Width, Bold, Center)
   // "MEGA ELEKTRONIK" (15 chars) fits perfectly in 16-char double width
   addText("MEGA ELEKTRONIK", 1, 1, 2);
 
-  // 2. SUBTITLE / HEADER (Normal, Center)
+  // 3. SUBTITLE + ALAMAT & WHATSAPP (Normal, Center)
   addText("Nota Pembayaran Toko", 0, 1, 0);
+  addText(
+    "Blok Gebangmampang Desa Margamulya\nKecamatan Bongas\nWhatsApp : 083115603569",
+    0,
+    1,
+    0
+  );
 
-  // 3. TANGGAL (Normal, Center)
+  // 4. TANGGAL (Normal, Center)
   const dateFormatted = formatReceiptDateTime(transaction?.createdAt || new Date());
   addText(dateFormatted, 0, 1, 0);
 
-  // 4. GARIS PEMBATAS (48 Karakter 80mm)
+  // 5. GARIS PEMBATAS (48 Karakter 80mm)
   addText("------------------------------------------------", 0, 0, 0);
 
   // 5. DAFTAR ITEM (Digabung 1 entry per item dengan \n untuk mencegah BLE packet burst)
