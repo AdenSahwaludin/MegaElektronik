@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
   const distribution = {
     'Harga Tawar': 0,
     'Harga Pas': 0,
-    'Harga Service': 0,
+    'Harga Teknisi': 0,
     'Harga Nego Bebas': 0
   };
 
@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
     } else if (item.soldPrice === item.product.fixedPrice) {
       distribution['Harga Pas']++;
     } else if (item.product.servicePrice && item.soldPrice === item.product.servicePrice) {
-      distribution['Harga Service']++;
+      distribution['Harga Teknisi']++;
     } else {
       distribution['Harga Nego Bebas']++;
     }

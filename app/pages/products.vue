@@ -111,49 +111,7 @@
                 >
                 <input
                   :value="newProduct.stock !== undefined ? formatNumber(newProduct.stock) : ''"
-                  @input="newProduct.stock = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="0"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Harga Service (Teknisi)</label
-                >
-                <input
-                  :value="newProduct.servicePrice ? formatNumber(newProduct.servicePrice) : ''"
-                  @input="newProduct.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="Khusus teknisi"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Harga Tawar (Rp) <span class="text-red-500">*</span></label
-                >
-                <input
-                  :value="newProduct.askingPrice ? formatNumber(newProduct.askingPrice) : ''"
-                  @input="newProduct.askingPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="0"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Harga Pas (Rp)</label
-                >
-                <input
-                  :value="newProduct.fixedPrice ? formatNumber(newProduct.fixedPrice) : ''"
-                  @input="newProduct.fixedPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  @input="onPriceInput($event, (v) => newProduct.stock = v)"
                   type="text"
                   inputmode="numeric"
                   placeholder="0"
@@ -167,12 +125,57 @@
                 >
                 <input
                   :value="newProduct.buyPrice ? formatNumber(newProduct.buyPrice) : ''"
-                  @input="newProduct.buyPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  @input="onPriceInput($event, (v) => newProduct.buyPrice = v)"
                   type="text"
                   inputmode="numeric"
                   placeholder="0"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Teknisi <span class="text-xs font-normal text-gray-500">Opsional</span></label
+                >
+                <input
+                  :value="newProduct.servicePrice ? formatNumber(newProduct.servicePrice) : ''"
+                  @input="onPriceInput($event, (v) => newProduct.servicePrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="Khusus teknisi"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <PriceProfitHint :price="newProduct.servicePrice" :buy-price="newProduct.buyPrice" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Pas (Rp)</label
+                >
+                <input
+                  :value="newProduct.fixedPrice ? formatNumber(newProduct.fixedPrice) : ''"
+                  @input="onPriceInput($event, (v) => newProduct.fixedPrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <PriceProfitHint :price="newProduct.fixedPrice" :buy-price="newProduct.buyPrice" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Tawar (Rp) <span class="text-red-500">*</span></label
+                >
+                <input
+                  :value="newProduct.askingPrice ? formatNumber(newProduct.askingPrice) : ''"
+                  @input="onPriceInput($event, (v) => newProduct.askingPrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <PriceProfitHint :price="newProduct.askingPrice" :buy-price="newProduct.buyPrice" />
               </div>
 
               <div class="flex items-center gap-2 mt-auto pb-2">
@@ -539,7 +542,7 @@
                     class="px-4 py-3 text-right text-sm font-semibold text-gray-700 hidden md:table-cell cursor-pointer hover:bg-gray-200 transition"
                   >
                     <div class="flex items-center justify-end gap-1">
-                      Harga Service
+                      Harga Teknisi
                       <Icon v-if="sortBy === 'servicePrice'" :name="sortOrder === 'asc' ? 'lucide:sort-asc' : 'lucide:sort-desc'" class="w-4 h-4 text-orange-600" />
                     </div>
                   </th>
@@ -842,16 +845,45 @@
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Harga Service</label
+                  >Harga Beli</label
+                >
+                <input
+                  :value="editingProduct.buyPrice ? formatNumber(editingProduct.buyPrice) : ''"
+                  @input="onPriceInput($event, (v) => editingProduct.buyPrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Teknisi</label
                 >
                 <input
                   :value="editingProduct.servicePrice ? formatNumber(editingProduct.servicePrice) : ''"
-                  @input="editingProduct.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                  @input="onPriceInput($event, (v) => editingProduct.servicePrice = v)"
                   type="text"
                   inputmode="numeric"
                   placeholder="Khusus teknisi"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
+                <PriceProfitHint :price="editingProduct.servicePrice" :buy-price="editingProduct.buyPrice" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Pas</label
+                >
+                <input
+                  :value="editingProduct.fixedPrice ? formatNumber(editingProduct.fixedPrice) : ''"
+                  @input="onPriceInput($event, (v) => editingProduct.fixedPrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <PriceProfitHint :price="editingProduct.fixedPrice" :buy-price="editingProduct.buyPrice" />
               </div>
             </div>
 
@@ -875,53 +907,27 @@
               </button>
             </div>
 
-          
-
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2"
                 >Harga Tawar</label
               >
               <input
                 :value="editingProduct.askingPrice ? formatNumber(editingProduct.askingPrice) : ''"
-                @input="editingProduct.askingPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                @input="onPriceInput($event, (v) => editingProduct.askingPrice = v)"
                 type="text"
                 inputmode="numeric"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Pas</label
-              >
-              <input
-                :value="editingProduct.fixedPrice ? formatNumber(editingProduct.fixedPrice) : ''"
-                @input="editingProduct.fixedPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                type="text"
-                inputmode="numeric"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-        <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Beli</label
-              >
-              <input
-                :value="editingProduct.buyPrice ? formatNumber(editingProduct.buyPrice) : ''"
-                @input="editingProduct.buyPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
-                type="text"
-                inputmode="numeric"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              <PriceProfitHint :price="editingProduct.askingPrice" :buy-price="editingProduct.buyPrice" />
               <div class="flex items-center gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="isActiveEdit"
-                v-model="editingProduct.isActive"
-                class="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-              />
-              <label for="isActiveEdit" class="text-sm font-semibold text-gray-700">Produk Aktif (Tampil di Penjualan)</label>
-            </div>
+                <input
+                  type="checkbox"
+                  id="isActiveEdit"
+                  v-model="editingProduct.isActive"
+                  class="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                />
+                <label for="isActiveEdit" class="text-sm font-semibold text-gray-700">Produk Aktif (Tampil di Penjualan)</label>
+              </div>
             </div>
             <div class="flex gap-4 pt-4">
               <button
@@ -990,89 +996,96 @@
             <p class="text-gray-500 font-medium">Belum ada riwayat kedatangan barang.</p>
           </div>
 
-          <!-- Table Content -->
-          <div v-else class="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
-            <div class="overflow-x-auto max-h-[55vh]">
-              <table class="w-full text-left border-collapse min-w-[900px]">
-                <thead class="sticky top-0 bg-gray-50 z-10 border-b border-gray-200">
-                  <tr class="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    <th class="p-4">Tanggal</th>
-                    <th class="p-4">Produk</th>
-                    <th class="p-4 text-center">Jumlah</th>
-                    <th class="p-4 text-right">Harga Modal</th>
-                    <th class="p-4 text-right">Harga Tawar</th>
-                    <th class="p-4 text-right">Harga Pas</th>
-                    <th class="p-4 text-right">Harga Service</th>
-                    <th class="p-4">Supplier & Catatan</th>
-                    <th class="p-4 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                  <tr 
-                    v-for="item in arrivalHistory" 
-                    :key="item.id" 
-                    class="hover:bg-blue-50/20 transition-colors text-sm"
-                  >
-                    <td class="p-4 whitespace-nowrap text-gray-500 font-medium">
-                      {{ new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
-                    </td>
-                    <td class="p-4">
-                      <div class="font-semibold text-gray-900 leading-tight">
-                        {{ item.product?.name || 'Produk Dihapus' }}
+          <!-- Content: Grouped by Day -->
+          <div v-else class="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white max-h-[58vh] overflow-y-auto">
+            <div v-for="group in groupedArrivalHistory" :key="group.key" class="border-b border-gray-100 last:border-b-0">
+              <!-- Day Header -->
+              <div class="sticky top-0 z-10 bg-gray-50/95 backdrop-blur border-b border-gray-200 px-4 py-2 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 min-w-0">
+                  <Icon
+                    :name="group.isToday ? 'lucide:calendar-check' : group.isYesterday ? 'lucide:calendar-minus' : 'lucide:calendar-days'"
+                    :class="group.isToday ? 'text-orange-600' : 'text-gray-400'"
+                    class="w-4 h-4 shrink-0"
+                  />
+                  <span class="font-bold text-sm text-gray-800 truncate">{{ group.label }}</span>
+                </div>
+                <div class="text-[11px] font-bold text-gray-500 whitespace-nowrap shrink-0">
+                  {{ group.items.length }} item · <span class="text-emerald-600">+{{ group.totalQty }} unit</span>
+                </div>
+              </div>
+
+              <!-- Items -->
+              <div class="divide-y divide-gray-100">
+                <div
+                  v-for="item in group.items"
+                  :key="item.id"
+                  class="px-4 py-3 flex items-start gap-3 hover:bg-blue-50/20 transition-colors"
+                >
+                  <!-- Waktu -->
+                  <div class="w-11 shrink-0 pt-0.5 text-center">
+                    <span class="text-[11px] font-mono font-bold text-gray-400">{{ formatTimeShort(item.createdAt) }}</span>
+                  </div>
+
+                  <!-- Detail -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="min-w-0">
+                        <div class="font-semibold text-gray-900 text-sm leading-tight">
+                          {{ item.product?.name || 'Produk Dihapus' }}
+                        </div>
+                        <div class="text-xs text-gray-400 mt-0.5 font-mono">
+                          {{ item.product?.brand || '-' }} / {{ item.product?.model || '-' }}
+                        </div>
                       </div>
-                      <div class="text-xs text-gray-400 mt-1 font-mono">
-                        {{ item.product?.brand || '-' }} / {{ item.product?.model || '-' }}
-                      </div>
-                    </td>
-                    <td class="p-4 text-center whitespace-nowrap">
-                      <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                      <span class="shrink-0 inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                         +{{ item.quantity }}
                       </span>
-                    </td>
-                    <td class="p-4 text-right whitespace-nowrap font-semibold">
-                      <span v-if="item.buyPrice" class="font-mono text-gray-900">{{ formatCurrency(item.buyPrice) }}</span>
-                      <span v-else class="text-gray-400 font-sans">-</span>
-                    </td>
-                    <td class="p-4 text-right whitespace-nowrap">
-                      <span v-if="item.askingPrice" class="font-mono text-gray-600">{{ formatCurrency(item.askingPrice) }}</span>
-                      <span v-else class="text-gray-400">-</span>
-                    </td>
-                    <td class="p-4 text-right whitespace-nowrap">
-                      <span v-if="item.fixedPrice" class="font-mono text-gray-600">{{ formatCurrency(item.fixedPrice) }}</span>
-                      <span v-else class="text-gray-400">-</span>
-                    </td>
-                    <td class="p-4 text-right whitespace-nowrap">
-                      <span v-if="item.servicePrice" class="font-mono text-gray-600">{{ formatCurrency(item.servicePrice) }}</span>
-                      <span v-else class="text-gray-400">-</span>
-                    </td>
-                    <td class="p-4 max-w-xs truncate">
-                      <div v-if="item.supplier" class="font-medium text-gray-800 flex items-center gap-1">
-                        <Icon name="lucide:user" class="w-3.5 h-3.5 text-gray-400" />
+                    </div>
+
+                    <!-- Harga -->
+                    <div class="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5 text-xs">
+                      <span v-if="item.buyPrice" class="text-gray-500">
+                        Modal: <span class="font-mono font-semibold text-gray-800">{{ formatCurrency(item.buyPrice) }}</span>
+                      </span>
+                      <span v-if="item.askingPrice" class="text-gray-500">
+                        Tawar: <span class="font-mono font-semibold text-gray-700">{{ formatCurrency(item.askingPrice) }}</span>
+                      </span>
+                      <span v-if="item.fixedPrice" class="text-gray-500">
+                        Pas: <span class="font-mono font-semibold text-gray-700">{{ formatCurrency(item.fixedPrice) }}</span>
+                      </span>
+                      <span v-if="item.servicePrice" class="text-gray-500">
+                        Teknisi: <span class="font-mono font-semibold text-gray-700">{{ formatCurrency(item.servicePrice) }}</span>
+                      </span>
+                    </div>
+
+                    <!-- Supplier & Catatan -->
+                    <div v-if="item.supplier || item.notes" class="mt-1.5 text-xs flex flex-wrap items-center gap-x-4 gap-y-0.5">
+                      <span v-if="item.supplier" class="text-gray-700 font-semibold inline-flex items-center gap-1">
+                        <Icon name="lucide:user" class="w-3 h-3 text-gray-400" />
                         {{ item.supplier }}
-                      </div>
-                      <div v-if="item.notes" class="text-xs text-gray-500 mt-1 flex items-center gap-1 italic">
+                      </span>
+                      <span v-if="item.notes" class="text-gray-500 italic inline-flex items-center gap-1">
                         <Icon name="lucide:info" class="w-3 h-3 text-gray-400" />
                         {{ item.notes }}
-                      </div>
-                      <span v-if="!item.supplier && !item.notes" class="text-gray-400">-</span>
-                    </td>
-                    <td class="p-4 text-center whitespace-nowrap">
-                      <button
-                        @click="deleteArrivalItem(item)"
-                        :disabled="deletingArrivalId === item.id"
-                        class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition disabled:opacity-40 cursor-pointer"
-                        title="Hapus riwayat & kembalikan stok"
-                      >
-                        <Icon
-                          :name="deletingArrivalId === item.id ? 'lucide:loader-2' : 'lucide:trash-2'"
-                          class="w-4 h-4"
-                          :class="{ 'animate-spin': deletingArrivalId === item.id }"
-                        />
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Aksi -->
+                  <button
+                    @click="deleteArrivalItem(item)"
+                    :disabled="deletingArrivalId === item.id"
+                    class="p-1.5 shrink-0 self-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition disabled:opacity-40 cursor-pointer"
+                    title="Hapus riwayat & kembalikan stok"
+                  >
+                    <Icon
+                      :name="deletingArrivalId === item.id ? 'lucide:loader-2' : 'lucide:trash-2'"
+                      class="w-4 h-4"
+                      :class="{ 'animate-spin': deletingArrivalId === item.id }"
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1182,7 +1195,7 @@
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Masuk <span class="text-red-500">*</span></label>
                   <input
                     :value="item.quantity ? formatNumber(Number(item.quantity)) : ''"
-                    @input="item.quantity = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    @input="onPriceInput($event, (v) => item.quantity = v)"
                     type="text"
                     inputmode="numeric"
                     placeholder="0"
@@ -1195,7 +1208,7 @@
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Modal Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
                   <input
                     :value="item.buyPrice ? formatNumber(Number(item.buyPrice)) : ''"
-                    @input="item.buyPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    @input="onPriceInput($event, (v) => item.buyPrice = v)"
                     type="text"
                     inputmode="numeric"
                     placeholder="Biarkan kosong jika sama"
@@ -1208,7 +1221,7 @@
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Tawar Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
                   <input
                     :value="item.askingPrice ? formatNumber(Number(item.askingPrice)) : ''"
-                    @input="item.askingPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    @input="onPriceInput($event, (v) => item.askingPrice = v)"
                     type="text"
                     inputmode="numeric"
                     placeholder="Harga Jual Normal"
@@ -1221,7 +1234,7 @@
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Pas Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
                   <input
                     :value="item.fixedPrice ? formatNumber(Number(item.fixedPrice)) : ''"
-                    @input="item.fixedPrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    @input="onPriceInput($event, (v) => item.fixedPrice = v)"
                     type="text"
                     inputmode="numeric"
                     placeholder="Harga Net/Pas"
@@ -1231,10 +1244,10 @@
 
                 <!-- Service Price -->
                 <div>
-                  <label class="block text-sm font-semibold text-gray-700 mb-2">Hrga Service Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Teknisi Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
                   <input
                     :value="item.servicePrice ? formatNumber(Number(item.servicePrice)) : ''"
-                    @input="item.servicePrice = parseFromDisplay(($event.target as HTMLInputElement).value)"
+                    @input="onPriceInput($event, (v) => item.servicePrice = v)"
                     type="text"
                     inputmode="numeric"
                     placeholder="Harga u/ Teknisi"
@@ -1351,6 +1364,7 @@ import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
 import { getIdempotencyKey, renewIdempotencyKey } from "../utils/idempotency";
+import { onPriceInput } from "../utils/priceInput";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 
 definePageMeta({
@@ -1944,6 +1958,62 @@ const deleteProduct = async (productId: string) => {
   } catch (error: any) {
     showToast(error.message || "Waduh, gagal hapus produk");
   }
+};
+
+// ── Riwayat kedatangan: kelompokkan per hari ──
+interface GroupedArrivalDay {
+  key: string;
+  label: string;
+  isToday: boolean;
+  isYesterday: boolean;
+  items: any[];
+  totalQty: number;
+}
+
+const arrivalDateKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+const groupedArrivalHistory = computed<GroupedArrivalDay[]>(() => {
+  const now = new Date();
+  const todayKey = arrivalDateKey(now);
+  const yesterdayKey = arrivalDateKey(new Date(now.getTime() - 86_400_000));
+
+  const groups = new Map<string, GroupedArrivalDay>();
+  for (const item of [...arrivalHistory.value].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  )) {
+    const d = new Date(item.createdAt);
+    const key = arrivalDateKey(d);
+    if (!groups.has(key)) {
+      const isToday = key === todayKey;
+      const isYesterday = key === yesterdayKey;
+      const label = isToday
+        ? "Hari Ini"
+        : isYesterday
+        ? "Kemarin"
+        : d.toLocaleDateString("id-ID", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+      groups.set(key, { key, label, isToday, isYesterday, items: [], totalQty: 0 });
+    }
+    const group = groups.get(key)!;
+    group.items.push(item);
+    group.totalQty += item.quantity || 0;
+  }
+
+  // Hari terbaru di atas
+  return Array.from(groups.values()).sort((a, b) => b.key.localeCompare(a.key));
+});
+
+const formatTimeShort = (dateStr: string | null | undefined) => {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const fetchArrivalHistory = async () => {

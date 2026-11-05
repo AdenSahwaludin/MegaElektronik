@@ -194,7 +194,7 @@
                     class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[8px] font-bold rounded-lg shadow transition active:scale-90 flex items-center gap-1"
                   >
                     <Icon name="lucide:tag" class="w-2.5 h-2.5" />
-                    Service
+                    Teknisi
                   </button>
                 </div>
               </div>
@@ -252,12 +252,12 @@
               <p class="text-xs text-gray-600">
                 {{ item.brand }} - {{ item.model }}
                 <span v-if="item.servicePrice" :class="item.stockType === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'" class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">
-                  {{ item.stockType === 'service' ? 'Harga Service' : 'Harga Umum' }}
+                  {{ item.stockType === 'service' ? 'Harga Teknisi' : 'Harga Umum' }}
                 </span>
               </p>
             </div>
 
-            <!-- Quantity Control -->
+            <!-- Quantity Control + Tombol Harga Pas -->
             <div class="flex items-center gap-2 mb-2">
               <label class="text-xs font-semibold shrink-0">Qty:</label>
               <div class="flex items-center border border-gray-300 rounded">
@@ -289,6 +289,17 @@
                   +
                 </button>
               </div>
+              <!-- Langsung pakai harga pas produk -->
+              <button
+                v-if="item.fixedPrice"
+                type="button"
+                @click="setPriceToFixed(item.id)"
+                class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 border border-emerald-200 hover:border-emerald-400 font-bold text-xs rounded-md transition active:scale-95 flex items-center gap-1 shrink-0 select-none touch-manipulation cursor-pointer"
+                :title="`Langsung pakai harga pas: ${formatCurrency(item.fixedPrice || 0)}`"
+              >
+                <Icon name="lucide:badge-check" class="w-3.5 h-3.5" />
+                Pas
+              </button>
             </div>
 
             <!-- Price Input (Bargaining Feature) -->
@@ -304,11 +315,11 @@
               <div class="flex items-center gap-1 flex-1 min-w-0">
                 <button
                   type="button"
-                  @click="adjustPrice(item.id, item.soldPrice, -10000)"
+                  @click="adjustPrice(item.id, item.soldPrice, -getSmartStep(item.soldPrice))"
                   class="h-9 px-2 min-w-[38px] bg-orange-100 hover:bg-orange-200 active:bg-orange-300 text-orange-800 font-bold rounded-lg transition active:scale-95 flex items-center justify-center text-xs shrink-0 select-none touch-manipulation border border-orange-200"
-                  title="Kurang Rp 10.000"
+                  :title="stepSentence(item.soldPrice, 'Kurang')"
                 >
-                  -10rb
+                  -{{ stepRb(item.soldPrice) }}
                 </button>
                 <div class="relative flex-1 min-w-0">
                   <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold select-none pointer-events-none">Rp</span>
@@ -324,11 +335,11 @@
                 </div>
                 <button
                   type="button"
-                  @click="adjustPrice(item.id, item.soldPrice, 10000)"
+                  @click="adjustPrice(item.id, item.soldPrice, getSmartStep(item.soldPrice))"
                   class="h-9 px-2 min-w-[38px] bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold rounded-lg transition active:scale-95 flex items-center justify-center text-xs shrink-0 select-none touch-manipulation shadow-xs"
-                  title="Tambah Rp 10.000"
+                  :title="stepSentence(item.soldPrice, 'Tambah')"
                 >
-                  +10rb
+                  +{{ stepRb(item.soldPrice) }}
                 </button>
               </div>
               <p
@@ -516,7 +527,7 @@
                 <p class="text-xs text-gray-600">
                   {{ item.brand }} - {{ item.model }}
                   <span v-if="item.servicePrice" :class="item.stockType === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'" class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">
-                    {{ item.stockType === 'service' ? 'Harga Service' : 'Harga Umum' }}
+                    {{ item.stockType === 'service' ? 'Harga Teknisi' : 'Harga Umum' }}
                   </span>
                 </p>
               </div>
@@ -555,6 +566,17 @@
                     +
                   </button>
                 </div>
+                <!-- Langsung pakai harga pas produk -->
+                <button
+                  v-if="item.fixedPrice"
+                  type="button"
+                  @click="setPriceToFixed(item.id)"
+                  class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 border border-emerald-200 hover:border-emerald-400 font-bold text-xs rounded-md transition active:scale-95 flex items-center gap-1 shrink-0 select-none touch-manipulation cursor-pointer"
+                  :title="`Langsung pakai harga pas: ${formatCurrency(item.fixedPrice || 0)}`"
+                >
+                  <Icon name="lucide:badge-check" class="w-3.5 h-3.5" />
+                  Pas
+                </button>
               </div>
               <div class="mb-2">
                 <label
@@ -568,11 +590,11 @@
                 <div class="flex items-center gap-1 flex-1 min-w-0">
                   <button
                     type="button"
-                    @click="adjustPrice(item.id, item.soldPrice, -10000)"
+                    @click="adjustPrice(item.id, item.soldPrice, -getSmartStep(item.soldPrice))"
                     class="h-9 px-2 min-w-[38px] bg-orange-100 hover:bg-orange-200 active:bg-orange-300 text-orange-800 font-bold rounded-lg transition active:scale-95 flex items-center justify-center text-xs shrink-0 select-none touch-manipulation border border-orange-200"
-                    title="Kurang Rp 10.000"
+                    :title="stepSentence(item.soldPrice, 'Kurang')"
                   >
-                    -10rb
+                    -{{ stepRb(item.soldPrice) }}
                   </button>
                   <div class="relative flex-1 min-w-0">
                     <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold select-none pointer-events-none">Rp</span>
@@ -588,11 +610,11 @@
                   </div>
                   <button
                     type="button"
-                    @click="adjustPrice(item.id, item.soldPrice, 10000)"
+                    @click="adjustPrice(item.id, item.soldPrice, getSmartStep(item.soldPrice))"
                     class="h-9 px-2 min-w-[38px] bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold rounded-lg transition active:scale-95 flex items-center justify-center text-xs shrink-0 select-none touch-manipulation shadow-xs"
-                    title="Tambah Rp 10.000"
+                    :title="stepSentence(item.soldPrice, 'Tambah')"
                   >
-                    +10rb
+                    +{{ stepRb(item.soldPrice) }}
                   </button>
                 </div>
               </div>
@@ -905,9 +927,11 @@ import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
+import { onPriceInput, getSmartStep, formatStepRb } from "../utils/priceInput";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
 import { usePosViewPreference } from "~/composables/usePosViewPreference";
+import { useQuickFilterState } from "~/composables/useQuickFilterState";
 
 definePageMeta({
   layout: "default",
@@ -1154,9 +1178,12 @@ const getProductSortName = (product: any) => {
 };
 
 // Category & Brand & Jenis Selection State
-const selectedCategory = ref('');
-const selectedBrand = ref('');
-const selectedJenis = ref('');
+// (dibagi antar tampilan POS lama & baru, tetap bertahan saat pindah)
+const {
+  category: selectedCategory,
+  brand: selectedBrand,
+  jenis: selectedJenis,
+} = useQuickFilterState();
 
 // Urutan harga saat quick category aktif (default: termurah, sama seperti Menu Produk)
 const priceSort = ref<'default' | 'cheapest' | 'expensive'>('default');
@@ -1272,14 +1299,28 @@ const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") 
 };
 
 const handlePriceInput = (cartItemId: string, event: Event) => {
-  const input = event.target as HTMLInputElement;
-  const value = parseFromDisplay(input.value);
-  cartStore.updateSoldPrice(cartItemId, value);
+  // Kursor tetap di posisi digit yang diedit (tidak lompat ke akhir)
+  onPriceInput(event, (value) => {
+    cartStore.updateSoldPrice(cartItemId, value);
+  });
 };
 
 const adjustPrice = (cartItemId: string, currentPrice: number, delta: number) => {
   const newPrice = Math.max(0, (currentPrice || 0) + delta);
   cartStore.updateSoldPrice(cartItemId, newPrice);
+};
+
+// Tombol -/+ harga unit smart: langkah menyesuaikan besaran harga
+const stepRb = (price: number) => formatStepRb(getSmartStep(price));
+const stepSentence = (price: number, aktivitas: string) =>
+  `${aktivitas} Rp ${getSmartStep(price).toLocaleString("id-ID")}`;
+
+// Tombol "Pas": langsung pakai harga pas produk
+const setPriceToFixed = (cartItemId: string) => {
+  const item = cartStore.items.find((i) => i.id === cartItemId);
+  if (!item) return;
+  const target = item.fixedPrice || item.askingPrice;
+  if (target > 0) cartStore.updateSoldPrice(cartItemId, target);
 };
 
 const willPrintReceipt = ref(false);

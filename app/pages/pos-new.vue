@@ -265,10 +265,10 @@
                 :disabled="product.stock === 0"
                 @click.stop="addProductToCart(product, 'service')"
                 class="px-2 py-1.5 text-[9px] sm:text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-lg sm:rounded-xl transition-all active:scale-95 flex items-center gap-0.5 shadow-2xs"
-                title="Tambah Jasa Service"
+                title="Tambah dengan harga teknisi"
               >
                 <Icon name="lucide:wrench" class="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span class="hidden sm:inline">Svc {{ formatCurrency(product.servicePrice) }}</span>
+                <span class="hidden sm:inline">Tek {{ formatCurrency(product.servicePrice) }}</span>
               </button>
 
               <button
@@ -456,7 +456,7 @@
                     :class="item.stockType === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'"
                     class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase inline-block"
                   >
-                    {{ item.stockType === 'service' ? 'Service' : 'Umum' }}
+                    {{ item.stockType === 'service' ? 'Teknisi' : 'Umum' }}
                   </span>
                 </p>
               </div>
@@ -470,36 +470,49 @@
 
             <!-- Qty & Price Row -->
             <div class="flex items-center gap-3 mb-2.5">
-              <!-- Quantity -->
-              <div class="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shrink-0">
+              <!-- Quantity + Tombol Harga Pas -->
+              <div class="flex items-center gap-1.5 shrink-0">
+                <div class="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    @click="cartStore.updateQuantity(item.id, item.quantity - 1)"
+                    class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-500 font-bold transition"
+                  >−</button>
+                  <input
+                    :id="'qty-' + item.id"
+                    name="quantity"
+                    :value="item.quantity"
+                    @input="(e: any) => cartStore.updateQuantity(item.id, parseInt(e.target.value, 10) || 1)"
+                    type="number"
+                    min="1"
+                    class="w-10 text-center text-sm font-bold border-l border-r border-gray-200 py-1 focus:outline-none bg-transparent"
+                  />
+                  <button
+                    @click="cartStore.updateQuantity(item.id, item.quantity + 1)"
+                    class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-500 font-bold transition"
+                  >+</button>
+                </div>
+                <!-- Langsung pakai harga pas produk -->
                 <button
-                  @click="cartStore.updateQuantity(item.id, item.quantity - 1)"
-                  class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-500 font-bold transition"
-                >−</button>
-                <input
-                  :id="'qty-' + item.id"
-                  name="quantity"
-                  :value="item.quantity"
-                  @input="(e: any) => cartStore.updateQuantity(item.id, parseInt(e.target.value, 10) || 1)"
-                  type="number"
-                  min="1"
-                  class="w-10 text-center text-sm font-bold border-l border-r border-gray-200 py-1 focus:outline-none bg-transparent"
-                />
-                <button
-                  @click="cartStore.updateQuantity(item.id, item.quantity + 1)"
-                  class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-500 font-bold transition"
-                >+</button>
+                  v-if="item.fixedPrice"
+                  type="button"
+                  @click="setPriceToFixed(item.id)"
+                  class="h-8 px-1.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 border border-emerald-200 hover:border-emerald-400 font-bold text-[10px] rounded-md transition active:scale-95 flex items-center gap-0.5 shrink-0 select-none touch-manipulation cursor-pointer"
+                  :title="`Langsung pakai harga pas: ${formatCurrency(item.fixedPrice || 0)}`"
+                >
+                  <Icon name="lucide:badge-check" class="w-3 h-3" />
+                  Pas
+                </button>
               </div>
 
               <!-- Price Input -->
               <div class="flex items-center gap-1 flex-1 min-w-0">
                 <button
                   type="button"
-                  @click="adjustPrice(item.id, item.soldPrice, -10000)"
+                  @click="adjustPrice(item.id, item.soldPrice, -getSmartStep(item.soldPrice))"
                   class="h-9 px-2 min-w-[38px] bg-orange-100 hover:bg-orange-200 active:bg-orange-300 text-orange-800 font-bold rounded-lg transition active:scale-95 flex items-center justify-center text-xs shrink-0 select-none touch-manipulation border border-orange-200"
-                  title="Kurang Rp 10.000"
+                  :title="stepSentence(item.soldPrice, 'Kurang')"
                 >
-                  -10rb
+                  -{{ stepRb(item.soldPrice) }}
                 </button>
                 <div class="relative flex-1 min-w-0">
                   <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold select-none pointer-events-none">Rp</span>
@@ -515,11 +528,11 @@
                 </div>
                 <button
                   type="button"
-                  @click="adjustPrice(item.id, item.soldPrice, 10000)"
+                  @click="adjustPrice(item.id, item.soldPrice, getSmartStep(item.soldPrice))"
                   class="h-9 px-2 min-w-[38px] bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold rounded-lg transition active:scale-95 flex items-center justify-center text-xs shrink-0 select-none touch-manipulation shadow-xs"
-                  title="Tambah Rp 10.000"
+                  :title="stepSentence(item.soldPrice, 'Tambah')"
                 >
-                  +10rb
+                  +{{ stepRb(item.soldPrice) }}
                 </button>
               </div>
             </div>
@@ -935,8 +948,10 @@ import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
 import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
+import { onPriceInput, getSmartStep, formatStepRb } from "../utils/priceInput";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 import { usePosViewPreference } from "~/composables/usePosViewPreference";
+import { useQuickFilterState } from "~/composables/useQuickFilterState";
 
 definePageMeta({
   layout: "default",
@@ -1021,9 +1036,12 @@ function handleScannerDecrementQty(cartItemId: any) {
 }
 
 // Category & Brand & Jenis Selection State
-const selectedCategory = ref('');
-const selectedBrand = ref('');
-const selectedJenis = ref('');
+// (dibagi antar tampilan POS lama & baru, tetap bertahan saat pindah)
+const {
+  category: selectedCategory,
+  brand: selectedBrand,
+  jenis: selectedJenis,
+} = useQuickFilterState();
 
 // Default sorting di POS New: Nama A-Z
 const sortBy = ref("name-asc");
@@ -1330,14 +1348,28 @@ const addProductToCart = (product: any, priceType: "umum" | "service" = "umum") 
 };
 
 const handlePriceInput = (cartItemId: string, event: Event) => {
-  const input = event.target as HTMLInputElement;
-  const value = parseFromDisplay(input.value);
-  cartStore.updateSoldPrice(cartItemId, value);
+  // Kursor tetap di posisi digit yang diedit (tidak lompat ke akhir)
+  onPriceInput(event, (value) => {
+    cartStore.updateSoldPrice(cartItemId, value);
+  });
 };
 
 const adjustPrice = (cartItemId: string, currentPrice: number, delta: number) => {
   const newPrice = Math.max(0, (currentPrice || 0) + delta);
   cartStore.updateSoldPrice(cartItemId, newPrice);
+};
+
+// Tombol -/+ harga unit smart: langkah menyesuaikan besaran harga
+const stepRb = (price: number) => formatStepRb(getSmartStep(price));
+const stepSentence = (price: number, aktivitas: string) =>
+  `${aktivitas} Rp ${getSmartStep(price).toLocaleString("id-ID")}`;
+
+// Tombol "Pas": langsung pakai harga pas produk
+const setPriceToFixed = (cartItemId: string) => {
+  const item = cartStore.items.find((i) => i.id === cartItemId);
+  if (!item) return;
+  const target = item.fixedPrice || item.askingPrice;
+  if (target > 0) cartStore.updateSoldPrice(cartItemId, target);
 };
 
 const willPrintReceipt = ref(false);
@@ -1393,7 +1425,6 @@ const {
   hasBluetooth,
   isIOS: isIOSFlag,
 } = useReceiptPrinter();
-
 const showPrintOffer = ref(false);
 const isFetchingTrx = ref(false);
 const isTrxFetchFailed = ref(false);
