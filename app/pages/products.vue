@@ -626,33 +626,36 @@
                     <div>{{ formatCurrency(product.askingPrice) }}</div>
                     <div
                       v-if="profitPercentOf(product.askingPrice, product.buyPrice) !== null"
-                      class="text-[10px] font-bold leading-tight"
+                      class="text-[10px] font-bold leading-tight whitespace-nowrap"
                       :class="profitPercentOf(product.askingPrice, product.buyPrice) >= 0 ? 'text-emerald-600' : 'text-red-500'"
                       :title="`Profit harga tawar dari modal: ${formatCurrency(product.askingPrice - product.buyPrice)}`"
                     >
                       {{ profitPercentOf(product.askingPrice, product.buyPrice) >= 0 ? '+' : '' }}{{ profitPercentOf(product.askingPrice, product.buyPrice).toFixed(1) }}%
+                      <span class="font-semibold opacity-80">· {{ formatCurrency(product.askingPrice - product.buyPrice) }}</span>
                     </div>
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
                     <div>{{ formatCurrency(product.fixedPrice) }}</div>
                     <div
                       v-if="profitPercentOf(product.fixedPrice, product.buyPrice) !== null"
-                      class="text-[10px] font-bold leading-tight"
+                      class="text-[10px] font-bold leading-tight whitespace-nowrap"
                       :class="profitPercentOf(product.fixedPrice, product.buyPrice) >= 0 ? 'text-emerald-600' : 'text-red-500'"
                       :title="`Profit harga pas dari modal: ${formatCurrency(product.fixedPrice - product.buyPrice)}`"
                     >
                       {{ profitPercentOf(product.fixedPrice, product.buyPrice) >= 0 ? '+' : '' }}{{ profitPercentOf(product.fixedPrice, product.buyPrice).toFixed(1) }}%
+                      <span class="font-semibold opacity-80">· {{ formatCurrency(product.fixedPrice - product.buyPrice) }}</span>
                     </div>
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
                     <div>{{ product.servicePrice ? formatCurrency(product.servicePrice) : "-" }}</div>
                     <div
                       v-if="product.servicePrice && profitPercentOf(product.servicePrice, product.buyPrice) !== null"
-                      class="text-[10px] font-bold leading-tight"
+                      class="text-[10px] font-bold leading-tight whitespace-nowrap"
                       :class="profitPercentOf(product.servicePrice, product.buyPrice) >= 0 ? 'text-emerald-600' : 'text-red-500'"
                       :title="`Profit harga teknisi dari modal: ${formatCurrency(product.servicePrice - product.buyPrice)}`"
                     >
                       {{ profitPercentOf(product.servicePrice, product.buyPrice) >= 0 ? '+' : '' }}{{ profitPercentOf(product.servicePrice, product.buyPrice).toFixed(1) }}%
+                      <span class="font-semibold opacity-80">· {{ formatCurrency(product.servicePrice - product.buyPrice) }}</span>
                     </div>
                   </td>
                   <td class="px-4 py-3 text-right text-sm font-mono">
