@@ -187,15 +187,6 @@
                       {{ product.stock }}
                     </span>
                   </div>
-                  
-                  <button 
-                    v-if="product.servicePrice"
-                    @click.stop="addProductToCart(product, 'service')"
-                    class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[8px] font-bold rounded-lg shadow transition active:scale-90 flex items-center gap-1"
-                  >
-                    <Icon name="lucide:tag" class="w-2.5 h-2.5" />
-                    Teknisi
-                  </button>
                 </div>
               </div>
             </button>
@@ -299,6 +290,17 @@
               >
                 <Icon name="lucide:badge-check" class="w-3.5 h-3.5" />
                 Pas
+              </button>
+              <!-- Langsung pakai harga teknisi produk -->
+              <button
+                v-if="item.servicePrice"
+                type="button"
+                @click="setPriceToService(item.id)"
+                class="px-2 py-1 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 border border-blue-200 hover:border-blue-400 font-bold text-xs rounded-md transition active:scale-95 flex items-center gap-1 shrink-0 select-none touch-manipulation cursor-pointer"
+                :title="`Langsung pakai harga teknisi: ${formatCurrency(item.servicePrice || 0)}`"
+              >
+                <Icon name="lucide:wrench" class="w-3.5 h-3.5" />
+                Tek
               </button>
             </div>
 
@@ -576,6 +578,17 @@
                 >
                   <Icon name="lucide:badge-check" class="w-3.5 h-3.5" />
                   Pas
+                </button>
+                <!-- Langsung pakai harga teknisi produk -->
+                <button
+                  v-if="item.servicePrice"
+                  type="button"
+                  @click="setPriceToService(item.id)"
+                  class="px-2 py-1 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 border border-blue-200 hover:border-blue-400 font-bold text-xs rounded-md transition active:scale-95 flex items-center gap-1 shrink-0 select-none touch-manipulation cursor-pointer"
+                  :title="`Langsung pakai harga teknisi: ${formatCurrency(item.servicePrice || 0)}`"
+                >
+                  <Icon name="lucide:wrench" class="w-3.5 h-3.5" />
+                  Tek
                 </button>
               </div>
               <div class="mb-2">
@@ -1321,6 +1334,13 @@ const setPriceToFixed = (cartItemId: string) => {
   if (!item) return;
   const target = item.fixedPrice || item.askingPrice;
   if (target > 0) cartStore.updateSoldPrice(cartItemId, target);
+};
+
+// Tombol "Tek": langsung pakai harga teknisi produk
+const setPriceToService = (cartItemId: string) => {
+  const item = cartStore.items.find((i) => i.id === cartItemId);
+  if (!item || !item.servicePrice) return;
+  cartStore.updateSoldPrice(cartItemId, item.servicePrice);
 };
 
 const willPrintReceipt = ref(false);

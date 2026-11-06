@@ -268,17 +268,6 @@
             <!-- 6. Aksi -->
             <div class="flex items-center justify-center gap-1 shrink-0">
               <button
-                v-if="product.servicePrice"
-                :disabled="product.stock === 0"
-                @click.stop="addProductToCart(product, 'service')"
-                class="px-2 py-1.5 text-[9px] sm:text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-lg sm:rounded-xl transition-all active:scale-95 flex items-center gap-0.5 shadow-2xs"
-                title="Tambah dengan harga teknisi"
-              >
-                <Icon name="lucide:wrench" class="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span class="hidden sm:inline">Tek {{ formatCurrency(product.servicePrice) }}</span>
-              </button>
-
-              <button
                 :disabled="product.stock === 0"
                 @click.stop="addProductToCart(product, 'umum')"
                 :class="[
@@ -508,6 +497,17 @@
                 >
                   <Icon name="lucide:badge-check" class="w-3 h-3" />
                   Pas
+                </button>
+                <!-- Langsung pakai harga teknisi produk -->
+                <button
+                  v-if="item.servicePrice"
+                  type="button"
+                  @click="setPriceToService(item.id)"
+                  class="h-8 px-1.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 border border-blue-200 hover:border-blue-400 font-bold text-[10px] rounded-md transition active:scale-95 flex items-center gap-0.5 shrink-0 select-none touch-manipulation cursor-pointer"
+                  :title="`Langsung pakai harga teknisi: ${formatCurrency(item.servicePrice || 0)}`"
+                >
+                  <Icon name="lucide:wrench" class="w-3 h-3" />
+                  Tek
                 </button>
               </div>
 
@@ -1377,6 +1377,13 @@ const setPriceToFixed = (cartItemId: string) => {
   if (!item) return;
   const target = item.fixedPrice || item.askingPrice;
   if (target > 0) cartStore.updateSoldPrice(cartItemId, target);
+};
+
+// Tombol "Tek": langsung pakai harga teknisi produk
+const setPriceToService = (cartItemId: string) => {
+  const item = cartStore.items.find((i) => i.id === cartItemId);
+  if (!item || !item.servicePrice) return;
+  cartStore.updateSoldPrice(cartItemId, item.servicePrice);
 };
 
 const willPrintReceipt = ref(false);
