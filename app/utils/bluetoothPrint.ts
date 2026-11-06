@@ -165,7 +165,12 @@ function buildLogoRasterCommand(logo: LogoRaster): number[] {
   const rightPadBytes = FULL_WIDTH_BYTES - logo.widthBytes - leftPadBytes;
 
   const bytes: number[] = [
-    GS, 0x76, 0x30, 0x00,
+    GS, 0x76, 0x30,
+    // Mode raster: spesifikasi ESC/POS menganggap 0 dan 48 identik ("normal",
+    // 8 dot/mm sumbu X & Y). Tapi sebagian firmware clone POS-80 salah memetakan
+    // m=0 sebagai "double width" sehingga logo tercetak gepeng/melebar.
+    // Nilai desimal 48 (0x30) dipilih karena jalur kodenya lebih aman di firmware clone.
+    0x30,
     FULL_WIDTH_BYTES & 0xff,
     (FULL_WIDTH_BYTES >> 8) & 0xff,
     logo.height & 0xff,
