@@ -13,7 +13,7 @@
     <span
       v-if="percent !== null"
       class="font-semibold opacity-75"
-    >({{ percent }}%)</span>
+    >({{ percent }})</span>
   </p>
 </template>
 

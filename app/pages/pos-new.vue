@@ -256,6 +256,13 @@
               <p class="text-[9px] sm:text-[11px] text-gray-400 font-semibold mt-0.5">
                 Pas: <span class="text-gray-600 font-bold">{{ formatCurrency(product.fixedPrice) }}</span>
               </p>
+              <!-- Harga teknisi di mobile (desktop sudah via tombol Tek) -->
+              <p
+                v-if="product.servicePrice"
+                class="sm:hidden text-[9px] text-blue-400 font-semibold mt-0.5"
+              >
+                Tek: <span class="text-blue-600 font-bold">{{ formatCurrency(product.servicePrice) }}</span>
+              </p>
             </div>
 
             <!-- 6. Aksi -->
