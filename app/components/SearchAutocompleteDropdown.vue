@@ -19,6 +19,10 @@ const dropdownRef = ref<HTMLElement | null>(null)
 const isMounted = ref(false)
 
 const dropdownStyle = ref<Record<string, string>>({})
+const dropdownListStyle = ref<Record<string, string>>({})
+
+// Tinggi list dihitung dinamis mengikuti ruang yang terlihat (di atas keyboard)
+const MAX_LIST_HEIGHT = 288 // = max-h-72 (desktop)
 
 const updatePosition = () => {
   if (typeof window === 'undefined') return
@@ -32,38 +36,83 @@ const updatePosition = () => {
   const isMobile = viewportWidth < 640
   const padding = 12
 
+  // Region terlihat di layar: saat keyboard ponsel terbuka, visualViewport
+  // menyusut — dropdown tidak boleh turun ke balik keyboard.
+  const vv = window.visualViewport
+  const keyboardOpen = !!vv && vv.height < window.innerHeight - 30
+  const visibleTop = keyboardOpen && vv ? Math.max(0, vv.offsetTop) : 0
+  const visibleBottom = keyboardOpen && vv
+    ? window.visualViewport!.offsetTop + window.visualViewport!.height
+    : window.innerHeight
+
+  let top = rect.bottom + 6
+  let maxHeight = visibleBottom - top - 4
+
   if (isMobile) {
     const width = viewportWidth - (padding * 2)
+
+    // Jika ruang di bawah terlalu sempit (input dekat keyboard), tampilkan
+    // dropdown ke atas input supaya tetap terlihat.
+    const spaceBelow = visibleBottom - (rect.bottom + 6)
+    const spaceAbove = rect.top - visibleTop
+    const MIN_DROPDOWN = 170
+    if (spaceBelow < MIN_DROPDOWN && spaceAbove > spaceBelow) {
+      top = Math.max(visibleTop + 4, rect.top - Math.min(MAX_LIST_HEIGHT + 46, spaceAbove - 8))
+      maxHeight = rect.top - top - 8
+    }
+
+    maxHeight = Math.max(120, Math.min(MAX_LIST_HEIGHT, maxHeight))
     dropdownStyle.value = {
       position: 'fixed',
-      top: `${Math.round(rect.bottom + 6)}px`,
+      top: `${Math.round(top)}px`,
       left: `${padding}px`,
       width: `${width}px`,
       maxWidth: `${width}px`,
+      maxHeight: `${Math.round(maxHeight + 46)}px`,
+      overflowY: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
       zIndex: '9999'
     }
-  } else {
-    // Desktop & Tablet
-    const minWidth = 460
-    const idealWidth = Math.max(minWidth, rect.width)
-    const maxWidth = Math.min(idealWidth, viewportWidth - (padding * 2))
-
-    // Ensure dropdown doesn't overflow right edge
-    let left = rect.left
-    if (left + maxWidth > viewportWidth - padding) {
-      left = Math.max(padding, viewportWidth - padding - maxWidth)
+    // 46px ≈ tinggi header "Saran Pencarian"
+    dropdownListStyle.value = {
+      maxHeight: `${Math.round(Math.max(80, maxHeight))}px`
     }
-
-    dropdownStyle.value = {
-      position: 'fixed',
-      top: `${Math.round(rect.bottom + 6)}px`,
-      left: `${Math.round(left)}px`,
-      width: `${Math.round(maxWidth)}px`,
-      minWidth: `${Math.round(Math.min(minWidth, maxWidth))}px`,
-      maxWidth: `${Math.round(maxWidth)}px`,
-      zIndex: '9999'
-    }
+    return
   }
+
+  // Desktop & Tablet
+  const minWidth = 460
+  const idealWidth = Math.max(minWidth, rect.width)
+  const maxWidth = Math.min(idealWidth, viewportWidth - (padding * 2))
+
+  // Ensure dropdown doesn't overflow right edge
+  let left = rect.left
+  if (left + maxWidth > viewportWidth - padding) {
+    left = Math.max(padding, viewportWidth - padding - maxWidth)
+  }
+
+  const desktopMaxList = Math.max(120, Math.min(MAX_LIST_HEIGHT, maxHeight))
+  dropdownStyle.value = {
+    position: 'fixed',
+    top: `${Math.round(rect.bottom + 6)}px`,
+    left: `${Math.round(left)}px`,
+    width: `${Math.round(maxWidth)}px`,
+    minWidth: `${Math.round(Math.min(minWidth, maxWidth))}px`,
+    maxWidth: `${Math.round(maxWidth)}px`,
+    maxHeight: `${Math.round(desktopMaxList + 46)}px`,
+    overflowY: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    zIndex: '9999'
+  }
+  dropdownListStyle.value = {
+    maxHeight: `${Math.round(desktopMaxList)}px`
+  }
+}
+
+const handleViewportChange = () => {
+  updatePosition()
 }
 
 watch(
@@ -81,13 +130,22 @@ onMounted(() => {
   nextTick(() => {
     updatePosition()
   })
-  window.addEventListener('resize', updatePosition)
-  window.addEventListener('scroll', updatePosition, true)
+  window.addEventListener('resize', handleViewportChange)
+  window.addEventListener('scroll', handleViewportChange, true)
+  // Keyboard ponsel/PWA mengubah visualViewport, bukan window -> wajib disimak
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportChange)
+    window.visualViewport.addEventListener('scroll', handleViewportChange)
+  }
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', updatePosition)
-  window.removeEventListener('scroll', updatePosition, true)
+  window.removeEventListener('resize', handleViewportChange)
+  window.removeEventListener('scroll', handleViewportChange, true)
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', handleViewportChange)
+    window.visualViewport.removeEventListener('scroll', handleViewportChange)
+  }
 })
 
 let lastSelectTime = 0
@@ -141,7 +199,10 @@ const getHighlightedParts = (text: string, query: string): Array<{ text: string,
       </div>
 
       <!-- Suggestion Items List -->
-      <div class="max-h-72 overflow-y-auto divide-y divide-gray-100/80 scrollbar-thin">
+      <div
+        :style="dropdownListStyle"
+        class="max-h-72 overflow-y-auto divide-y divide-gray-100/80 scrollbar-thin"
+      >
         <div
           v-for="(item, index) in suggestions"
           :key="item.id"

@@ -100,6 +100,7 @@
 
       <!-- Products Grid - Full Width -->
       <div
+        ref="productListScrollRef"
         class="flex-1 overflow-y-auto px-2 sm:px-3 lg:px-5 pt-3 overscroll-contain touch-pan-y"
         :style="{ 
           paddingBottom: `${(cartStore.items.length > 0 ? 100 : 24) + keyboardHeight}px`,
@@ -151,10 +152,29 @@
           v-show="!showDelayedLoading && filteredProducts.length > 0"
           class="flex flex-col gap-1.5 sm:gap-2 max-w-7xl mx-auto w-full pb-2"
         >
-          <div
-            v-for="product in filteredProducts"
-            :key="product.id"
-            :class="[
+          <template v-for="row in displayRows" :key="row.key">
+            <!-- Header merek (grouping khusus kategori AC) -->
+            <div
+              v-if="row.type === 'header'"
+              class="flex items-center flex-wrap gap-1.5 px-3 py-1.5 bg-orange-100/70 backdrop-blur rounded-lg border border-orange-200/60 shadow-2xs"
+            >
+              <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500 shrink-0" />
+              <span class="text-xs sm:text-sm font-black text-orange-800 uppercase tracking-wide leading-tight">{{ row.brand }}</span>
+              <span class="text-[10px] font-bold text-orange-700 bg-white/80 border border-orange-200/70 rounded-full px-1.5 py-0.5">{{ row.count }} unit</span>
+              <span
+                v-for="jc in row.jenisCounts"
+                :key="jc.label"
+                class="text-[9px] sm:text-[10px] font-bold text-gray-600 bg-white/80 border border-gray-200/70 rounded-full px-1.5 py-0.5"
+              >
+                {{ jc.label }}: {{ jc.count }}
+              </span>
+            </div>
+            <!-- Baris produk -->
+            <template v-else>
+              <div
+                v-for="product in [row.product]"
+                :key="row.key"
+                :class="[
               'group bg-white rounded-xl border border-gray-200/80 hover:border-orange-300/90 shadow-2xs hover:shadow-md transition-all duration-150 p-2.5 sm:p-3 lg:px-4 text-left relative overflow-hidden',
               'grid grid-cols-[1fr_90px_100px] sm:grid-cols-[36px_minmax(140px,1fr)_110px_140px_170px_200px] gap-2 sm:gap-3 items-center',
               product.stock === 0
@@ -281,7 +301,9 @@
                 <span>Tambah</span>
               </button>
             </div>
-          </div>
+              </div>
+            </template>
+          </template>
         </div>
       </div>
     </div>
@@ -329,6 +351,13 @@
                 <div class="min-w-0">
                   <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wide">{{ cartStore.totalItems }} item</p>
                   <p class="text-lg font-black text-gray-800 truncate leading-tight">{{ formatCurrency(cartStore.totalRevenue) }}</p>
+                  <!-- Preview untung (nominal) -->
+                  <p
+                    class="text-[11px] font-bold mt-0.5 leading-tight"
+                    :class="cartStore.totalProfit >= 0 ? 'text-emerald-600' : 'text-red-500'"
+                  >
+                    {{ cartStore.totalProfit >= 0 ? 'Untung' : 'Rugi' }}: {{ formatCurrency(cartStore.totalProfit) }}
+                  </p>
                 </div>
               </div>
               <!-- Right: Actions -->
@@ -1112,6 +1141,13 @@ watch(searchQuery, (newVal) => {
   }, 150);
 });
 
+const productListScrollRef = ref<HTMLElement | null>(null);
+// Saat hasil pencarian berubah, balik daftar ke atas supaya produk hasil
+// ketikan langsung terlihat (di mobile/PWA bagian bawah tertutup keyboard).
+watch(debouncedSearchQuery, () => {
+  if (productListScrollRef.value) productListScrollRef.value.scrollTop = 0;
+});
+
 // Best sellers data: { [productId]: totalQuantitySold }
 const bestSellersMap = ref<Record<number, number>>({});
 const loadingBestSellers = ref(false);
@@ -1292,6 +1328,65 @@ const filteredProducts = computed(() => {
   });
 });
 
+// ═══ Group per merek (khusus kategori AC) ═══
+// Saat kategori AC dipilih, daftar pecah jadi seksi per merek: header merek
+// (nama + jumlah + rincian per jenis ½ PK/1 PK/...) lalu baris produknya.
+type AcGroupRow =
+  | {
+      key: string;
+      type: "header";
+      brand: string;
+      count: number;
+      jenisCounts: { label: string; count: number }[];
+    }
+  | { key: string; type: "product"; product: any };
+
+const isAcGroupingActive = computed(
+  () => selectedCategory.value.trim().toLowerCase() === "ac"
+);
+
+const displayRows = computed<AcGroupRow[]>(() => {
+  const rows: AcGroupRow[] = [];
+  if (!isAcGroupingActive.value) {
+    for (const p of filteredProducts.value) {
+      rows.push({ key: `p-${p.id}`, type: "product", product: p });
+    }
+    return rows;
+  }
+
+  // Kelompokkan per merek; produk tanpa merek masuk "Tanpa Merek" di urutan akhir
+  const groups = new Map<string, any[]>();
+  for (const p of filteredProducts.value) {
+    const b = (p.brand || "").trim();
+    const key =
+      !b || b === "-" || b.toLowerCase() === "no brand" ? "Tanpa Merek" : b;
+    if (!groups.has(key)) groups.set(key, []);
+    (groups.get(key) as any[]).push(p);
+  }
+
+  const jenisLabels = getJenisList("AC");
+  const brands = Array.from(groups.keys());
+  brands.sort((a, b) => {
+    if (a === "Tanpa Merek") return 1;
+    if (b === "Tanpa Merek") return -1;
+    return a.localeCompare(b, "id", { sensitivity: "base" });
+  });
+
+  for (const brand of brands) {
+    const items = groups.get(brand) as any[];
+    const jenisCounts = jenisLabels
+      .map((label) => ({
+        label,
+        count: items.filter((p) => matchesJenis(p, "AC", label)).length,
+      }))
+      .filter((jc) => jc.count > 0);
+    rows.push({ key: `h-${brand}`, type: "header", brand, count: items.length, jenisCounts });
+    for (const p of items) {
+      rows.push({ key: `p-${p.id}`, type: "product", product: p });
+    }
+  }
+  return rows;
+});
 
 let timeInterval: any = null;
 
