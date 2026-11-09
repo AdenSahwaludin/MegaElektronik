@@ -172,7 +172,7 @@
               <div class="text-left flex flex-col h-full w-full">
                 <div class="min-h-12 flex flex-col justify-start">
                   <p class="font-bold text-sm line-clamp-2 group-hover:text-orange-700 transition-colors">
-                    {{ getProductDisplayName(product) }}
+                    {{ row.displayName || getProductDisplayName(product) }}
                   </p>
                   <p v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'" class="text-[11px] text-gray-500 font-semibold mt-0.5 line-clamp-1">
                     {{ product.model }}
@@ -1285,17 +1285,32 @@ type AcGroupRow =
       count: number;
       jenisCounts: { label: string; count: number }[];
     }
-  | { key: string; type: "product"; product: any };
+  | { key: string; type: "product"; product: any; displayName: string };
 
 const isAcGroupingActive = computed(
   () => selectedCategory.value.trim().toLowerCase() === "ac"
 );
 
+// Model yang layak ditampilkan (bukan kosong/'-'/standar)
+const displayModelOf = (p: any) => {
+  const m = (p.model || '').trim();
+  return m &&
+    m !== '-' &&
+    !['standar', 'standard'].includes(m.toLowerCase())
+    ? m
+    : '';
+};
+
 const displayRows = computed<AcGroupRow[]>(() => {
   const rows: AcGroupRow[] = [];
   if (!isAcGroupingActive.value) {
     for (const p of filteredProducts.value) {
-      rows.push({ key: `p-${p.id}`, type: "product", product: p });
+      rows.push({
+        key: `p-${p.id}`,
+        type: "product",
+        product: p,
+        displayName: '',
+      });
     }
     return rows;
   }
@@ -1327,8 +1342,26 @@ const displayRows = computed<AcGroupRow[]>(() => {
       }))
       .filter((jc) => jc.count > 0);
     rows.push({ key: `h-${brand}`, type: 'header', brand, count: items.length, jenisCounts });
+
+    // Nama yang muncul >1x dalam merek yang sama disisipi modelnya supaya
+    // beda model langsung kelihatan (mis. "AC 1 PK Sharp · AH-A9DEY")
+    const nameCounts = new Map<string, number>();
     for (const p of items) {
-      rows.push({ key: `p-${p.id}`, type: 'product', product: p });
+      const n = (p.name || '').trim();
+      nameCounts.set(n, (nameCounts.get(n) || 0) + 1);
+    }
+    const dupNames = new Set(
+      Array.from(nameCounts.entries())
+        .filter(([, c]) => c > 1)
+        .map(([n]) => n)
+    );
+
+    for (const p of items) {
+      const n = (p.name || '').trim();
+      const m = displayModelOf(p);
+      const displayName =
+        dupNames.has(n) && m ? `${n} · ${m}` : '';
+      rows.push({ key: `p-${p.id}`, type: 'product', product: p, displayName });
     }
   }
   return rows;
