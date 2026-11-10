@@ -569,26 +569,31 @@
               </thead>
               <tbody class="divide-y divide-gray-200">
                 <template v-for="row in productRows" :key="row.key">
-                  <!-- Header kategori (level 1, saat tanpa filter kategori) -->
-                  <tr v-if="row.type === 'catHeader'" class="bg-orange-500">
+                  <!-- Header kategori (level 1, saat tanpa filter kategori) — warna band per kategori -->
+                  <tr v-if="row.type === 'catHeader'" class="shrink-0" :class="row.palette.catBg">
                     <td colspan="10" class="px-4 py-2">
                       <div class="flex items-center flex-wrap gap-2">
                         <span class="text-sm font-black text-white uppercase tracking-wide leading-tight">{{ row.category }}</span>
-                        <span class="text-[10px] font-bold text-orange-100 bg-orange-600/70 rounded-full px-1.5 py-0.5">{{ row.count }} unit</span>
+                        <span class="text-[10px] font-bold rounded-full px-1.5 py-0.5" :class="row.palette.catChip">{{ row.count }} unit</span>
                       </div>
                     </td>
                   </tr>
-                  <!-- Header merek (pemisah per merek, seperti di POS) -->
-                  <tr v-else-if="row.type === 'header'" class="bg-orange-100/70">
-                    <td colspan="10" class="px-4 py-1.5">
+                  <!-- Header merek (level 2): Kategori · Merek -->
+                  <tr v-else-if="row.type === 'header'" :class="row.palette.brandBg">
+                    <td colspan="10" class="px-4 py-1">
                       <div class="flex items-center flex-wrap gap-1.5">
-                        <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                        <span class="text-xs sm:text-sm font-black text-orange-800 uppercase tracking-wide leading-tight">{{ row.brand }}</span>
-                        <span class="text-[10px] font-bold text-orange-700 bg-white/80 border border-orange-200/70 rounded-full px-1.5 py-0.5">{{ row.count }} unit</span>
+                        <span
+                          v-if="row.catLabel"
+                          class="text-[9px] sm:text-[10px] font-black uppercase tracking-wide leading-tight opacity-80"
+                          :class="row.palette.brandText"
+                        >{{ row.catLabel }} ·</span>
+                        <span class="text-[10px] sm:text-xs font-black uppercase tracking-wide leading-tight" :class="row.palette.brandText">{{ row.brand }}</span>
+                        <span class="text-[9px] sm:text-[10px] font-bold border rounded-full px-1.5 py-0.5" :class="row.palette.brandChip">{{ row.count }} unit</span>
                         <span
                           v-for="jc in row.jenisCounts"
                           :key="jc.label"
-                          class="text-[9px] sm:text-[10px] font-bold text-gray-600 bg-white/80 border border-gray-200/70 rounded-full px-1.5 py-0.5"
+                          class="text-[9px] font-semibold border rounded-full px-1.5 py-0.5"
+                          :class="row.palette.brandChip"
                         >
                           {{ jc.label }}: {{ jc.count }}
                         </span>
@@ -1419,7 +1424,7 @@ import type { Ref } from "vue";
 import { watch, computed, ref, reactive, onMounted } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
-import { getJenisList, matchesCategory, matchesJenis, DEFAULT_QUICK_CATEGORIES } from "../utils/categoryJenis";
+import { getJenisList, matchesCategory, matchesJenis, DEFAULT_QUICK_CATEGORIES, getCategoryPalette, type CategoryPalette } from "../utils/categoryJenis";
 import { getIdempotencyKey, renewIdempotencyKey } from "../utils/idempotency";
 import { onPriceInput } from "../utils/priceInput";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
@@ -1567,12 +1572,14 @@ const productsList = computed(() => {
 
 // Baris tabel dengan header kategori → header merek (grouping seperti di POS)
 type BrandGroupRow =
-  | { key: string; type: "catHeader"; category: string; count: number }
+  | { key: string; type: "catHeader"; category: string; count: number; palette: CategoryPalette }
   | {
       key: string;
       type: "header";
       brand: string;
       count: number;
+      catLabel: string;
+      palette: CategoryPalette;
       jenisCounts: { label: string; count: number }[];
     }
   | { key: string; type: "product"; product: any };
@@ -1645,7 +1652,7 @@ const productRows = computed<BrandGroupRow[]>(() => {
 
   for (const sec of sections) {
     if (isAllCats && sec.count > 0) {
-      rows.push({ key: `c-${sec.category}`, type: "catHeader", category: sec.category, count: sec.count });
+      rows.push({ key: `c-${sec.category}`, type: "catHeader", category: sec.category, count: sec.count, palette: getCategoryPalette(sec.category) });
     }
 
     const brandArr = Array.from(sec.brands.values());
@@ -1655,13 +1662,14 @@ const productRows = computed<BrandGroupRow[]>(() => {
       return a.name.localeCompare(b.name, "id", { sensitivity: "base" });
     });
 
+    const secCat = isAllCats ? sec.category : selectedCategory.value;
     for (const bs of brandArr) {
-      const jenisLabels = getJenisList(isAllCats ? sec.category : selectedCategory.value);
+      const jenisLabels = getJenisList(secCat);
       const jenisCounts = jenisLabels
         .map((label) => ({
           label,
           count: bs.items.filter((p) =>
-            matchesJenis(p, isAllCats ? sec.category : selectedCategory.value, label)
+            matchesJenis(p, secCat, label)
           ).length,
         }))
         .filter((jc) => jc.count > 0);
@@ -1670,6 +1678,8 @@ const productRows = computed<BrandGroupRow[]>(() => {
         type: "header",
         brand: bs.name,
         count: bs.items.length,
+        catLabel: isAllCats ? sec.category : "",
+        palette: getCategoryPalette(secCat),
         jenisCounts,
       });
       for (const p of bs.items) {

@@ -214,3 +214,90 @@ export function matchesJenis(
   // Kategori lain belum punya Jenis — anggap selalu cocok.
   return true
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// ── Warna band per kategori ──
+// Dipakai header Kategori & Merek (POS Baru/Biasa, halaman Produk) supaya
+// sekilas kategori beda kelihatan. Nilai harus class Tailwind statis agar
+// ikut ter-generate.
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface CategoryPalette {
+  /** bg header kategori (level 1) */
+  catBg: string
+  /** bg/text chip jumlah di header kategori */
+  catChip: string
+  /** bg header merek (level 2) */
+  brandBg: string
+  /** border header merek */
+  brandBorder: string
+  /** teks utama header merek */
+  brandText: string
+  /** chip kecil di header merek */
+  brandChip: string
+}
+
+const CATEGORY_PALETTES: Record<string, CategoryPalette> = {
+  'ac': {
+    catBg: 'bg-blue-600', catChip: 'bg-blue-500/80 text-blue-100',
+    brandBg: 'bg-blue-50', brandBorder: 'border-blue-200', brandText: 'text-blue-800', brandChip: 'bg-white/80 text-blue-700 border-blue-200'
+  },
+  'blender': {
+    catBg: 'bg-purple-600', catChip: 'bg-purple-500/80 text-purple-100',
+    brandBg: 'bg-purple-50', brandBorder: 'border-purple-200', brandText: 'text-purple-800', brandChip: 'bg-white/80 text-purple-700 border-purple-200'
+  },
+  'dispenser': {
+    catBg: 'bg-cyan-600', catChip: 'bg-cyan-500/80 text-cyan-100',
+    brandBg: 'bg-cyan-50', brandBorder: 'border-cyan-200', brandText: 'text-cyan-800', brandChip: 'bg-white/80 text-cyan-700 border-cyan-200'
+  },
+  'exhaust': {
+    catBg: 'bg-slate-500', catChip: 'bg-slate-500/80 text-slate-100',
+    brandBg: 'bg-slate-50', brandBorder: 'border-slate-200', brandText: 'text-slate-700', brandChip: 'bg-white/80 text-slate-600 border-slate-200'
+  },
+  'kipas': {
+    catBg: 'bg-teal-600', catChip: 'bg-teal-500/80 text-teal-100',
+    brandBg: 'bg-teal-50', brandBorder: 'border-teal-200', brandText: 'text-teal-800', brandChip: 'bg-white/80 text-teal-700 border-teal-200'
+  },
+  'kompor': {
+    catBg: 'bg-rose-600', catChip: 'bg-rose-500/80 text-rose-100',
+    brandBg: 'bg-rose-50', brandBorder: 'border-rose-200', brandText: 'text-rose-800', brandChip: 'bg-white/80 text-rose-700 border-rose-200'
+  },
+  'kulkas': {
+    catBg: 'bg-sky-600', catChip: 'bg-sky-500/80 text-sky-100',
+    brandBg: 'bg-sky-50', brandBorder: 'border-sky-200', brandText: 'text-sky-800', brandChip: 'bg-white/80 text-sky-700 border-sky-200'
+  },
+  'mesin cuci': {
+    catBg: 'bg-indigo-600', catChip: 'bg-indigo-500/80 text-indigo-100',
+    brandBg: 'bg-indigo-50', brandBorder: 'border-indigo-200', brandText: 'text-indigo-800', brandChip: 'bg-white/80 text-indigo-700 border-indigo-200'
+  },
+  'rice cooker': {
+    catBg: 'bg-amber-600', catChip: 'bg-amber-500/80 text-amber-100',
+    brandBg: 'bg-amber-50', brandBorder: 'border-amber-200', brandText: 'text-amber-800', brandChip: 'bg-white/80 text-amber-700 border-amber-200'
+  },
+  'setrika': {
+    catBg: 'bg-fuchsia-600', catChip: 'bg-fuchsia-500/80 text-fuchsia-100',
+    brandBg: 'bg-fuchsia-50', brandBorder: 'border-fuchsia-200', brandText: 'text-fuchsia-800', brandChip: 'bg-white/80 text-fuchsia-700 border-fuchsia-200'
+  },
+  'speaker': {
+    catBg: 'bg-violet-600', catChip: 'bg-violet-500/80 text-violet-100',
+    brandBg: 'bg-violet-50', brandBorder: 'border-violet-200', brandText: 'text-violet-800', brandChip: 'bg-white/80 text-violet-700 border-violet-200'
+  },
+  'teko': {
+    catBg: 'bg-yellow-500', catChip: 'bg-yellow-500/80 text-yellow-100',
+    brandBg: 'bg-yellow-50', brandBorder: 'border-yellow-200', brandText: 'text-yellow-800', brandChip: 'bg-white/80 text-yellow-700 border-yellow-200'
+  },
+  'tv': {
+    catBg: 'bg-emerald-600', catChip: 'bg-emerald-500/80 text-emerald-100',
+    brandBg: 'bg-emerald-50', brandBorder: 'border-emerald-200', brandText: 'text-emerald-800', brandChip: 'bg-white/80 text-emerald-700 border-emerald-200'
+  }
+}
+
+// Palet default (Lainnya / kategori tak terdaftar): oranye seperti tema POS
+const DEFAULT_CATEGORY_PALETTE: CategoryPalette = {
+  catBg: 'bg-orange-500', catChip: 'bg-orange-600/70 text-orange-100',
+  brandBg: 'bg-orange-100/70', brandBorder: 'border-orange-200/60', brandText: 'text-orange-800', brandChip: 'bg-white/80 text-orange-700 border-orange-200/70'
+}
+
+export function getCategoryPalette(category: string): CategoryPalette {
+  return CATEGORY_PALETTES[normalizeCategoryKey(category)] || DEFAULT_CATEGORY_PALETTE
+}

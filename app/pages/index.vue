@@ -140,27 +140,35 @@
             class="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-max"
           >
             <template v-for="row in displayRows" :key="row.key">
-              <!-- Header kategori (level 1, saat "Semua") -->
+              <!-- Header kategori (level 1, saat "Semua") — warna band per kategori -->
               <div
                 v-if="row.type === 'catHeader'"
-                class="col-span-full flex items-center flex-wrap gap-2 px-3 py-2 rounded-lg bg-orange-500 shadow-md"
+                class="col-span-full flex items-center flex-wrap gap-2 px-3 py-2 rounded-lg shadow-md"
+                :class="row.palette.catBg"
               >
-                <Icon :name="getCategoryIcon(row.category)" class="w-4 h-4 text-orange-100 shrink-0" />
+                <Icon :name="getCategoryIcon(row.category)" class="w-4 h-4 text-white/85 shrink-0" />
                 <span class="text-sm font-black text-white uppercase tracking-wide leading-tight">{{ row.category }}</span>
-                <span class="text-[10px] font-bold text-orange-100 bg-orange-600/70 rounded-full px-1.5 py-0.5">{{ row.count }} unit</span>
+                <span class="text-[10px] font-bold rounded-full px-1.5 py-0.5" :class="row.palette.catChip">{{ row.count }} unit</span>
               </div>
-              <!-- Header merek (pemisah per merek) -->
+              <!-- Header merek (level 2): Kategori · Merek -->
               <div
                 v-else-if="row.type === 'header'"
-                class="col-span-full flex items-center flex-wrap gap-1.5 px-3 py-1.5 bg-orange-100/70 rounded-lg border border-orange-200/60"
+                class="col-span-full flex items-center flex-wrap gap-1.5 px-3 py-1 rounded-lg border shadow-2xs"
+                :class="[row.palette.brandBg, row.palette.brandBorder]"
               >
-                <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                <span class="text-xs sm:text-sm font-black text-orange-800 uppercase tracking-wide leading-tight">{{ row.brand }}</span>
-                <span class="text-[10px] font-bold text-orange-700 bg-white/80 border border-orange-200/70 rounded-full px-1.5 py-0.5">{{ row.count }} unit</span>
+                <Icon name="lucide:tag" class="w-3 h-3 shrink-0" :class="row.palette.brandText" />
+                <span
+                  v-if="row.catLabel"
+                  class="text-[9px] sm:text-[10px] font-black uppercase tracking-wide leading-tight opacity-80"
+                  :class="row.palette.brandText"
+                >{{ row.catLabel }} ·</span>
+                <span class="text-[10px] sm:text-xs font-black uppercase tracking-wide leading-tight" :class="row.palette.brandText">{{ row.brand }}</span>
+                <span class="text-[9px] sm:text-[10px] font-bold border rounded-full px-1.5 py-0.5" :class="row.palette.brandChip">{{ row.count }} unit</span>
                 <span
                   v-for="jc in row.jenisCounts"
                   :key="jc.label"
-                  class="text-[9px] sm:text-[10px] font-bold text-gray-600 bg-white/80 border border-gray-200/70 rounded-full px-1.5 py-0.5"
+                  class="text-[9px] font-semibold border rounded-full px-1.5 py-0.5"
+                  :class="row.palette.brandChip"
                 >
                   {{ jc.label }}: {{ jc.count }}
                 </span>
@@ -968,7 +976,7 @@ import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
-import { getJenisList, matchesCategory, matchesJenis, getCategoryIcon, DEFAULT_QUICK_CATEGORIES } from "../utils/categoryJenis";
+import { getJenisList, matchesCategory, matchesJenis, getCategoryIcon, getCategoryPalette, DEFAULT_QUICK_CATEGORIES, type CategoryPalette } from "../utils/categoryJenis";
 import { onPriceInput, getSmartStep, formatStepRb } from "../utils/priceInput";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
@@ -1289,12 +1297,14 @@ const filteredProducts = computed(() => {
 // Saat satu kategori dipilih: langsung header merek (kategori sudah pasti).
 // Merek yang beda cuma kapital ("AQUA" vs "Aqua") dianggap sama.
 type AcGroupRow =
-  | { key: string; type: "catHeader"; category: string; count: number }
+  | { key: string; type: "catHeader"; category: string; count: number; palette: CategoryPalette }
   | {
       key: string;
       type: "header";
       brand: string;
       count: number;
+      catLabel: string;
+      palette: CategoryPalette;
       jenisCounts: { label: string; count: number }[];
     }
   | { key: string; type: "product"; product: any; displayName: string };
@@ -1390,6 +1400,7 @@ const displayRows = computed<AcGroupRow[]>(() => {
         type: 'catHeader',
         category: sec.category,
         count: sec.count,
+        palette: getCategoryPalette(sec.category),
       });
     }
 
@@ -1400,13 +1411,14 @@ const displayRows = computed<AcGroupRow[]>(() => {
       return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
     });
 
+    const secCat = isAllCats ? sec.category : selectedCategory.value;
     for (const bs of brandArr) {
-      const jenisLabels = getJenisList(isAllCats ? sec.category : selectedCategory.value);
+      const jenisLabels = getJenisList(secCat);
       const jenisCounts = jenisLabels
         .map((label) => ({
           label,
           count: bs.items.filter((p) =>
-            matchesJenis(p, isAllCats ? sec.category : selectedCategory.value, label)
+            matchesJenis(p, secCat, label)
           ).length,
         }))
         .filter((jc) => jc.count > 0);
@@ -1415,6 +1427,10 @@ const displayRows = computed<AcGroupRow[]>(() => {
         type: 'header',
         brand: bs.name,
         count: bs.items.length,
+        // Saat Semua: tulis "Kategori · Merek" biar merek yang sama di
+        // kategori berbeda jelas posisinya
+        catLabel: isAllCats ? sec.category : '',
+        palette: getCategoryPalette(secCat),
         jenisCounts,
       });
 
