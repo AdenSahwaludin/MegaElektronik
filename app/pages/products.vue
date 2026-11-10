@@ -2336,30 +2336,43 @@ const printProductList = async () => {
     };
     const printDate = new Date().toLocaleDateString('id-ID', dateOptions);
 
-    // ── Group per KATEGORI → MEREK: kategori sesuai urutan tombol Quick
-    // Categories, di dalamnya merek A→Z, produk urut nama A→Z.
-    // Pemisah tanpa warna (aman printer hitam-putih & hemat tinta):
-    // header kategori bold besar + garis tebal atas,
-    // header merek bold kecil + garis tipis atas.
-    const printCats = new Map<string, Map<string, { name: string; items: any[] }>>();
+    // ── Group per KATEGORI saja (tanpa baris merek biar pendek):
+    // kategori sesuai urutan tombol Quick Categories ("Lainnya" terakhir),
+    // produk di dalamnya urut nama A→Z. Bedanya antar kategori pakai
+    // WARNA: header kategori dapat band tint kategorinya, baris produk
+    // selang-seling putih / tint kategori.
+    const PRINT_CAT_COLORS: Record<string, { header: string; row: string }> = {
+      'ac': { header: '#bfdbfe', row: '#eff6ff' },          // biru
+      'blender': { header: '#e9d5ff', row: '#faf5ff' },     // ungu
+      'dispenser': { header: '#a5f3fc', row: '#ecfeff' },   // cyan
+      'exhaust': { header: '#e2e8f0', row: '#f8fafc' },     // slate
+      'kipas': { header: '#99f6e4', row: '#f0fdfa' },       // teal
+      'kompor': { header: '#fecdd3', row: '#fff1f2' },      // rose
+      'kulkas': { header: '#bae6fd', row: '#f0f9ff' },      // sky
+      'mesin cuci': { header: '#c7d2fe', row: '#eef2ff' },  // indigo
+      'rice cooker': { header: '#fde68a', row: '#fffbeb' }, // amber
+      'setrika': { header: '#f5d0fe', row: '#fdf4ff' },     // fuchsia
+      'speaker': { header: '#ddd6fe', row: '#f5f3ff' },     // violet
+      'teko': { header: '#fde047', row: '#fefce8' },        // yellow
+      'tv': { header: '#a7f3d0', row: '#ecfdf5' },          // emerald
+    };
+    const printColorOf = (cat: string) =>
+      PRINT_CAT_COLORS[(cat || '').trim().toLowerCase()] ||
+      { header: '#fed7aa', row: '#fff7ed' };              // default oranye
+
+    const printCats = new Map<string, any[]>();
     allProducts.forEach((p: any) => {
       const cat = categoryOfProduct(p);
-      const b = (p.brand || '').trim();
-      const fold = !b || b === '-' || b.toLowerCase() === 'no brand' ? '__tanpamerek' : b.toLowerCase();
-      let brands = printCats.get(cat);
-      if (!brands) {
-        brands = new Map();
-        printCats.set(cat, brands);
+      let arr = printCats.get(cat);
+      if (!arr) {
+        arr = [];
+        printCats.set(cat, arr);
       }
-      let bs = brands.get(fold);
-      if (!bs) {
-        bs = { name: fold === '__tanpamerek' ? 'Tanpa Merek' : b, items: [] };
-        brands.set(fold, bs);
-      }
-      bs.items.push(p);
+      arr.push(p);
     });
 
     const printCatOrder = (c: string) => {
+      if (!c || c === 'Lainnya') return DEFAULT_QUICK_CATEGORIES.length;
       const idx = DEFAULT_QUICK_CATEGORIES.findIndex(
         (x) => x.toLowerCase() === c.toLowerCase()
       );
@@ -2372,56 +2385,42 @@ const printProductList = async () => {
     );
 
     sortedPrintCats.forEach((cat) => {
-      const brands = printCats.get(cat) as Map<string, { name: string; items: any[] }>;
-      const total = Array.from(brands.values()).reduce((sum, bs) => sum + bs.items.length, 0);
+      const items = printCats.get(cat) as any[];
+      const color = printColorOf(cat);
 
       tableRows += `
         <tr>
-          <td colspan="4" style="padding: 6px 6px 4px; font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border-top: 3px solid #000; border-bottom: 1px solid #000;">
-            ${(cat || 'Lainnya').toUpperCase()} &nbsp;—&nbsp; ${total} item
+          <td colspan="4" style="padding: 5px 6px; font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border: 1px solid #000; border-top: 2px solid #000; background-color: ${color.header};">
+            ${(cat || 'Lainnya').toUpperCase()} &nbsp;—&nbsp; ${items.length} item
           </td>
         </tr>
       `;
 
-      const brandArr = Array.from(brands.values()).sort((a, b) => {
-        if (a.name === 'Tanpa Merek') return 1;
-        if (b.name === 'Tanpa Merek') return -1;
-        return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
-      });
+      const productsSorted = [...items].sort((a: any, b: any) =>
+        (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' })
+      );
 
-      brandArr.forEach((bs) => {
+      productsSorted.forEach((p: any, index: number) => {
+        const isEven = index % 2 === 0;
+        const rowStyle = isEven
+          ? "background-color: #ffffff;"
+          : `background-color: ${color.row};`;
+
+        const brand2 = p.brand && !["-", "No Brand", "no brand"].includes(p.brand.trim()) ? p.brand.trim() : "";
+        const alreadyHasBrand = brand2 && p.name.toLowerCase().includes(brand2.toLowerCase());
+        const productName = (p.name + (brand2 && !alreadyHasBrand ? ` ${brand2}` : "")).trim();
+        const model = p.model ? p.model : "-";
+        const askingPrice = formatCurrency(p.askingPrice);
+        const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";
+
         tableRows += `
-          <tr>
-            <td colspan="4" style="padding: 4px 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; text-align: left; border-top: 1px solid #000; border-bottom: 1px solid #000;">
-              ${bs.name.toUpperCase()} &nbsp;—&nbsp; ${bs.items.length} item
-            </td>
+          <tr style="${rowStyle}">
+            <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px;">${productName}</td>
+            <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px; text-align: center;">${model}</td>
+            <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 12px; font-weight: bold;">${askingPrice}</td>
+            <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 11px;">${fixedPrice}</td>
           </tr>
         `;
-
-        const productsSorted = [...bs.items].sort((a: any, b: any) =>
-          (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' })
-        );
-
-        productsSorted.forEach((p: any, index: number) => {
-          const isEven = index % 2 === 0;
-          const rowStyle = isEven ? "background-color: #ffffff;" : "background-color: #f9fafb;";
-
-          const brand2 = p.brand && !["-", "No Brand", "no brand"].includes(p.brand.trim()) ? p.brand.trim() : "";
-          const alreadyHasBrand = brand2 && p.name.toLowerCase().includes(brand2.toLowerCase());
-          const productName = (p.name + (brand2 && !alreadyHasBrand ? ` ${brand2}` : "")).trim();
-          const model = p.model ? p.model : "-";
-          const askingPrice = formatCurrency(p.askingPrice);
-          const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";
-
-          tableRows += `
-            <tr style="${rowStyle}">
-              <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px;">${productName}</td>
-              <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px; text-align: center;">${model}</td>
-              <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 12px; font-weight: bold;">${askingPrice}</td>
-              <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 11px;">${fixedPrice}</td>
-            </tr>
-          `;
-        });
       });
     });
 

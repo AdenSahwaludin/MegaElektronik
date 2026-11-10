@@ -139,46 +139,11 @@
             v-show="!showDelayedLoading && filteredProducts.length > 0"
             class="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-max"
           >
-            <template v-for="row in displayRows" :key="row.key">
-              <!-- Header kategori (level 1, saat "Semua") — warna band per kategori -->
-              <div
-                v-if="row.type === 'catHeader'"
-                class="col-span-full flex items-center flex-wrap gap-2 px-3 py-2 rounded-lg shadow-md"
-                :class="row.palette.catBg"
-              >
-                <Icon :name="getCategoryIcon(row.category)" class="w-4 h-4 text-white/85 shrink-0" />
-                <span class="text-sm font-black text-white uppercase tracking-wide leading-tight">{{ row.category }}</span>
-                <span class="text-[10px] font-bold rounded-full px-1.5 py-0.5" :class="row.palette.catChip">{{ row.count }} unit</span>
-              </div>
-              <!-- Header merek (level 2): Kategori · Merek -->
-              <div
-                v-else-if="row.type === 'header'"
-                class="col-span-full flex items-center flex-wrap gap-1.5 px-3 py-1 rounded-lg border shadow-2xs"
-                :class="[row.palette.brandBg, row.palette.brandBorder]"
-              >
-                <Icon name="lucide:tag" class="w-3 h-3 shrink-0" :class="row.palette.brandText" />
-                <span
-                  v-if="row.catLabel"
-                  class="text-[9px] sm:text-[10px] font-black uppercase tracking-wide leading-tight opacity-80"
-                  :class="row.palette.brandText"
-                >{{ row.catLabel }} ·</span>
-                <span class="text-[10px] sm:text-xs font-black uppercase tracking-wide leading-tight" :class="row.palette.brandText">{{ row.brand }}</span>
-                <span class="text-[9px] sm:text-[10px] font-bold border rounded-full px-1.5 py-0.5" :class="row.palette.brandChip">{{ row.count }} unit</span>
-                <span
-                  v-for="jc in row.jenisCounts"
-                  :key="jc.label"
-                  class="text-[9px] font-semibold border rounded-full px-1.5 py-0.5"
-                  :class="row.palette.brandChip"
-                >
-                  {{ jc.label }}: {{ jc.count }}
-                </span>
-              </div>
-              <template v-else>
-                <button
-                  v-for="product in [row.product]"
-                  :key="row.key"
-                  :disabled="product.stock === 0"
-                  @click="addProductToCart(product, 'umum')"
+            <button
+              v-for="product in filteredProducts"
+              :key="product.id"
+              :disabled="product.stock === 0"
+              @click="addProductToCart(product, 'umum')"
               :class="[
                 'p-4 rounded-lg border-2 transition-all transform active:scale-[0.98] group relative overflow-hidden flex flex-col',
                 product.stock === 0
@@ -189,7 +154,7 @@
               <div class="text-left flex flex-col h-full w-full">
                 <div class="min-h-12 flex flex-col justify-start">
                   <p class="font-bold text-sm line-clamp-2 group-hover:text-orange-700 transition-colors">
-                    {{ row.displayName || getProductDisplayName(product) }}
+                    {{ getProductDisplayName(product) }}
                   </p>
                   <p v-if="product.model && product.model.trim() !== '' && product.model !== '-' && product.model.toLowerCase() !== 'standar' && product.model.toLowerCase() !== 'standard'" class="text-[11px] text-gray-500 font-semibold mt-0.5 line-clamp-1">
                     {{ product.model }}
@@ -225,8 +190,6 @@
                 </div>
               </div>
             </button>
-              </template>
-            </template>
           </div>
         </div>
       </div>
@@ -976,7 +939,7 @@ import { useCartStore } from "../stores/cart";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
-import { getJenisList, matchesCategory, matchesJenis, getCategoryIcon, getCategoryPalette, DEFAULT_QUICK_CATEGORIES, type CategoryPalette } from "../utils/categoryJenis";
+import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
 import { onPriceInput, getSmartStep, formatStepRb } from "../utils/priceInput";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
@@ -1289,161 +1252,6 @@ const filteredProducts = computed(() => {
     }
     return getProductSortName(a).localeCompare(getProductSortName(b), 'id', { sensitivity: 'base' });
   });
-});
-
-// ═══ Group per kategori → merek ═══
-// Saat "Semua": header kategori besar (urut sesuai tombol Quick Categories),
-// di bawahnya header merek kecil berisi produk merek itu, sampai ganti kategori.
-// Saat satu kategori dipilih: langsung header merek (kategori sudah pasti).
-// Merek yang beda cuma kapital ("AQUA" vs "Aqua") dianggap sama.
-type AcGroupRow =
-  | { key: string; type: "catHeader"; category: string; count: number; palette: CategoryPalette }
-  | {
-      key: string;
-      type: "header";
-      brand: string;
-      count: number;
-      catLabel: string;
-      palette: CategoryPalette;
-      jenisCounts: { label: string; count: number }[];
-    }
-  | { key: string; type: "product"; product: any; displayName: string };
-
-// Model yang layak ditampilkan (bukan kosong/'-'/standar)
-const displayModelOf = (p: any) => {
-  const m = (p.model || '').trim();
-  return m &&
-    m !== '-' &&
-    !['standar', 'standard'].includes(m.toLowerCase())
-    ? m
-    : '';
-};
-
-// Kategori pertama yang cocok dengan isi nama/brand/model produk
-const categoryOfProduct = (p: any): string => {
-  for (const cat of DEFAULT_QUICK_CATEGORIES) {
-    if (matchesCategory(p, cat)) return cat;
-  }
-  return 'Lainnya';
-};
-
-const brandHeaderKeyOf = (p: any) => {
-  const b = (p.brand || '').trim();
-  return !b || b === '-' || b.toLowerCase() === 'no brand'
-    ? '__tanpamerek'
-    : b.toLowerCase();
-};
-
-const displayRows = computed<AcGroupRow[]>(() => {
-  const rows: AcGroupRow[] = [];
-  const isAllCats = !selectedCategory.value.trim();
-
-  interface BrandSection {
-    key: string;
-    name: string;
-    items: any[];
-    nameCounts: Map<string, number>;
-  }
-  interface CatSection {
-    category: string;
-    count: number;
-    brands: Map<string, BrandSection>;
-  }
-
-  const sections: CatSection[] = [];
-  const catIndex = new Map<string, CatSection>();
-  const getCatSection = (category: string): CatSection => {
-    let s = catIndex.get(category);
-    if (!s) {
-      s = { category, count: 0, brands: new Map() };
-      catIndex.set(category, s);
-      sections.push(s);
-    }
-    return s;
-  };
-
-  for (const p of filteredProducts.value) {
-    const catName = isAllCats ? categoryOfProduct(p) : '';
-    const sec = getCatSection(catName);
-    sec.count++;
-
-    const rawBrand = (p.brand || '').trim();
-    const fold = brandHeaderKeyOf(p);
-    let bs = sec.brands.get(fold);
-    if (!bs) {
-      bs = {
-        key: fold,
-        name: fold === '__tanpamerek' ? 'Tanpa Merek' : rawBrand,
-        items: [],
-        nameCounts: new Map(),
-      };
-      sec.brands.set(fold, bs);
-    }
-    bs.items.push(p);
-    const n = (p.name || '').trim();
-    bs.nameCounts.set(n, (bs.nameCounts.get(n) || 0) + 1);
-  }
-
-  const catOrder = (c: string) => {
-    if (!c || c === 'Lainnya') return DEFAULT_QUICK_CATEGORIES.length;
-    const idx = DEFAULT_QUICK_CATEGORIES.findIndex(
-      (x) => x.toLowerCase() === c.toLowerCase()
-    );
-    return idx === -1 ? DEFAULT_QUICK_CATEGORIES.length : idx;
-  };
-  sections.sort((a, b) => catOrder(a.category) - catOrder(b.category));
-
-  for (const sec of sections) {
-    if (isAllCats && sec.count > 0) {
-      rows.push({
-        key: `c-${sec.category}`,
-        type: 'catHeader',
-        category: sec.category,
-        count: sec.count,
-        palette: getCategoryPalette(sec.category),
-      });
-    }
-
-    const brandArr = Array.from(sec.brands.values());
-    brandArr.sort((a, b) => {
-      if (a.key === '__tanpamerek') return 1;
-      if (b.key === '__tanpamerek') return -1;
-      return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
-    });
-
-    const secCat = isAllCats ? sec.category : selectedCategory.value;
-    for (const bs of brandArr) {
-      const jenisLabels = getJenisList(secCat);
-      const jenisCounts = jenisLabels
-        .map((label) => ({
-          label,
-          count: bs.items.filter((p) =>
-            matchesJenis(p, secCat, label)
-          ).length,
-        }))
-        .filter((jc) => jc.count > 0);
-      rows.push({
-        key: `${sec.category || 'semua'}-h-${bs.key}`,
-        type: 'header',
-        brand: bs.name,
-        count: bs.items.length,
-        // Saat Semua: tulis "Kategori · Merek" biar merek yang sama di
-        // kategori berbeda jelas posisinya
-        catLabel: isAllCats ? sec.category : '',
-        palette: getCategoryPalette(secCat),
-        jenisCounts,
-      });
-
-      for (const p of bs.items) {
-        const n = (p.name || '').trim();
-        const m = displayModelOf(p);
-        const displayName =
-          (bs.nameCounts.get(n) || 0) > 1 && m ? `${n} · ${m}` : '';
-        rows.push({ key: `p-${p.id}`, type: 'product', product: p, displayName });
-      }
-    }
-  }
-  return rows;
 });
 
 // Handler @input yang AMAN di PWA/ponsel: filter langsung dari nilai input
