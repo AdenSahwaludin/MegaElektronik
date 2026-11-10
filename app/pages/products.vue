@@ -568,11 +568,30 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
-                <tr
-                  v-for="product in products"
-                  :key="product.id"
-                  :class="[!product.isActive ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-orange-50', 'transition']"
-                >
+                <template v-for="row in productRows" :key="row.key">
+                  <!-- Header merek (pemisah per merek, seperti di POS) -->
+                  <tr v-if="row.type === 'header'" class="bg-orange-100/70">
+                    <td colspan="10" class="px-4 py-1.5">
+                      <div class="flex items-center flex-wrap gap-1.5">
+                        <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                        <span class="text-xs sm:text-sm font-black text-orange-800 uppercase tracking-wide leading-tight">{{ row.brand }}</span>
+                        <span class="text-[10px] font-bold text-orange-700 bg-white/80 border border-orange-200/70 rounded-full px-1.5 py-0.5">{{ row.count }} unit</span>
+                        <span
+                          v-for="jc in row.jenisCounts"
+                          :key="jc.label"
+                          class="text-[9px] sm:text-[10px] font-bold text-gray-600 bg-white/80 border border-gray-200/70 rounded-full px-1.5 py-0.5"
+                        >
+                          {{ jc.label }}: {{ jc.count }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                  <template v-else>
+                    <tr
+                      v-for="product in [row.product]"
+                      :key="row.key"
+                      :class="[!product.isActive ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-orange-50', 'transition']"
+                    >
                   <td class="px-4 py-3 text-sm font-semibold text-gray-800 wrap-break-words max-w-75">
                     <div class="flex items-center gap-1.5 flex-wrap">
                       <Icon
@@ -719,6 +738,8 @@
                     </div>
                   </td>
                 </tr>
+                  </template>
+                </template>
               </tbody>
             </table>
           </div>
@@ -1511,7 +1532,65 @@ const productsList = computed(() => {
     return (valA < valB ? -1 : valA > valB ? 1 : 0) * order;
   });
 
-  return sorted;
+  // 3. Grouping per merek: merek A→Z dulu (Tanpa Merek paling akhir),
+  // urutan dalam merek tetap mengikuti sort di atas (Array.sort stabil).
+  const brandKeySpec = (p: any) => {
+    const b = (p.brand || "").trim();
+    const key = !b || b === "-" || b.toLowerCase() === "no brand" ? "Tanpa Merek" : b;
+    return key;
+  };
+  return [...sorted].sort((a, b) => {
+    const ka = brandKeySpec(a);
+    const kb = brandKeySpec(b);
+    if (ka === kb) return 0;
+    if (ka === "Tanpa Merek") return 1;
+    if (kb === "Tanpa Merek") return -1;
+    return ka.localeCompare(kb, "id", { sensitivity: "base" });
+  });
+});
+
+// Baris tabel dengan header per merek (grouping seperti di POS)
+type BrandGroupRow =
+  | {
+      key: string;
+      type: "header";
+      brand: string;
+      count: number;
+      jenisCounts: { label: string; count: number }[];
+    }
+  | { key: string; type: "product"; product: any };
+
+const productRows = computed<BrandGroupRow[]>(() => {
+  const rows: BrandGroupRow[] = [];
+  const groups = new Map<string, any[]>();
+  for (const p of products.value) {
+    const b = (p.brand || "").trim();
+    const key = !b || b === "-" || b.toLowerCase() === "no brand" ? "Tanpa Merek" : b;
+    if (!groups.has(key)) groups.set(key, []);
+    (groups.get(key) as any[]).push(p);
+  }
+
+  const jenisLabels = getJenisList(selectedCategory.value);
+  const brands = Array.from(groups.keys()).sort((a, b) => {
+    if (a === "Tanpa Merek") return 1;
+    if (b === "Tanpa Merek") return -1;
+    return a.localeCompare(b, "id", { sensitivity: "base" });
+  });
+
+  for (const brand of brands) {
+    const items = groups.get(brand) as any[];
+    const jenisCounts = jenisLabels
+      .map((label) => ({
+        label,
+        count: items.filter((p) => matchesJenis(p, selectedCategory.value, label)).length,
+      }))
+      .filter((jc) => jc.count > 0);
+    rows.push({ key: `h-${brand}`, type: "header", brand, count: items.length, jenisCounts });
+    for (const p of items) {
+      rows.push({ key: `p-${p.id}`, type: "product", product: p });
+    }
+  }
+  return rows;
 });
 
 const products = computed(() => {
@@ -2160,36 +2239,46 @@ const printProductList = async () => {
     };
     const printDate = new Date().toLocaleDateString('id-ID', dateOptions);
 
-    const groupedProducts: Record<string, any[]> = {};
+    // ── Group per MEREK: merek A→Z (Tanpa Merek paling akhir), produk
+    // dalam merek urut nama A→Z. Pemisah: header bold + garis atas-bawah
+    // (tanpa warna — tetap jelas di printer hitam-putih & hemat tinta).
+    const groupedByBrand: Record<string, any[]> = {};
     allProducts.forEach((p: any) => {
-      const firstWord = p.name ? p.name.split(' ')[0].toUpperCase() : 'LAIN-LAIN';
-      if (!groupedProducts[firstWord]) {
-        groupedProducts[firstWord] = [];
+      const b = (p.brand || '').trim();
+      const brand = !b || b === '-' || b.toLowerCase() === 'no brand' ? 'Tanpa Merek' : b;
+      if (!groupedByBrand[brand]) {
+        groupedByBrand[brand] = [];
       }
-      groupedProducts[firstWord].push(p);
+      groupedByBrand[brand].push(p);
     });
 
-    const sortedCategories = Object.keys(groupedProducts).sort();
+    const sortedBrands = Object.keys(groupedByBrand).sort((a, b) => {
+      if (a === 'Tanpa Merek') return 1;
+      if (b === 'Tanpa Merek') return -1;
+      return a.localeCompare(b, 'id', { sensitivity: 'base' });
+    });
 
     let tableRows = "";
-    sortedCategories.forEach((category) => {
+    sortedBrands.forEach((brand) => {
       tableRows += `
         <tr>
-          <td colspan="4" style="padding: 4px 6px; background-color: #f3f4f6; font-size: 12px; font-weight: bold; border: 1px solid #000; text-align: left;">
-            Kategori: ${category}
+          <td colspan="4" style="padding: 5px 6px; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border-top: 2.5px solid #000; border-bottom: 1px solid #000;">
+            ${brand} &nbsp;—&nbsp; ${(groupedByBrand[brand] || []).length} item
           </td>
         </tr>
       `;
-      
-      const productsInCategory = (groupedProducts[category] || []).sort((a: any, b: any) => a.name.localeCompare(b.name));
-      
-      productsInCategory.forEach((p: any, index: number) => {
+
+      const productsInBrand = (groupedByBrand[brand] || []).sort((a: any, b: any) =>
+        (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' })
+      );
+
+      productsInBrand.forEach((p: any, index: number) => {
         const isEven = index % 2 === 0;
         const rowStyle = isEven ? "background-color: #ffffff;" : "background-color: #f9fafb;";
-        
-        const brand = p.brand && !["-", "No Brand", "no brand"].includes(p.brand.trim()) ? p.brand.trim() : "";
-        const alreadyHasBrand = brand && p.name.toLowerCase().includes(brand.toLowerCase());
-        const productName = (p.name + (brand && !alreadyHasBrand ? ` ${brand}` : "")).trim();
+
+        const brand2 = p.brand && !["-", "No Brand", "no brand"].includes(p.brand.trim()) ? p.brand.trim() : "";
+        const alreadyHasBrand = brand2 && p.name.toLowerCase().includes(brand2.toLowerCase());
+        const productName = (p.name + (brand2 && !alreadyHasBrand ? ` ${brand2}` : "")).trim();
         const model = p.model ? p.model : "-";
         const askingPrice = formatCurrency(p.askingPrice);
         const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";

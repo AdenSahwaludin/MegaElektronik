@@ -19,7 +19,7 @@
                 name="searchQuery"
                 v-model="searchQuery"
                 @focus="openSearchDropdown"
-                @input="openSearchDropdown"
+                @input="onSearchInput"
                 @keydown="onSearchKeydown"
                 type="text"
                 placeholder="Cari produk..."
@@ -362,6 +362,16 @@
               </div>
               <!-- Right: Actions -->
               <div class="flex items-center gap-2 shrink-0">
+                <!-- Pas harga item terakhir -->
+                <button
+                  v-if="lastCartItem"
+                  @click="pasLastItem"
+                  class="px-3 lg:px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 border border-emerald-200 hover:border-emerald-400 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95 flex items-center gap-1.5"
+                  :title="`Harga pas item terakhir (${lastCartItem.productName}): ${formatCurrency(lastCartItem.fixedPrice || lastCartItem.askingPrice)}`"
+                >
+                  <Icon name="lucide:badge-check" class="w-4 h-4" />
+                  <span>Pas</span>
+                </button>
                 <button
                   @click="showCartDrawer = true"
                   class="px-3 lg:px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95"
@@ -1141,6 +1151,38 @@ watch(searchQuery, (newVal) => {
   }, 150);
 });
 
+// Handler @input yang AMAN di PWA/ponsel: filter langsung dari nilai input
+// (tanpa menunggu chain watch + setTimeout / v-model yang di sebagian
+// keyboard ponsel telat, sehingga hasil terasa "harus Enter dulu").
+const onSearchInput = (e: any) => {
+  const val = e && typeof e === "object" && e.target ? e.target.value : e || "";
+  const v = (val ?? "").trim();
+  if (v) {
+    if ((searchQuery.value || "") !== val) searchQuery.value = val;
+    openSearchDropdown();
+    debouncedSearchQuery.value = val;
+  } else {
+    debouncedSearchQuery.value = "";
+    closeSearchDropdown();
+  }
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = null;
+  }
+};
+
+// Item terakhir yang ditambahkan ke keranjang (untuk tombol Pas di bar bawah)
+const lastCartItem = computed(() =>
+  cartStore.items.length > 0 ? cartStore.items[cartStore.items.length - 1] : null
+);
+
+// Tombol "Pas" di bar bawah: langsung pakai harga pas item terakhir
+const pasLastItem = () => {
+  const item = lastCartItem.value;
+  if (!item) return;
+  setPriceToFixed(item.id);
+};
+
 const productListScrollRef = ref<HTMLElement | null>(null);
 // Saat hasil pencarian berubah, balik daftar ke atas supaya produk hasil
 // ketikan langsung terlihat (di mobile/PWA bagian bawah tertutup keyboard).
@@ -1328,9 +1370,9 @@ const filteredProducts = computed(() => {
   });
 });
 
-// ═══ Group per merek (khusus kategori AC) ═══
-// Saat kategori AC dipilih, daftar pecah jadi seksi per merek: header merek
-// (nama + jumlah + rincian per jenis ½ PK/1 PK/...) lalu baris produknya.
+// ═══ Group per merek (semua kategori) ═══
+// Daftar pecah jadi seksi per merek: header merek (nama + jumlah + rincian
+// jenis bila kategori punya daftar jenis) lalu baris produknya.
 type AcGroupRow =
   | {
       key: string;
@@ -1340,10 +1382,6 @@ type AcGroupRow =
       jenisCounts: { label: string; count: number }[];
     }
   | { key: string; type: "product"; product: any; displayName: string };
-
-const isAcGroupingActive = computed(
-  () => selectedCategory.value.trim().toLowerCase() === "ac"
-);
 
 // Model yang layak ditampilkan (bukan kosong/'-'/standar)
 const displayModelOf = (p: any) => {
@@ -1357,17 +1395,6 @@ const displayModelOf = (p: any) => {
 
 const displayRows = computed<AcGroupRow[]>(() => {
   const rows: AcGroupRow[] = [];
-  if (!isAcGroupingActive.value) {
-    for (const p of filteredProducts.value) {
-      rows.push({
-        key: `p-${p.id}`,
-        type: "product",
-        product: p,
-        displayName: p.name || "",
-      });
-    }
-    return rows;
-  }
 
   // Kelompokkan per merek; produk tanpa merek masuk "Tanpa Merek" di urutan akhir
   const groups = new Map<string, any[]>();
@@ -1379,7 +1406,7 @@ const displayRows = computed<AcGroupRow[]>(() => {
     (groups.get(key) as any[]).push(p);
   }
 
-  const jenisLabels = getJenisList("AC");
+  const jenisLabels = getJenisList(selectedCategory.value);
   const brands = Array.from(groups.keys());
   brands.sort((a, b) => {
     if (a === "Tanpa Merek") return 1;
@@ -1392,7 +1419,7 @@ const displayRows = computed<AcGroupRow[]>(() => {
     const jenisCounts = jenisLabels
       .map((label) => ({
         label,
-        count: items.filter((p) => matchesJenis(p, "AC", label)).length,
+        count: items.filter((p) => matchesJenis(p, selectedCategory.value, label)).length,
       }))
       .filter((jc) => jc.count > 0);
     rows.push({ key: `h-${brand}`, type: "header", brand, count: items.length, jenisCounts });
