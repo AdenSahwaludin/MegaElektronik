@@ -153,9 +153,18 @@
           class="flex flex-col gap-1.5 sm:gap-2 max-w-7xl mx-auto w-full pb-2"
         >
           <template v-for="row in displayRows" :key="row.key">
+            <!-- Header kategori (level 1, saat "Semua") -->
+            <div
+              v-if="row.type === 'catHeader'"
+              class="flex items-center flex-wrap gap-2 px-3 py-2 rounded-lg bg-orange-500 shadow-md"
+            >
+              <Icon :name="getCategoryIcon(row.category)" class="w-4 h-4 text-orange-100 shrink-0" />
+              <span class="text-sm font-black text-white uppercase tracking-wide leading-tight">{{ row.category }}</span>
+              <span class="text-[10px] font-bold text-orange-100 bg-orange-600/70 rounded-full px-1.5 py-0.5">{{ row.count }} unit</span>
+            </div>
             <!-- Header merek (grouping khusus kategori AC) -->
             <div
-              v-if="row.type === 'header'"
+              v-else-if="row.type === 'header'"
               class="flex items-center flex-wrap gap-1.5 px-3 py-1.5 bg-orange-100/70 backdrop-blur rounded-lg border border-orange-200/60 shadow-2xs"
             >
               <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500 shrink-0" />
@@ -993,7 +1002,7 @@ import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
 import { useAudioBeep } from "~/composables/useAudioBeep";
 import { useReceiptPrinter } from "~/composables/useReceiptPrinter";
-import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
+import { getJenisList, matchesCategory, matchesJenis, getCategoryIcon, DEFAULT_QUICK_CATEGORIES } from "../utils/categoryJenis";
 import { onPriceInput, getSmartStep, formatStepRb } from "../utils/priceInput";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
 import { usePosViewPreference } from "~/composables/usePosViewPreference";
@@ -1370,10 +1379,13 @@ const filteredProducts = computed(() => {
   });
 });
 
-// ═══ Group per merek (semua kategori) ═══
-// Daftar pecah jadi seksi per merek: header merek (nama + jumlah + rincian
-// jenis bila kategori punya daftar jenis) lalu baris produknya.
+// ═══ Group per kategori → merek ═══
+// Saat "Semua": header kategori besar (urut sesuai tombol Quick Categories),
+// di bawahnya header merek kecil berisi produk merek itu, sampai ganti kategori.
+// Saat satu kategori dipilih: langsung header merek (kategori sudah pasti).
+// Merek yang beda cuma kapital ("AQUA" vs "Aqua") dianggap sama.
 type AcGroupRow =
+  | { key: string; type: "catHeader"; category: string; count: number }
   | {
       key: string;
       type: "header";
@@ -1393,56 +1405,124 @@ const displayModelOf = (p: any) => {
     : "";
 };
 
+// Kategori pertama yang cocok dengan isi nama/brand/model produk
+const categoryOfProduct = (p: any): string => {
+  for (const cat of DEFAULT_QUICK_CATEGORIES) {
+    if (matchesCategory(p, cat)) return cat;
+  }
+  return "Lainnya";
+};
+
+const brandHeaderKeyOf = (p: any) => {
+  const b = (p.brand || "").trim();
+  return !b || b === "-" || b.toLowerCase() === "no brand"
+    ? "__tanpamerek"
+    : b.toLowerCase();
+};
+
 const displayRows = computed<AcGroupRow[]>(() => {
   const rows: AcGroupRow[] = [];
+  const isAllCats = !selectedCategory.value.trim();
 
-  // Kelompokkan per merek; produk tanpa merek masuk "Tanpa Merek" di urutan akhir
-  const groups = new Map<string, any[]>();
-  for (const p of filteredProducts.value) {
-    const b = (p.brand || "").trim();
-    const key =
-      !b || b === "-" || b.toLowerCase() === "no brand" ? "Tanpa Merek" : b;
-    if (!groups.has(key)) groups.set(key, []);
-    (groups.get(key) as any[]).push(p);
+  interface BrandSection {
+    key: string;
+    name: string;
+    items: any[];
+    nameCounts: Map<string, number>;
+  }
+  interface CatSection {
+    category: string;
+    count: number;
+    brands: Map<string, BrandSection>;
+    firstSeenCatName: string;
   }
 
-  const jenisLabels = getJenisList(selectedCategory.value);
-  const brands = Array.from(groups.keys());
-  brands.sort((a, b) => {
-    if (a === "Tanpa Merek") return 1;
-    if (b === "Tanpa Merek") return -1;
-    return a.localeCompare(b, "id", { sensitivity: "base" });
-  });
-
-  for (const brand of brands) {
-    const items = groups.get(brand) as any[];
-    const jenisCounts = jenisLabels
-      .map((label) => ({
-        label,
-        count: items.filter((p) => matchesJenis(p, selectedCategory.value, label)).length,
-      }))
-      .filter((jc) => jc.count > 0);
-    rows.push({ key: `h-${brand}`, type: "header", brand, count: items.length, jenisCounts });
-
-    // Nama yang muncul >1x dalam merek yang sama disisipi modelnya supaya
-    // beda model langsung kelihatan (mis. "AC 1 PK Sharp · AH-A9DEY")
-    const nameCounts = new Map<string, number>();
-    for (const p of items) {
-      const n = (p.name || "").trim();
-      nameCounts.set(n, (nameCounts.get(n) || 0) + 1);
+  const sections: CatSection[] = [];
+  const catIndex = new Map<string, CatSection>();
+  const getCatSection = (category: string): CatSection => {
+    let s = catIndex.get(category);
+    if (!s) {
+      s = { category, count: 0, brands: new Map(), firstSeenCatName: category };
+      catIndex.set(category, s);
+      sections.push(s);
     }
-    const dupNames = new Set(
-      Array.from(nameCounts.entries())
-        .filter(([, c]) => c > 1)
-        .map(([n]) => n)
-    );
+    return s;
+  };
 
-    for (const p of items) {
-      const n = (p.name || "").trim();
-      const m = displayModelOf(p);
-      const displayName =
-        dupNames.has(n) && m ? `${n} · ${m}` : n || p.name || "";
-      rows.push({ key: `p-${p.id}`, type: "product", product: p, displayName });
+  for (const p of filteredProducts.value) {
+    const catName = isAllCats ? categoryOfProduct(p) : "";
+    const sec = getCatSection(catName);
+    sec.count++;
+
+    const rawBrand = (p.brand || "").trim();
+    const fold = brandHeaderKeyOf(p);
+    let bs = sec.brands.get(fold);
+    if (!bs) {
+      bs = {
+        key: fold,
+        name: fold === "__tanpamerek" ? "Tanpa Merek" : rawBrand,
+        items: [],
+        nameCounts: new Map(),
+      };
+      sec.brands.set(fold, bs);
+    }
+    bs.items.push(p);
+    const n = (p.name || "").trim();
+    bs.nameCounts.set(n, (bs.nameCounts.get(n) || 0) + 1);
+  }
+
+  // Urutan kategori: sesuai urutan tombol Quick Categories; "Lainnya" paling akhir
+  const catOrder = (c: string) => {
+    if (!c || c === "Lainnya") return DEFAULT_QUICK_CATEGORIES.length;
+    const idx = DEFAULT_QUICK_CATEGORIES.findIndex(
+      (x) => x.toLowerCase() === c.toLowerCase()
+    );
+    return idx === -1 ? DEFAULT_QUICK_CATEGORIES.length : idx;
+  };
+  sections.sort((a, b) => catOrder(a.category) - catOrder(b.category));
+
+  for (const sec of sections) {
+    if (isAllCats && sec.count > 0) {
+      rows.push({
+        key: `c-${sec.category}`,
+        type: "catHeader",
+        category: sec.category,
+        count: sec.count,
+      });
+    }
+
+    const brandArr = Array.from(sec.brands.values());
+    brandArr.sort((a, b) => {
+      if (a.key === "__tanpamerek") return 1;
+      if (b.key === "__tanpamerek") return -1;
+      return a.name.localeCompare(b.name, "id", { sensitivity: "base" });
+    });
+
+    for (const bs of brandArr) {
+      const jenisLabels = getJenisList(isAllCats ? sec.category : selectedCategory.value);
+      const jenisCounts = jenisLabels
+        .map((label) => ({
+          label,
+          count: bs.items.filter((p) =>
+            matchesJenis(p, isAllCats ? sec.category : selectedCategory.value, label)
+          ).length,
+        }))
+        .filter((jc) => jc.count > 0);
+      rows.push({
+        key: `${sec.category || "semua"}-h-${bs.key}`,
+        type: "header",
+        brand: bs.name,
+        count: bs.items.length,
+        jenisCounts,
+      });
+
+      for (const p of bs.items) {
+        const n = (p.name || "").trim();
+        const m = displayModelOf(p);
+        const displayName =
+          (bs.nameCounts.get(n) || 0) > 1 && m ? `${n} · ${m}` : n || p.name || "";
+        rows.push({ key: `p-${p.id}`, type: "product", product: p, displayName });
+      }
     }
   }
   return rows;

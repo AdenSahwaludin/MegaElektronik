@@ -569,8 +569,17 @@
               </thead>
               <tbody class="divide-y divide-gray-200">
                 <template v-for="row in productRows" :key="row.key">
+                  <!-- Header kategori (level 1, saat tanpa filter kategori) -->
+                  <tr v-if="row.type === 'catHeader'" class="bg-orange-500">
+                    <td colspan="10" class="px-4 py-2">
+                      <div class="flex items-center flex-wrap gap-2">
+                        <span class="text-sm font-black text-white uppercase tracking-wide leading-tight">{{ row.category }}</span>
+                        <span class="text-[10px] font-bold text-orange-100 bg-orange-600/70 rounded-full px-1.5 py-0.5">{{ row.count }} unit</span>
+                      </div>
+                    </td>
+                  </tr>
                   <!-- Header merek (pemisah per merek, seperti di POS) -->
-                  <tr v-if="row.type === 'header'" class="bg-orange-100/70">
+                  <tr v-else-if="row.type === 'header'" class="bg-orange-100/70">
                     <td colspan="10" class="px-4 py-1.5">
                       <div class="flex items-center flex-wrap gap-1.5">
                         <Icon name="lucide:tag" class="w-3.5 h-3.5 text-orange-500 shrink-0" />
@@ -1410,7 +1419,7 @@ import type { Ref } from "vue";
 import { watch, computed, ref, reactive, onMounted } from "vue";
 import { useCurrency } from "../../composables/useCurrency";
 import { useDataCacheStore } from "../stores/data-cache";
-import { getJenisList, matchesCategory, matchesJenis } from "../utils/categoryJenis";
+import { getJenisList, matchesCategory, matchesJenis, DEFAULT_QUICK_CATEGORIES } from "../utils/categoryJenis";
 import { getIdempotencyKey, renewIdempotencyKey } from "../utils/idempotency";
 import { onPriceInput } from "../utils/priceInput";
 import { useSearchAutocomplete } from "../composables/useSearchAutocomplete";
@@ -1532,25 +1541,33 @@ const productsList = computed(() => {
     return (valA < valB ? -1 : valA > valB ? 1 : 0) * order;
   });
 
-  // 3. Grouping per merek: merek A→Z dulu (Tanpa Merek paling akhir),
-  // urutan dalam merek tetap mengikuti sort di atas (Array.sort stabil).
-  const brandKeySpec = (p: any) => {
-    const b = (p.brand || "").trim();
-    const key = !b || b === "-" || b.toLowerCase() === "no brand" ? "Tanpa Merek" : b;
-    return key;
+  // 3. Grouping per kategori → merek: kategori sesuai urutan Quick Categories,
+  // merek A→Z di dalamnya (Tanpa Merek paling akhir), isi tetap ikut sort di atas.
+  const isAllCats = !selectedCategory.value.trim();
+  const catOrderIdx = (c: string) => {
+    if (!c || c === "Lainnya") return DEFAULT_QUICK_CATEGORIES.length;
+    const idx = DEFAULT_QUICK_CATEGORIES.findIndex(
+      (x) => x.toLowerCase() === c.toLowerCase()
+    );
+    return idx === -1 ? DEFAULT_QUICK_CATEGORIES.length : idx;
   };
   return [...sorted].sort((a, b) => {
-    const ka = brandKeySpec(a);
-    const kb = brandKeySpec(b);
+    if (isAllCats) {
+      const diff = catOrderIdx(categoryOfProduct(a)) - catOrderIdx(categoryOfProduct(b));
+      if (diff !== 0) return diff;
+    }
+    const ka = brandHeaderKeyOf(a);
+    const kb = brandHeaderKeyOf(b);
     if (ka === kb) return 0;
-    if (ka === "Tanpa Merek") return 1;
-    if (kb === "Tanpa Merek") return -1;
+    if (ka === "__tanpamerek") return 1;
+    if (kb === "__tanpamerek") return -1;
     return ka.localeCompare(kb, "id", { sensitivity: "base" });
   });
 });
 
-// Baris tabel dengan header per merek (grouping seperti di POS)
+// Baris tabel dengan header kategori → header merek (grouping seperti di POS)
 type BrandGroupRow =
+  | { key: string; type: "catHeader"; category: string; count: number }
   | {
       key: string;
       type: "header";
@@ -1560,34 +1577,104 @@ type BrandGroupRow =
     }
   | { key: string; type: "product"; product: any };
 
+// Kategori pertama yang cocok dengan isi nama/brand/model produk
+const categoryOfProduct = (p: any): string => {
+  for (const cat of DEFAULT_QUICK_CATEGORIES) {
+    if (matchesCategory(p, cat)) return cat;
+  }
+  return "Lainnya";
+};
+
+const brandHeaderKeyOf = (p: any) => {
+  const b = (p.brand || "").trim();
+  return !b || b === "-" || b.toLowerCase() === "no brand"
+    ? "__tanpamerek"
+    : b.toLowerCase();
+};
+
 const productRows = computed<BrandGroupRow[]>(() => {
   const rows: BrandGroupRow[] = [];
-  const groups = new Map<string, any[]>();
-  for (const p of products.value) {
-    const b = (p.brand || "").trim();
-    const key = !b || b === "-" || b.toLowerCase() === "no brand" ? "Tanpa Merek" : b;
-    if (!groups.has(key)) groups.set(key, []);
-    (groups.get(key) as any[]).push(p);
+  const isAllCats = !selectedCategory.value.trim();
+
+  interface BrandSection {
+    key: string;
+    name: string;
+    items: any[];
+  }
+  interface CatSection {
+    category: string;
+    count: number;
+    brands: Map<string, BrandSection>;
   }
 
-  const jenisLabels = getJenisList(selectedCategory.value);
-  const brands = Array.from(groups.keys()).sort((a, b) => {
-    if (a === "Tanpa Merek") return 1;
-    if (b === "Tanpa Merek") return -1;
-    return a.localeCompare(b, "id", { sensitivity: "base" });
-  });
+  const sections: CatSection[] = [];
+  const catIndex = new Map<string, CatSection>();
+  const getCatSection = (category: string): CatSection => {
+    let s = catIndex.get(category);
+    if (!s) {
+      s = { category, count: 0, brands: new Map() };
+      catIndex.set(category, s);
+      sections.push(s);
+    }
+    return s;
+  };
 
-  for (const brand of brands) {
-    const items = groups.get(brand) as any[];
-    const jenisCounts = jenisLabels
-      .map((label) => ({
-        label,
-        count: items.filter((p) => matchesJenis(p, selectedCategory.value, label)).length,
-      }))
-      .filter((jc) => jc.count > 0);
-    rows.push({ key: `h-${brand}`, type: "header", brand, count: items.length, jenisCounts });
-    for (const p of items) {
-      rows.push({ key: `p-${p.id}`, type: "product", product: p });
+  for (const p of products.value) {
+    const catName = isAllCats ? categoryOfProduct(p) : "";
+    const sec = getCatSection(catName);
+    sec.count++;
+
+    const rawBrand = (p.brand || "").trim();
+    const fold = brandHeaderKeyOf(p);
+    let bs = sec.brands.get(fold);
+    if (!bs) {
+      bs = { key: fold, name: fold === "__tanpamerek" ? "Tanpa Merek" : rawBrand, items: [] };
+      sec.brands.set(fold, bs);
+    }
+    bs.items.push(p);
+  }
+
+  const catOrder = (c: string) => {
+    if (!c || c === "Lainnya") return DEFAULT_QUICK_CATEGORIES.length;
+    const idx = DEFAULT_QUICK_CATEGORIES.findIndex(
+      (x) => x.toLowerCase() === c.toLowerCase()
+    );
+    return idx === -1 ? DEFAULT_QUICK_CATEGORIES.length : idx;
+  };
+  sections.sort((a, b) => catOrder(a.category) - catOrder(b.category));
+
+  for (const sec of sections) {
+    if (isAllCats && sec.count > 0) {
+      rows.push({ key: `c-${sec.category}`, type: "catHeader", category: sec.category, count: sec.count });
+    }
+
+    const brandArr = Array.from(sec.brands.values());
+    brandArr.sort((a, b) => {
+      if (a.key === "__tanpamerek") return 1;
+      if (b.key === "__tanpamerek") return -1;
+      return a.name.localeCompare(b.name, "id", { sensitivity: "base" });
+    });
+
+    for (const bs of brandArr) {
+      const jenisLabels = getJenisList(isAllCats ? sec.category : selectedCategory.value);
+      const jenisCounts = jenisLabels
+        .map((label) => ({
+          label,
+          count: bs.items.filter((p) =>
+            matchesJenis(p, isAllCats ? sec.category : selectedCategory.value, label)
+          ).length,
+        }))
+        .filter((jc) => jc.count > 0);
+      rows.push({
+        key: `${sec.category || "semua"}-h-${bs.key}`,
+        type: "header",
+        brand: bs.name,
+        count: bs.items.length,
+        jenisCounts,
+      });
+      for (const p of bs.items) {
+        rows.push({ key: `p-${p.id}`, type: "product", product: p });
+      }
     }
   }
   return rows;
@@ -2239,58 +2326,92 @@ const printProductList = async () => {
     };
     const printDate = new Date().toLocaleDateString('id-ID', dateOptions);
 
-    // ── Group per MEREK: merek A→Z (Tanpa Merek paling akhir), produk
-    // dalam merek urut nama A→Z. Pemisah: header bold + garis atas-bawah
-    // (tanpa warna — tetap jelas di printer hitam-putih & hemat tinta).
-    const groupedByBrand: Record<string, any[]> = {};
+    // ── Group per KATEGORI → MEREK: kategori sesuai urutan tombol Quick
+    // Categories, di dalamnya merek A→Z, produk urut nama A→Z.
+    // Pemisah tanpa warna (aman printer hitam-putih & hemat tinta):
+    // header kategori bold besar + garis tebal atas,
+    // header merek bold kecil + garis tipis atas.
+    const printCats = new Map<string, Map<string, { name: string; items: any[] }>>();
     allProducts.forEach((p: any) => {
+      const cat = categoryOfProduct(p);
       const b = (p.brand || '').trim();
-      const brand = !b || b === '-' || b.toLowerCase() === 'no brand' ? 'Tanpa Merek' : b;
-      if (!groupedByBrand[brand]) {
-        groupedByBrand[brand] = [];
+      const fold = !b || b === '-' || b.toLowerCase() === 'no brand' ? '__tanpamerek' : b.toLowerCase();
+      let brands = printCats.get(cat);
+      if (!brands) {
+        brands = new Map();
+        printCats.set(cat, brands);
       }
-      groupedByBrand[brand].push(p);
+      let bs = brands.get(fold);
+      if (!bs) {
+        bs = { name: fold === '__tanpamerek' ? 'Tanpa Merek' : b, items: [] };
+        brands.set(fold, bs);
+      }
+      bs.items.push(p);
     });
 
-    const sortedBrands = Object.keys(groupedByBrand).sort((a, b) => {
-      if (a === 'Tanpa Merek') return 1;
-      if (b === 'Tanpa Merek') return -1;
-      return a.localeCompare(b, 'id', { sensitivity: 'base' });
-    });
+    const printCatOrder = (c: string) => {
+      const idx = DEFAULT_QUICK_CATEGORIES.findIndex(
+        (x) => x.toLowerCase() === c.toLowerCase()
+      );
+      return idx === -1 ? DEFAULT_QUICK_CATEGORIES.length : idx;
+    };
 
     let tableRows = "";
-    sortedBrands.forEach((brand) => {
+    const sortedPrintCats = Array.from(printCats.keys()).sort(
+      (a, b) => printCatOrder(a) - printCatOrder(b)
+    );
+
+    sortedPrintCats.forEach((cat) => {
+      const brands = printCats.get(cat) as Map<string, { name: string; items: any[] }>;
+      const total = Array.from(brands.values()).reduce((sum, bs) => sum + bs.items.length, 0);
+
       tableRows += `
         <tr>
-          <td colspan="4" style="padding: 5px 6px; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border-top: 2.5px solid #000; border-bottom: 1px solid #000;">
-            ${brand} &nbsp;—&nbsp; ${(groupedByBrand[brand] || []).length} item
+          <td colspan="4" style="padding: 6px 6px 4px; font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border-top: 3px solid #000; border-bottom: 1px solid #000;">
+            ${(cat || 'Lainnya').toUpperCase()} &nbsp;—&nbsp; ${total} item
           </td>
         </tr>
       `;
 
-      const productsInBrand = (groupedByBrand[brand] || []).sort((a: any, b: any) =>
-        (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' })
-      );
+      const brandArr = Array.from(brands.values()).sort((a, b) => {
+        if (a.name === 'Tanpa Merek') return 1;
+        if (b.name === 'Tanpa Merek') return -1;
+        return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' });
+      });
 
-      productsInBrand.forEach((p: any, index: number) => {
-        const isEven = index % 2 === 0;
-        const rowStyle = isEven ? "background-color: #ffffff;" : "background-color: #f9fafb;";
-
-        const brand2 = p.brand && !["-", "No Brand", "no brand"].includes(p.brand.trim()) ? p.brand.trim() : "";
-        const alreadyHasBrand = brand2 && p.name.toLowerCase().includes(brand2.toLowerCase());
-        const productName = (p.name + (brand2 && !alreadyHasBrand ? ` ${brand2}` : "")).trim();
-        const model = p.model ? p.model : "-";
-        const askingPrice = formatCurrency(p.askingPrice);
-        const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";
-
+      brandArr.forEach((bs) => {
         tableRows += `
-          <tr style="${rowStyle}">
-            <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px;">${productName}</td>
-            <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px; text-align: center;">${model}</td>
-            <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 12px; font-weight: bold;">${askingPrice}</td>
-            <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 11px;">${fixedPrice}</td>
+          <tr>
+            <td colspan="4" style="padding: 4px 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; text-align: left; border-top: 1px solid #000; border-bottom: 1px solid #000;">
+              ${bs.name.toUpperCase()} &nbsp;—&nbsp; ${bs.items.length} item
+            </td>
           </tr>
         `;
+
+        const productsSorted = [...bs.items].sort((a: any, b: any) =>
+          (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' })
+        );
+
+        productsSorted.forEach((p: any, index: number) => {
+          const isEven = index % 2 === 0;
+          const rowStyle = isEven ? "background-color: #ffffff;" : "background-color: #f9fafb;";
+
+          const brand2 = p.brand && !["-", "No Brand", "no brand"].includes(p.brand.trim()) ? p.brand.trim() : "";
+          const alreadyHasBrand = brand2 && p.name.toLowerCase().includes(brand2.toLowerCase());
+          const productName = (p.name + (brand2 && !alreadyHasBrand ? ` ${brand2}` : "")).trim();
+          const model = p.model ? p.model : "-";
+          const askingPrice = formatCurrency(p.askingPrice);
+          const fixedPrice = p.fixedPrice ? formatCurrency(p.fixedPrice) : "-";
+
+          tableRows += `
+            <tr style="${rowStyle}">
+              <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px;">${productName}</td>
+              <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px; text-align: center;">${model}</td>
+              <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 12px; font-weight: bold;">${askingPrice}</td>
+              <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 11px;">${fixedPrice}</td>
+            </tr>
+          `;
+        });
       });
     });
 
