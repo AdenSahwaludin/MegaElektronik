@@ -1219,22 +1219,33 @@
                 <!-- Product Search -->
                 <div class="relative lg:col-span-2">
               <label class="block text-sm font-semibold text-gray-700 mb-2">Cari & Pilih Produk <span class="text-red-500">*</span></label>
-                  <input
-                    v-model="item.searchQuery"
-                    @focus="item.showDropdown = true"
-                    @blur="hideDropdown(item)"
-                    type="text"
-                    placeholder="Ketik nama produk..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                  />
-                  <!-- Selected indicator -->
+                  <div class="relative">
+                    <input
+                      v-model="item.searchQuery"
+                      @focus="item.showDropdown = true"
+                      @blur="hideDropdown(item)"
+                      type="text"
+                      placeholder="Ketik nama produk..."
+                      class="w-full pl-4 pr-9 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                    />
+                    <!-- Tombol hapus pilihan: ganti produk jadi mudah -->
+                    <button
+                      v-if="item.searchQuery"
+                      @mousedown.prevent="clearArrivalSearch(item)"
+                      class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 p-1"
+                      title="Hapus pilihan, cari produk lain"
+                    >
+                      <Icon name="lucide:x-circle" class="w-4 h-4" />
+                    </button>
+                  </div>
+                  <!-- Selected indicator (nama + model biar tidak bingung produk kembar) -->
                   <div v-if="item.productId" class="mt-1 text-xs text-green-600 font-semibold flex items-center gap-1">
-                    <Icon name="lucide:check-circle" class="w-3 h-3" /> Terpilih: {{ getProductName(item.productId) }}
+                    <Icon name="lucide:check-circle" class="w-3 h-3 shrink-0" /> Terpilih: {{ getArrivalSelectedLabel(item.productId) }}
                   </div>
                   <div v-if="item.showDropdown && filteredProducts(item.searchQuery).length > 0" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1">
-                    <div 
-                      v-for="product in filteredProducts(item.searchQuery)" 
-                      :key="product.id" 
+                    <div
+                      v-for="product in filteredProducts(item.searchQuery)"
+                      :key="product.id"
                       @mousedown.prevent="selectProduct(item, product)"
                       class="px-4 py-2 hover:bg-green-50 cursor-pointer border-b last:border-0 text-sm"
                     >
@@ -1247,7 +1258,9 @@
                         />
                         <span>{{ getProductDisplayName(product) }}</span>
                       </div>
-                      <div class="text-xs text-gray-500">Stok: {{ product.stock }}</div>
+                      <div class="text-xs text-gray-500">
+                        <span v-if="getArrivalModelLabel(product)" class="font-semibold text-gray-600">Model: {{ getArrivalModelLabel(product) }} · </span>Stok: {{ product.stock }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1853,17 +1866,54 @@ const filteredProducts = (query: string) => {
   ).slice(0, 50);
 };
 
-const getProductName = (id: string) => {
-  if (!id) return '';
-  const p = allProductsForSelect.value.find(p => p.id === parseInt(id));
-  return p ? p.name : '';
+const getProductById = (id: string) => {
+  if (!id) return null;
+  return allProductsForSelect.value.find(p => p.id === parseInt(id)) || null;
+};
+
+// Model yang layak ditampilkan (bukan kosong/'-'/standar)
+const getArrivalModelLabel = (p: any) => {
+  const m = (p?.model || '').trim();
+  return m && m !== '-' && !['standar', 'standard'].includes(m.toLowerCase()) ? m : '';
+};
+
+// Label "Terpilih": Nama — Model (biar produk kembar beda model jelas)
+const getArrivalSelectedLabel = (id: string) => {
+  const p = getProductById(id);
+  if (!p) return '';
+  const m = getArrivalModelLabel(p);
+  return `${getProductDisplayName(p)}${m ? ` — ${m}` : ''}`;
+};
+
+// Hapus pilihan biar gampang ganti produk
+const clearArrivalSearch = (item: ArrivalItem) => {
+  item.productId = "";
+  item.searchQuery = "";
+  item.showDropdown = true;
 };
 
 const selectProduct = (item: ArrivalItem, product: any) => {
   item.productId = product.id.toString();
-  item.searchQuery = product.name;
+  item.searchQuery = getProductDisplayName(product);
   item.showDropdown = false;
 };
+
+// Kalau teks pencarian diubah manual sampai tidak sama dengan produk yang
+// dipilih, batalkan pilihan lama — kalau tidak, stok bisa nyasar ke
+// produk lama padahal user niatnya ganti produk
+watch(
+  () => arrivalForm.items.map(i => i.searchQuery),
+  (queries) => {
+    queries.forEach((q, idx) => {
+      const item = arrivalForm.items[idx];
+      if (!item || !item.productId) return;
+      const sel = getProductById(item.productId);
+      if (!sel || (q || '').trim() !== getProductDisplayName(sel)) {
+        item.productId = "";
+      }
+    });
+  }
+);
 
 const hideDropdown = (item: ArrivalItem) => {
   setTimeout(() => {
@@ -2115,7 +2165,9 @@ const redirectToArrivalFromEdit = () => {
     {
       ...createEmptyArrivalItem(),
       productId: targetId,
-      searchQuery: targetName,
+      // Pakai display name yang sama dengan selectProduct biar tidak
+      // dianggap teks berubah & pilihannya terbatal
+      searchQuery: getProductDisplayName({ name: targetName, brand: editingProduct.brand }),
     },
   ];
 
