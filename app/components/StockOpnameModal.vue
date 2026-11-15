@@ -122,7 +122,7 @@
               <input
                 v-model="sheetSearch"
                 type="text"
-                placeholder="Cari nama, merek, atau model produk..."
+                placeholder="Cari... boleh beberapa kata (mis: aqua 1 pk)"
                 class="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm font-medium transition"
               />
               <button
@@ -174,6 +174,35 @@
             </div>
           </div>
 
+          <!-- Category Chips (filter kategori di lembar opname) -->
+          <div class="px-3 sm:px-6 py-2 border-b border-gray-200 bg-white flex items-center gap-1.5 overflow-x-auto shrink-0">
+            <button
+              @click="sheetCategory = ''"
+              :class="[
+                'px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap border',
+                sheetCategory === ''
+                  ? 'bg-orange-600 text-white border-orange-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-700',
+              ]"
+            >
+              Semua Kategori ({{ products.length }})
+            </button>
+            <button
+              v-for="cat in DEFAULT_QUICK_CATEGORIES"
+              :key="cat"
+              @click="sheetCategory = sheetCategory === cat ? '' : cat"
+              :class="[
+                'px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap border flex items-center gap-1',
+                sheetCategory === cat
+                  ? 'bg-orange-600 text-white border-orange-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-700',
+              ]"
+            >
+              <Icon :name="getCategoryIcon(cat)" class="w-3.5 h-3.5 shrink-0" />
+              {{ cat }} ({{ sheetCategoryCount(cat) }})
+            </button>
+          </div>
+
           <!-- Product Audit List -->
           <div class="flex-1 overflow-y-auto p-3 sm:p-6 space-y-3 bg-gray-50/60">
             <!-- Empty state -->
@@ -189,8 +218,8 @@
                 {{ sheetSearch ? `Tidak ada produk dengan kata kunci "${sheetSearch}" pada filter ini.` : 'Semua produk telah sesuai dengan filter yang dipilih.' }}
               </p>
               <button
-                v-if="sheetSearch || sheetFilter !== 'all'"
-                @click="sheetSearch = ''; sheetFilter = 'all'"
+                v-if="sheetSearch || sheetFilter !== 'all' || sheetCategory"
+                @click="sheetSearch = ''; sheetFilter = 'all'; sheetCategory = ''"
                 class="mt-3 px-3 py-1.5 bg-orange-100 text-orange-700 text-xs font-bold rounded-lg hover:bg-orange-200 transition"
               >
                 Reset Filter
@@ -739,6 +768,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { getIdempotencyKey, renewIdempotencyKey } from "../utils/idempotency";
+import { matchesCategory, DEFAULT_QUICK_CATEGORIES, getCategoryIcon } from "../utils/categoryJenis";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -757,6 +787,8 @@ const activeTab = ref<"sheet" | "history">("sheet");
 // Sheet state
 const sheetSearch = ref("");
 const sheetFilter = ref<"all" | "unopnamed" | "opnamed">("all");
+// Filter kategori di dalam lembar opname ("" = semua kategori)
+const sheetCategory = ref("");
 const draftStocks = ref<Record<number, number>>({});
 const draftNotes = ref<Record<number, string>>({});
 const showNoteForId = ref<number | null>(null);
@@ -829,18 +861,48 @@ const unopnamedCount = computed(() => {
 
 // Sheet filtered products
 const filteredSheetProducts = computed(() => {
-  return props.products.filter((p) => {
-    // 1. Status Filter
+  const list = props.products.filter((p) => {
+    // 1. Filter Kategori
+    if (sheetCategory.value && !matchesCategory(p, sheetCategory.value)) return false;
+
+    // 2. Status Filter
     if (sheetFilter.value === "opnamed" && !p.lastStockOpnameAt) return false;
     if (sheetFilter.value === "unopnamed" && p.lastStockOpnameAt) return false;
 
-    // 2. Search
-    if (!sheetSearch.value.trim()) return true;
+    // 3. Search — multi kata kunci: tiap kata dipisah spasi, semua harus
+    // cocok, urutan bebas (ketik "aqua 1" ketemu "AC 1 PK AQUA").
+    // Kata angka pendek (1-2 digit) tidak dicari di model agar tidak
+    // salah ketemu (mis. "1" kena model "K-108").
     const query = sheetSearch.value.trim().toLowerCase();
-    const fullName = `${p.name || ""} ${p.brand || ""} ${p.model || ""} ${p.otherName || ""} ${p.barcode || ""}`.toLowerCase();
-    return fullName.includes(query);
+    if (!query) return true;
+    const keywords = query.split(/\s+/).filter(Boolean);
+    if (keywords.length === 0) return true;
+    const name = (p.name || "").toLowerCase();
+    const brand = (p.brand || "").toLowerCase();
+    const model = (p.model || "").toLowerCase();
+    const other = (p.otherName || "").toLowerCase();
+    const barcode = p.barcode != null ? String(p.barcode).toLowerCase() : "";
+    return keywords.every((kw) => {
+      const isShortNumeric = kw.length <= 2 && /^\d+$/.test(kw);
+      return (
+        name.includes(kw) ||
+        brand.includes(kw) ||
+        (!isShortNumeric && model.includes(kw)) ||
+        other.includes(kw) ||
+        barcode.includes(kw)
+      );
+    });
   });
+
+  // Urut nama A→Z biar gampang nyamain dengan barang fisik di rak
+  return [...list].sort((a, b) =>
+    (a.name || "").localeCompare(b.name || "", "id", { sensitivity: "base" })
+  );
 });
+
+// Daftar kategori untuk chips + jumlah produknya
+const sheetCategoryCount = (cat: string) =>
+  props.products.filter((p) => matchesCategory(p, cat)).length;
 
 // Draft helper functions
 const getDraftStock = (product: any): number => {
