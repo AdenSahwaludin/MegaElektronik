@@ -799,7 +799,7 @@
         v-if="showEditModal"
         class="fixed inset-0 bg-black/50 z-[60] flex items-start justify-center p-4 overflow-y-auto py-10"
       >
-        <div class="bg-white rounded-lg max-w-md w-full p-6 shadow-xl my-auto">
+        <div class="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl my-auto">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Icon name="lucide:edit-2" class="w-6 h-6 text-orange-600" />
@@ -825,59 +825,26 @@
               />
             </div>
 
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Merk</label
-              >
-              <input
-                v-model="editingProduct.brand"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Model</label
-              >
-              <input
-                v-model="editingProduct.model"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Nama Lain</label
-              >
-              <input
-                v-model="editingProduct.otherName"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Barcode <span class="text-xs font-normal text-gray-500">Opsional</span></label
-              >
-              <div class="relative flex items-center">
-                <input
-                  v-model="editingProduct.barcode"
-                  type="text"
-                  placeholder="Scan / ketik barcode..."
-                  class="w-full pl-4 pr-24 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono text-sm"
-                />
-                <button
-                  @click="openEditBarcodeScanner"
-                  type="button"
-                  class="absolute right-1.5 px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
-                  title="Scan Barcode Kamera"
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Merk</label
                 >
-                  <Icon name="lucide:scan-line" class="w-3.5 h-3.5" />
-                  <span>Scan</span>
-                </button>
+                <input
+                  v-model="editingProduct.brand"
+                  type="text"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Model</label
+                >
+                <input
+                  v-model="editingProduct.model"
+                  type="text"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
               </div>
             </div>
 
@@ -945,47 +912,88 @@
               </div>
             </div>
 
-            <!-- Direct to Barang Datang Banner -->
-            <div class="p-3 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-xs">
-              <div class="flex items-start gap-2">
-                <Icon name="lucide:info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div class="text-amber-900 leading-snug">
-                  <span class="font-bold">Stok tidak bisa diedit di sini.</span>
-                  <span class="text-amber-800 hidden sm:inline"> Tambah atau sesuaikan stok melalui menu Barang Datang.</span>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Tawar</label
+                >
+                <input
+                  :value="editingProduct.askingPrice ? formatNumber(editingProduct.askingPrice) : ''"
+                  @input="onPriceInput($event, (v) => editingProduct.askingPrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <PriceProfitHint :price="editingProduct.askingPrice" :buy-price="editingProduct.buyPrice" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Barcode <span class="text-xs font-normal text-gray-500">Opsional</span></label
+                >
+                <div class="relative flex items-center">
+                  <input
+                    v-model="editingProduct.barcode"
+                    type="text"
+                    placeholder="Scan / ketik barcode..."
+                    class="w-full pl-3 pr-20 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono text-sm"
+                  />
+                  <button
+                    @click="openEditBarcodeScanner"
+                    type="button"
+                    class="absolute right-1 px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                    title="Scan Barcode Kamera"
+                  >
+                    <Icon name="lucide:scan-line" class="w-3.5 h-3.5" />
+                    <span>Scan</span>
+                  </button>
                 </div>
               </div>
-              <button
-                type="button"
-                @click="redirectToArrivalFromEdit"
-                class="px-3 py-1.5 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-lg transition flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer active:scale-95"
-                title="Buka Barang Datang untuk produk ini"
-              >
-                <Icon name="lucide:truck" class="w-3.5 h-3.5" />
-                <span>Ke Barang Datang</span>
-              </button>
             </div>
 
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2"
-                >Harga Tawar</label
-              >
-              <input
-                :value="editingProduct.askingPrice ? formatNumber(editingProduct.askingPrice) : ''"
-                @input="onPriceInput($event, (v) => editingProduct.askingPrice = v)"
-                type="text"
-                inputmode="numeric"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <PriceProfitHint :price="editingProduct.askingPrice" :buy-price="editingProduct.buyPrice" />
-              <div class="flex items-center gap-2 pt-2">
+            <div class="grid grid-cols-2 gap-4 items-end">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Nama Lain</label
+                >
                 <input
-                  type="checkbox"
-                  id="isActiveEdit"
-                  v-model="editingProduct.isActive"
-                  class="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                  v-model="editingProduct.otherName"
+                  type="text"
+                  placeholder="Nama lain untuk pencarian..."
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
-                <label for="isActiveEdit" class="text-sm font-semibold text-gray-700">Produk Aktif (Tampil di Penjualan)</label>
               </div>
+
+              <!-- Direct to Barang Datang Banner -->
+              <div class="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between gap-1.5 text-xs min-h-[42px]">
+                <div class="flex items-start gap-1.5 min-w-0">
+                  <Icon name="lucide:info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div class="text-amber-900 leading-tight">
+                    <span class="font-bold text-[11px] block">Stok tidak bisa diedit di sini.</span>
+                    <span class="text-amber-700 text-[10px] block">Sesuaikan di Barang Datang</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  @click="redirectToArrivalFromEdit"
+                  class="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-lg transition flex items-center gap-1 shrink-0 shadow-xs cursor-pointer active:scale-95 text-xs whitespace-nowrap"
+                  title="Buka Barang Datang untuk produk ini"
+                >
+                  <Icon name="lucide:truck" class="w-3.5 h-3.5" />
+                  <span>Ke Barang Datang</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="isActiveEdit"
+                v-model="editingProduct.isActive"
+                class="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer"
+              />
+              <label for="isActiveEdit" class="text-sm font-semibold text-gray-700 cursor-pointer select-none">
+                Produk Aktif (Tampil di Penjualan)
+              </label>
             </div>
             <div class="flex gap-4 pt-4">
               <button
