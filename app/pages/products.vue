@@ -305,19 +305,6 @@
                 />
               </div>
 
-              <!-- Quick Opname Filter Selector -->
-              <div class="relative shrink-0">
-                <select
-                  v-model="selectedOpnameFilter"
-                  class="h-10.5 px-3 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-700 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-xs transition cursor-pointer"
-                  title="Filter produk berdasarkan status stock opname"
-                >
-                  <option value="all">Opname: Semua</option>
-                  <option value="unopnamed">Belum di-Opname</option>
-                  <option value="opnamed">Sudah di-Opname</option>
-                </select>
-              </div>
-
               <!-- Quick Categories Toggle Button -->
               <button
                 @click="showCategories = !showCategories"
@@ -350,13 +337,10 @@
                   @change-category="onCategoryChange"
                 />
 
-                <!-- Active Filter Pill Indicator if a query or category/brand/jenis/opname filter is active -->
-                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis || selectedOpnameFilter !== 'all'" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
+                <!-- Active Filter Pill Indicator if a query or category/brand/jenis filter is active -->
+                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
                   <div class="flex flex-wrap items-center gap-2 text-gray-600 font-medium">
                     <span class="text-gray-400">Filter Aktif:</span>
-                    <span v-if="selectedOpnameFilter !== 'all'" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold border" :class="selectedOpnameFilter === 'opnamed' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-amber-100 text-amber-800 border-amber-200'">
-                      Opname: {{ selectedOpnameFilter === 'opnamed' ? 'Sudah Opname' : 'Belum Opname' }}
-                    </span>
                     <span v-if="selectedCategory" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
                       Kategori: {{ selectedCategory }}
                     </span>
@@ -1278,6 +1262,19 @@
                   />
                 </div>
 
+                <!-- Harga Modal Lama -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Modal Lama</label>
+                  <input
+                    :value="item.oldBuyPrice != null ? formatCurrency(item.oldBuyPrice) : ''"
+                    type="text"
+                    disabled
+                    readonly
+                    placeholder="-"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-semibold cursor-not-allowed"
+                  />
+                </div>
+
                 <!-- Buy Price -->
                 <div>
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Modal Baru <span class="text-xs font-normal text-gray-500">Opsional</span></label>
@@ -1287,6 +1284,17 @@
                     type="text"
                     inputmode="numeric"
                     placeholder="Biarkan kosong jika sama"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+
+                <!-- Supplier -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Supplier <span class="text-xs font-normal text-gray-500">Opsional</span></label>
+                  <input
+                    v-model="item.supplier"
+                    type="text"
+                    placeholder="Nama Toko/Suplier"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
                   />
                 </div>
@@ -1330,19 +1338,8 @@
                   />
                 </div>
 
-                <!-- Supplier -->
-                <div>
-                  <label class="block text-sm font-semibold text-gray-700 mb-2">Supplier <span class="text-xs font-normal text-gray-500">Opsional</span></label>
-                  <input
-                    v-model="item.supplier"
-                    type="text"
-                    placeholder="Nama Toko/Suplier"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                  />
-                </div>
-
                 <!-- Notes -->
-                <div>
+                <div class="col-span-1 md:col-span-2 lg:col-span-3">
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Catatan <span class="text-xs font-normal text-gray-500">Opsional</span></label>
                   <input
                     v-model="item.notes"
@@ -1807,6 +1804,7 @@ interface ArrivalItem {
   showDropdown: boolean;
   quantity: number | string;
   supplier: string;
+  oldBuyPrice?: number | null;
   buyPrice: number | string | null;
   askingPrice: number | string | null;
   fixedPrice: number | string | null;
@@ -1821,6 +1819,7 @@ const createEmptyArrivalItem = (): ArrivalItem => ({
   showDropdown: false,
   quantity: "",
   supplier: "",
+  oldBuyPrice: null,
   buyPrice: null,
   askingPrice: null,
   fixedPrice: null,
@@ -1889,12 +1888,14 @@ const getArrivalSelectedLabel = (id: string) => {
 const clearArrivalSearch = (item: ArrivalItem) => {
   item.productId = "";
   item.searchQuery = "";
+  item.oldBuyPrice = null;
   item.showDropdown = true;
 };
 
 const selectProduct = (item: ArrivalItem, product: any) => {
   item.productId = product.id.toString();
   item.searchQuery = getProductDisplayName(product);
+  item.oldBuyPrice = product.buyPrice != null ? Number(product.buyPrice) : null;
   item.showDropdown = false;
 };
 
@@ -1910,6 +1911,7 @@ watch(
       const sel = getProductById(item.productId);
       if (!sel || (q || '').trim() !== getProductDisplayName(sel)) {
         item.productId = "";
+        item.oldBuyPrice = null;
       }
     });
   }
@@ -2165,6 +2167,7 @@ const redirectToArrivalFromEdit = () => {
     {
       ...createEmptyArrivalItem(),
       productId: targetId,
+      oldBuyPrice: editingProduct.buyPrice != null ? Number(editingProduct.buyPrice) : null,
       // Pakai display name yang sama dengan selectProduct biar tidak
       // dianggap teks berubah & pilihannya terbatal
       searchQuery: getProductDisplayName({ name: targetName, brand: editingProduct.brand }),
@@ -2443,14 +2446,30 @@ const printProductList = async () => {
       tableRows += `
         <tr>
           <td colspan="4" style="padding: 5px 6px; font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border: 1px solid #000; border-top: 2px solid #000; background-color: ${color.header};">
-            ${(cat || 'Lainnya').toUpperCase()} &nbsp;—&nbsp; ${items.length} item
+            ${(cat || 'Lainnya').toUpperCase()}
           </td>
         </tr>
       `;
 
-      const productsSorted = [...items].sort((a: any, b: any) =>
-        (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' })
-      );
+      const getBrandForSort = (p: any) => {
+        const b = (p.brand || '').trim();
+        if (!b || ['-', 'no brand'].includes(b.toLowerCase())) return '';
+        return b;
+      };
+
+      const productsSorted = [...items].sort((a: any, b: any) => {
+        const brandA = getBrandForSort(a);
+        const brandB = getBrandForSort(b);
+        if (brandA && brandB) {
+          const brandCmp = brandA.localeCompare(brandB, 'id', { sensitivity: 'base' });
+          if (brandCmp !== 0) return brandCmp;
+        } else if (brandA) {
+          return -1;
+        } else if (brandB) {
+          return 1;
+        }
+        return (a.name || '').localeCompare(b.name || '', 'id', { sensitivity: 'base' });
+      });
 
       productsSorted.forEach((p: any, index: number) => {
         const isEven = index % 2 === 0;
