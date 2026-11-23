@@ -7,6 +7,7 @@ import RevenueTrendChart from '../components/charts/RevenueTrendChart.vue'
 import TopProductsChart from '../components/charts/TopProductsChart.vue'
 import PriceDistributionChart from '../components/charts/PriceDistributionChart.vue'
 import MarginBarChart from '../components/charts/MarginBarChart.vue'
+import { matchesCategory } from '../utils/categoryJenis'
 
 definePageMeta({
   layout: "default",
@@ -29,14 +30,24 @@ const formatModel = (model?: string | null) => {
   return trimmed
 }
 
+const EXCLUDED_CATEGORIES = ['AC', 'Kulkas', 'Mesin cuci', 'Speaker', 'TV']
+
 const lowStockProducts = computed(() => {
-  return (dataCacheStore.products || []).filter((p: any) =>
-    p.stock === 0 &&
-    p.isActive !== false &&
-    p.isActive !== 0 &&
-    p.isActive !== 'false' &&
-    p.isActive !== '0'
-  )
+  return (dataCacheStore.products || []).filter((p: any) => {
+    const isActive =
+      p.isActive !== false &&
+      p.isActive !== 0 &&
+      p.isActive !== 'false' &&
+      p.isActive !== '0'
+    if (!isActive) return false
+
+    // Kecualikan AC, Kulkas, Mesin cuci, Speaker, TV
+    const isExcluded = EXCLUDED_CATEGORIES.some((cat) => matchesCategory(p, cat))
+    if (isExcluded) return false
+
+    // Stok dibawah sama dengan 3 (<= 3)
+    return p.stock !== null && p.stock !== undefined && p.stock <= 3
+  })
 })
 
 // State
@@ -180,13 +191,14 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
           >
             <div class="flex items-center gap-2 font-bold text-amber-900">
               <Icon name="lucide:alert-triangle" class="w-5 h-5 text-amber-600 shrink-0" />
-              <span>Ada {{ lowStockProducts.length }} produk stok habis!</span>
+              <span>Ada {{ lowStockProducts.length }} produk stok menipis (stok ≤ 3)!</span>
             </div>
             <div class="text-xs text-amber-700 font-medium pb-0.5">
-              Produk habis: {{ lowStockProducts.map((p: any) => {
+              Produk menipis: {{ lowStockProducts.map((p: any) => {
                 let str = p.name || '';
                 if (p.brand && p.brand.trim() !== '' && p.brand !== 'No Brand') str += ' ' + p.brand;
                 if (p.model && p.model.trim() !== '' && p.model !== '-' && p.model.toLowerCase() !== 'standar' && p.model.toLowerCase() !== 'standard') str += ' ' + p.model;
+                str += ` (sisa ${p.stock ?? 0})`;
                 return str;
               }).join(', ') }}
             </div>

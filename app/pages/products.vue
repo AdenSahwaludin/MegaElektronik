@@ -34,6 +34,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- 1. Nama Produk -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
                   >Nama Produk <span class="text-red-500">*</span></label
@@ -46,6 +47,7 @@
                 />
               </div>
 
+              <!-- 2. Merek -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
                   >Merek</label
@@ -58,6 +60,7 @@
                 />
               </div>
 
+              <!-- 3. Model/Tipe -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
                   >Model/Tipe</label
@@ -70,6 +73,85 @@
                 />
               </div>
 
+              <!-- 4. Stok -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Stok <span class="text-red-500">*</span></label
+                >
+                <input
+                  :value="newProduct.stock !== undefined ? formatNumber(newProduct.stock) : ''"
+                  @input="onPriceInput($event, (v) => newProduct.stock = v)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <!-- 5. Harga Beli -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Beli (Rp) <span class="text-red-500">*</span></label
+                >
+                <input
+                  :value="newProduct.buyPrice ? formatNumber(newProduct.buyPrice) : ''"
+                  @input="onPriceInput($event, (v) => newProduct.buyPrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <!-- 6. Harga Teknisi -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Teknisi <span class="text-xs font-normal text-gray-500">Opsional</span></label
+                >
+                <input
+                  :value="newProduct.servicePrice ? formatNumber(newProduct.servicePrice) : ''"
+                  @input="onPriceInput($event, (v) => newProduct.servicePrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="Khusus teknisi"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <PriceProfitHint :price="newProduct.servicePrice" :buy-price="newProduct.buyPrice" />
+              </div>
+
+              <!-- 7. Harga Pas -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Pas (Rp)</label
+                >
+                <input
+                  :value="newProduct.fixedPrice ? formatNumber(newProduct.fixedPrice) : ''"
+                  @input="onPriceInput($event, (v) => newProduct.fixedPrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <PriceProfitHint :price="newProduct.fixedPrice" :buy-price="newProduct.buyPrice" />
+              </div>
+
+              <!-- 8. Harga Tawar -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                  >Harga Tawar (Rp) <span class="text-red-500">*</span></label
+                >
+                <input
+                  :value="newProduct.askingPrice ? formatNumber(newProduct.askingPrice) : ''"
+                  @input="onPriceInput($event, (v) => newProduct.askingPrice = v)"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <PriceProfitHint :price="newProduct.askingPrice" :buy-price="newProduct.buyPrice" />
+              </div>
+
+              <!-- 9. Nama Lain -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
                   >Nama Lain <span class="text-xs font-normal text-gray-500">Opsional</span></label
@@ -82,6 +164,7 @@
                 />
               </div>
 
+              <!-- 10. Barcode -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2"
                   >Barcode <span class="text-xs font-normal text-gray-500">Opsional</span></label
@@ -105,79 +188,7 @@
                 </div>
               </div>
 
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Stok <span class="text-red-500">*</span></label
-                >
-                <input
-                  :value="newProduct.stock !== undefined ? formatNumber(newProduct.stock) : ''"
-                  @input="onPriceInput($event, (v) => newProduct.stock = v)"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="0"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Harga Beli (Rp) <span class="text-red-500">*</span></label
-                >
-                <input
-                  :value="newProduct.buyPrice ? formatNumber(newProduct.buyPrice) : ''"
-                  @input="onPriceInput($event, (v) => newProduct.buyPrice = v)"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="0"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Harga Teknisi <span class="text-xs font-normal text-gray-500">Opsional</span></label
-                >
-                <input
-                  :value="newProduct.servicePrice ? formatNumber(newProduct.servicePrice) : ''"
-                  @input="onPriceInput($event, (v) => newProduct.servicePrice = v)"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="Khusus teknisi"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-                <PriceProfitHint :price="newProduct.servicePrice" :buy-price="newProduct.buyPrice" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Harga Pas (Rp)</label
-                >
-                <input
-                  :value="newProduct.fixedPrice ? formatNumber(newProduct.fixedPrice) : ''"
-                  @input="onPriceInput($event, (v) => newProduct.fixedPrice = v)"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="0"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-                <PriceProfitHint :price="newProduct.fixedPrice" :buy-price="newProduct.buyPrice" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Harga Tawar (Rp) <span class="text-red-500">*</span></label
-                >
-                <input
-                  :value="newProduct.askingPrice ? formatNumber(newProduct.askingPrice) : ''"
-                  @input="onPriceInput($event, (v) => newProduct.askingPrice = v)"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="0"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-                <PriceProfitHint :price="newProduct.askingPrice" :buy-price="newProduct.buyPrice" />
-              </div>
-
+              <!-- Produk Aktif -->
               <div class="flex items-center gap-2 mt-auto pb-2">
                 <input
                   type="checkbox"
@@ -188,6 +199,7 @@
                 <label for="isActiveNew" class="text-sm font-semibold text-gray-700">Produk Aktif</label>
               </div>
 
+              <!-- Buttons -->
               <div class="flex items-end gap-2 col-span-1 lg:col-span-2">
                 <button
                   @click="addProduct"
