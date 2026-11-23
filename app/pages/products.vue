@@ -2486,10 +2486,10 @@ const printProductList = async () => {
 
         tableRows += `
           <tr style="${rowStyle}">
-            <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px;">${productName}</td>
-            <td style="padding: 4px 6px; border: 1px solid #000; font-size: 11px; text-align: center;">${model}</td>
-            <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 12px; font-weight: bold;">${askingPrice}</td>
-            <td style="padding: 4px 6px; border: 1px solid #000; text-align: right; font-size: 11px;">${fixedPrice}</td>
+            <td class="col-name" style="padding: 4px 6px; border: 1px solid #000; font-size: 11px;">${productName}</td>
+            <td class="col-model" style="padding: 4px 6px; border: 1px solid #000; font-size: 11px; text-align: center;">${model}</td>
+            <td class="col-asking-price" style="padding: 4px 10px; border: 1px solid #000; text-align: right; font-size: 12px; font-weight: bold;">${askingPrice}</td>
+            <td class="col-fixed-price" style="padding: 4px 10px; border: 1px solid #000; text-align: right; font-size: 11px;">${fixedPrice}</td>
           </tr>
         `;
       });
@@ -2558,6 +2558,26 @@ const printProductList = async () => {
               border: 1px solid #000;
               text-align: center;
             }
+            .col-name {
+              width: 1%;
+              white-space: nowrap;
+              text-align: left;
+            }
+            .col-model {
+              width: 1%;
+              white-space: nowrap;
+              text-align: center;
+            }
+            .col-asking-price {
+              width: 50%;
+              white-space: nowrap;
+              text-align: right;
+            }
+            .col-fixed-price {
+              width: 50%;
+              white-space: nowrap;
+              text-align: right;
+            }
             .footer {
               margin-top: 15px;
               text-align: center;
@@ -2569,7 +2589,7 @@ const printProductList = async () => {
         <body>
           <div class="header">
             <img src="${logoUrl}" class="logo" alt="Logo Mega Elektronik" onerror="this.style.display='none'" />
-            <div class="store-name">MEGA ELEKTRONIK & TEKNIK</div>
+            <div class="store-name">MEGA ELEKTRONIK BONGAS</div>
             <div class="title">DAFTAR HARGA PRODUK</div>
             <div class="date-info">Dicetak pada: ${printDate}</div>
           </div>
@@ -2577,10 +2597,10 @@ const printProductList = async () => {
           <table>
             <thead>
               <tr>
-                <th>Nama Produk</th>
-                <th>Model</th>
-                <th>Harga Tawar</th>
-                <th>Harga Pas (Net)</th>
+                <th class="col-name" style="text-align: center;">Nama Produk</th>
+                <th class="col-model" style="text-align: center;">Model</th>
+                <th class="col-asking-price" style="text-align: center;">Harga Tawar</th>
+                <th class="col-fixed-price" style="text-align: center;">Harga Pas (Net)</th>
               </tr>
             </thead>
             <tbody>
@@ -2736,7 +2756,7 @@ const printProductPrice = (product: any) => {
       </head>
       <body>
         <div class="tag-card">
-          <div class="store-name">MEGA ELEKTRONIK & TEKNIK</div>
+          <div class="store-name">MEGA ELEKTRONIK BONGAS</div>
           <div class="product-name">${name}</div>
           ${brandModel ? `<div class="product-details">${brandModel}</div>` : '<div style="margin-bottom: 30px;"></div>'}
           
