@@ -343,14 +343,14 @@
                   v-model:category="selectedCategory"
                   v-model:brand="selectedBrand"
                   v-model:jenis="selectedJenis"
-                  :sort-value="isPriceAscActive ? 'cheapest' : isPriceDescActive ? 'expensive' : isNameAscActive ? 'name' : ''"
+                  :sort-value="isPriceAscActive ? 'cheapest' : isNewestActive ? 'newest' : isNameAscActive ? 'name' : ''"
                   :show-sort="true"
                   @update:sort-value="(val: any) => setQuickSort(val)"
                   @change-category="onCategoryChange"
                 />
 
                 <!-- Active Filter Pill Indicator if a query or category/brand/jenis filter is active -->
-                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
+                <div v-if="searchQuery || selectedCategory || selectedBrand || selectedJenis || isNewestActive" class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 text-xs">
                   <div class="flex flex-wrap items-center gap-2 text-gray-600 font-medium">
                     <span class="text-gray-400">Filter Aktif:</span>
                     <span v-if="selectedCategory" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
@@ -366,9 +366,9 @@
                       <Icon name="lucide:trending-down" class="w-3 h-3 text-green-600" />
                       Termurah
                     </span>
-                    <span v-else-if="selectedCategory && isPriceDescActive" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold border border-blue-200">
-                      <Icon name="lucide:trending-up" class="w-3 h-3 text-blue-600" />
-                      Termahal
+                    <span v-else-if="isNewestActive" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold border border-blue-200">
+                      <Icon name="lucide:sparkles" class="w-3 h-3 text-blue-600" />
+                      Barang Terbaru
                     </span>
                     <span v-if="searchQuery" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
                       <Icon name="lucide:filter" class="w-3 h-3 text-orange-600" />
@@ -1322,6 +1322,14 @@
                     placeholder="Harga Jual Normal"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
                   />
+                  <div v-if="item.productId && item.oldAskingPrice != null" class="text-xs text-gray-500 font-medium mt-1">
+                    Lama: <span class="font-bold text-gray-700">{{ formatCurrency(item.oldAskingPrice) }}</span>
+                  </div>
+                  <PriceProfitHint
+                    :price="item.askingPrice || item.oldAskingPrice"
+                    :buy-price="getEffectiveBuyPrice(item)"
+                    :label="item.askingPrice ? 'Untung Baru' : 'Untung'"
+                  />
                 </div>
 
                 <!-- Fixed Price -->
@@ -1335,6 +1343,14 @@
                     placeholder="Harga Net/Pas"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
                   />
+                  <div v-if="item.productId && item.oldFixedPrice != null" class="text-xs text-gray-500 font-medium mt-1">
+                    Lama: <span class="font-bold text-gray-700">{{ formatCurrency(item.oldFixedPrice) }}</span>
+                  </div>
+                  <PriceProfitHint
+                    :price="item.fixedPrice || item.oldFixedPrice"
+                    :buy-price="getEffectiveBuyPrice(item)"
+                    :label="item.fixedPrice ? 'Untung Baru' : 'Untung'"
+                  />
                 </div>
 
                 <!-- Service Price -->
@@ -1347,6 +1363,14 @@
                     inputmode="numeric"
                     placeholder="Harga u/ Teknisi"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                  <div v-if="item.productId" class="text-xs text-gray-500 font-medium mt-1">
+                    Lama: <span class="font-bold text-gray-700">{{ item.oldServicePrice ? formatCurrency(item.oldServicePrice) : '-' }}</span>
+                  </div>
+                  <PriceProfitHint
+                    :price="item.servicePrice || item.oldServicePrice"
+                    :buy-price="getEffectiveBuyPrice(item)"
+                    :label="item.servicePrice ? 'Untung Baru' : 'Untung'"
                   />
                 </div>
 
@@ -1556,6 +1580,12 @@ const productsList = computed(() => {
   const order = sortOrder.value === "desc" ? -1 : 1;
   const sorted = [...list];
   sorted.sort((a, b) => {
+    if (field === 'id' || field === 'createdAt') {
+      const idA = Number(a.id) || 0;
+      const idB = Number(b.id) || 0;
+      return (idA - idB) * order;
+    }
+
     let valA = a[field];
     let valB = b[field];
 
@@ -1567,6 +1597,10 @@ const productsList = computed(() => {
     if (valB === null || valB === undefined) return -1;
     return (valA < valB ? -1 : valA > valB ? 1 : 0) * order;
   });
+
+  if (isNewestActive.value) {
+    return sorted;
+  }
 
   // 3. Grouping per kategori → merek: kategori sesuai urutan Quick Categories,
   // merek A→Z di dalamnya (Tanpa Merek paling akhir), isi tetap ikut sort di atas.
@@ -1622,6 +1656,13 @@ const brandHeaderKeyOf = (p: any) => {
 };
 
 const productRows = computed<BrandGroupRow[]>(() => {
+  if (isNewestActive.value) {
+    return products.value.map((p) => ({
+      key: `p-${p.id}`,
+      type: "product" as const,
+      product: p,
+    }));
+  }
   const rows: BrandGroupRow[] = [];
   const isAllCats = !selectedCategory.value.trim();
 
@@ -1817,6 +1858,9 @@ interface ArrivalItem {
   quantity: number | string;
   supplier: string;
   oldBuyPrice?: number | null;
+  oldAskingPrice?: number | null;
+  oldFixedPrice?: number | null;
+  oldServicePrice?: number | null;
   buyPrice: number | string | null;
   askingPrice: number | string | null;
   fixedPrice: number | string | null;
@@ -1832,12 +1876,23 @@ const createEmptyArrivalItem = (): ArrivalItem => ({
   quantity: "",
   supplier: "",
   oldBuyPrice: null,
+  oldAskingPrice: null,
+  oldFixedPrice: null,
+  oldServicePrice: null,
   buyPrice: null,
   askingPrice: null,
   fixedPrice: null,
   servicePrice: null,
   notes: "",
 });
+
+const getEffectiveBuyPrice = (item: ArrivalItem): number | null => {
+  const newBuy = Number(item.buyPrice);
+  if (newBuy > 0) return newBuy;
+  const oldBuy = Number(item.oldBuyPrice);
+  if (oldBuy > 0) return oldBuy;
+  return null;
+};
 
 const arrivalForm = reactive({
   items: [createEmptyArrivalItem()]
@@ -1901,6 +1956,9 @@ const clearArrivalSearch = (item: ArrivalItem) => {
   item.productId = "";
   item.searchQuery = "";
   item.oldBuyPrice = null;
+  item.oldAskingPrice = null;
+  item.oldFixedPrice = null;
+  item.oldServicePrice = null;
   item.showDropdown = true;
 };
 
@@ -1908,6 +1966,9 @@ const selectProduct = (item: ArrivalItem, product: any) => {
   item.productId = product.id.toString();
   item.searchQuery = getProductDisplayName(product);
   item.oldBuyPrice = product.buyPrice != null ? Number(product.buyPrice) : null;
+  item.oldAskingPrice = product.askingPrice != null ? Number(product.askingPrice) : null;
+  item.oldFixedPrice = product.fixedPrice != null ? Number(product.fixedPrice) : null;
+  item.oldServicePrice = product.servicePrice != null ? Number(product.servicePrice) : null;
   item.showDropdown = false;
 };
 
@@ -1924,6 +1985,9 @@ watch(
       if (!sel || (q || '').trim() !== getProductDisplayName(sel)) {
         item.productId = "";
         item.oldBuyPrice = null;
+        item.oldAskingPrice = null;
+        item.oldFixedPrice = null;
+        item.oldServicePrice = null;
       }
     });
   }
@@ -1999,17 +2063,17 @@ const resetAllFilters = () => {
   sortOrder.value = 'asc';
 };
 
-// Quick sort dari harga termurah (muncul saat quick categories aktif)
+// Quick sort dari harga termurah / barang terbaru (muncul saat quick categories aktif)
 const isPriceAscActive = computed(() => sortBy.value === 'askingPrice' && sortOrder.value === 'asc');
-const isPriceDescActive = computed(() => sortBy.value === 'askingPrice' && sortOrder.value === 'desc');
+const isNewestActive = computed(() => (sortBy.value === 'id' || sortBy.value === 'createdAt') && sortOrder.value === 'desc');
 const isNameAscActive = computed(() => sortBy.value === 'name' && sortOrder.value === 'asc');
 
-const setQuickSort = (mode: 'cheapest' | 'expensive' | 'name') => {
+const setQuickSort = (mode: 'cheapest' | 'newest' | 'name') => {
   if (mode === 'cheapest') {
     sortBy.value = 'askingPrice';
     sortOrder.value = 'asc';
-  } else if (mode === 'expensive') {
-    sortBy.value = 'askingPrice';
+  } else if (mode === 'newest') {
+    sortBy.value = 'id';
     sortOrder.value = 'desc';
   } else {
     sortBy.value = 'name';
@@ -2180,6 +2244,9 @@ const redirectToArrivalFromEdit = () => {
       ...createEmptyArrivalItem(),
       productId: targetId,
       oldBuyPrice: editingProduct.buyPrice != null ? Number(editingProduct.buyPrice) : null,
+      oldAskingPrice: editingProduct.askingPrice != null ? Number(editingProduct.askingPrice) : null,
+      oldFixedPrice: editingProduct.fixedPrice != null ? Number(editingProduct.fixedPrice) : null,
+      oldServicePrice: editingProduct.servicePrice != null ? Number(editingProduct.servicePrice) : null,
       // Pakai display name yang sama dengan selectProduct biar tidak
       // dianggap teks berubah & pilihannya terbatal
       searchQuery: getProductDisplayName({ name: targetName, brand: editingProduct.brand }),

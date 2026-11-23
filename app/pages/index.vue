@@ -1206,7 +1206,7 @@ const {
 } = useQuickFilterState();
 
 // Urutan harga saat quick category aktif (default: termurah, sama seperti Menu Produk)
-const priceSort = ref<'default' | 'cheapest' | 'expensive'>('default');
+const priceSort = ref<'default' | 'cheapest' | 'newest'>('default');
 
 const onCategoryChange = (cat: string) => {
   if (cat) {
@@ -1244,10 +1244,15 @@ const filteredProducts = computed(() => {
     });
   }
   return [...result].sort((a, b) => {
-    if (priceSort.value === 'cheapest' || priceSort.value === 'expensive') {
+    if (priceSort.value === 'cheapest') {
       const priceA = a.askingPrice || 0;
       const priceB = b.askingPrice || 0;
-      const diff = priceSort.value === 'cheapest' ? priceA - priceB : priceB - priceA;
+      const diff = priceA - priceB;
+      if (diff !== 0) return diff;
+    } else if (priceSort.value === 'newest') {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const diff = (timeB - timeA) || ((Number(b.id) || 0) - (Number(a.id) || 0));
       if (diff !== 0) return diff;
     }
     return getProductSortName(a).localeCompare(getProductSortName(b), 'id', { sensitivity: 'base' });

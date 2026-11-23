@@ -9,7 +9,7 @@
       :name="profit >= 0 ? 'lucide:trending-up' : 'lucide:trending-down'"
       class="w-3 h-3 shrink-0"
     />
-    <span>{{ profit >= 0 ? 'Untung' : 'Rugi' }}: {{ formatCurrency(Math.abs(profit)) }}</span>
+    <span>{{ label ? label : (profit >= 0 ? 'Untung' : 'Rugi') }}: {{ formatCurrency(Math.abs(profit)) }}</span>
     <span
       v-if="percent !== null"
       class="font-semibold opacity-75"
@@ -24,6 +24,7 @@ import { useCurrency } from '../../composables/useCurrency'
 const props = defineProps<{
   price?: number | string | null
   buyPrice?: number | string | null
+  label?: string
 }>()
 
 const { formatCurrency } = useCurrency()
@@ -39,6 +40,7 @@ const profit = computed<number | null>(() => {
 const percent = computed<string | null>(() => {
   const buyNum = Number(props.buyPrice) || 0
   if (!buyNum || profit.value === null) return null
-  return `+${Math.round((Math.abs(profit.value) / buyNum) * 100)}%`
+  const sign = profit.value >= 0 ? '+' : '-'
+  return `${sign}${Math.round((Math.abs(profit.value) / buyNum) * 100)}%`
 })
 </script>

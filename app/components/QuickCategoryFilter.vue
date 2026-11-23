@@ -141,17 +141,17 @@
         </button>
         <button
           type="button"
-          @click="setSort('expensive')"
+          @click="setSort('newest')"
           :class="[
             'h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-bold transition-all duration-150 border cursor-pointer active:scale-95 flex items-center gap-1 shadow-2xs select-none shrink-0 whitespace-nowrap',
-            sortValue === 'expensive'
+            sortValue === 'newest'
               ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-500 ring-2 ring-orange-400/30'
               : 'bg-white text-gray-700 border-gray-200 hover:border-orange-400 hover:text-orange-600'
           ]"
-          title="Urutkan harga tertinggi"
+          title="Urutkan barang terbaru"
         >
-          <Icon name="lucide:trending-up" class="w-3.5 h-3.5" />
-          <span>Termahal</span>
+          <Icon name="lucide:sparkles" class="w-3.5 h-3.5" />
+          <span>Barang Terbaru</span>
         </button>
       </div>
 
