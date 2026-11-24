@@ -293,6 +293,9 @@
               <p class="text-[9px] sm:text-[11px] text-gray-400 font-semibold mt-0.5">
                 Pas: <span class="text-gray-600 font-bold">{{ formatCurrency(product.fixedPrice) }}</span>
               </p>
+              <p v-if="product.buyPrice" class="text-[9px] sm:text-[11px] text-gray-400 font-semibold mt-0.5">
+                Modal: <span class="text-gray-600 font-bold">{{ formatCurrency(product.buyPrice) }}</span>
+              </p>
               <!-- Harga teknisi di mobile (desktop sudah via tombol Tek) -->
               <p
                 v-if="product.servicePrice"
@@ -378,28 +381,49 @@
                 </div>
               </div>
               <!-- Right: Actions -->
-              <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <!-- Pas harga item terakhir -->
                 <button
                   v-if="lastCartItem"
                   @click="pasLastItem"
-                  class="px-3 lg:px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 border border-emerald-200 hover:border-emerald-400 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95 flex items-center gap-1.5"
+                  class="px-2.5 sm:px-3 lg:px-4 py-2 sm:py-2.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 border border-emerald-200 hover:border-emerald-400 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95 flex items-center gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap cursor-pointer"
                   :title="`Harga pas item terakhir (${lastCartItem.productName}): ${formatCurrency(lastCartItem.fixedPrice || lastCartItem.askingPrice)}`"
                 >
                   <Icon name="lucide:badge-check" class="w-4 h-4" />
                   <span>Pas</span>
                 </button>
+                <!-- Teknisi harga item terakhir (jika ada) -->
+                <button
+                  v-if="lastCartItem && lastCartItem.servicePrice"
+                  @click="serviceLastItem"
+                  class="px-2.5 sm:px-3 lg:px-4 py-2 sm:py-2.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 border border-blue-200 hover:border-blue-400 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95 flex items-center gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap cursor-pointer"
+                  :title="`Harga teknisi item terakhir (${lastCartItem.productName}): ${formatCurrency(lastCartItem.servicePrice)}`"
+                >
+                  <Icon name="lucide:wrench" class="w-4 h-4" />
+                  <span>Teknisi</span>
+                </button>
+                <!-- Clear keranjang -->
+                <button
+                  @click="handleClearCart"
+                  class="px-2.5 sm:px-3 lg:px-3.5 py-2 sm:py-2.5 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 border border-red-200 hover:border-red-300 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95 flex items-center gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap cursor-pointer"
+                  title="Kosongkan Keranjang"
+                >
+                  <Icon name="lucide:trash-2" class="w-4 h-4" />
+                  <span>Clear</span>
+                </button>
+                <!-- Buka Drawer Keranjang -->
                 <button
                   @click="showCartDrawer = true"
-                  class="px-3 lg:px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95"
+                  class="px-2.5 sm:px-3 lg:px-4 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs lg:text-sm rounded-xl transition-all active:scale-95 flex items-center gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap cursor-pointer"
                 >
-                  <Icon name="lucide:list" class="w-4 h-4 inline -mt-0.5 mr-1" />
+                  <Icon name="lucide:list" class="w-4 h-4" />
                   <span class="hidden sm:inline">Keranjang</span>
                 </button>
+                <!-- Bayar -->
                 <button
                   @click="openPaymentModal"
                   :disabled="cartStore.isProcessing"
-                  class="px-4 lg:px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-xs lg:text-sm rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                  class="px-3.5 sm:px-4 lg:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-xs lg:text-sm rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer"
                 >
                   <Icon
                     name="lucide:loader-2"
@@ -1188,7 +1212,7 @@ const onSearchInput = (e: any) => {
   }
 };
 
-// Item terakhir yang ditambahkan ke keranjang (untuk tombol Pas di bar bawah)
+// Item terakhir yang ditambahkan ke keranjang (untuk tombol Pas & Teknisi di bar bawah)
 const lastCartItem = computed(() =>
   cartStore.items.length > 0 ? cartStore.items[cartStore.items.length - 1] : null
 );
@@ -1199,6 +1223,14 @@ const pasLastItem = () => {
   if (!item) return;
   setPriceToFixed(item.id);
 };
+
+// Tombol "Teknisi" di bar bawah: langsung pakai harga teknisi item terakhir jika ada
+const serviceLastItem = () => {
+  const item = lastCartItem.value;
+  if (!item || !item.servicePrice) return;
+  setPriceToService(item.id);
+};
+
 
 const productListScrollRef = ref<HTMLElement | null>(null);
 // Saat hasil pencarian berubah, balik daftar ke atas supaya produk hasil
@@ -1705,7 +1737,9 @@ const closePrintOffer = () => {
 };
 
 const handleClearCart = () => {
+  if (cartStore.items.length === 0) return;
   cartStore.clearCart();
+  showToast("Keranjang berhasil dikosongkan");
 };
 
 const showToast = (message: string) => {
