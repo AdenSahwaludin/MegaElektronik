@@ -964,18 +964,15 @@
               </div>
 
               <!-- Direct to Barang Datang Banner -->
-              <div class="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between gap-1.5 text-xs min-h-[42px]">
-                <div class="flex items-start gap-1.5 min-w-0">
-                  <Icon name="lucide:info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div class="text-amber-900 leading-tight">
-                    <span class="font-bold text-[11px] block">Stok tidak bisa diedit di sini.</span>
-                    <span class="text-amber-700 text-[10px] block">Sesuaikan di Barang Datang</span>
-                  </div>
+              <div class="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl flex flex-col justify-between gap-2 text-xs">
+                <div class="flex items-center gap-1.5 text-amber-900 min-w-0">
+                  <Icon name="lucide:info" class="w-4 h-4 text-amber-600 shrink-0" />
+                  <span class="font-bold text-[11px] sm:text-xs leading-tight">Stok tidak bisa diedit di sini.</span>
                 </div>
                 <button
                   type="button"
                   @click="redirectToArrivalFromEdit"
-                  class="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-lg transition flex items-center gap-1 shrink-0 shadow-xs cursor-pointer active:scale-95 text-xs whitespace-nowrap"
+                  class="w-full py-1.5 px-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-lg transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95 text-xs whitespace-nowrap"
                   title="Buka Barang Datang untuk produk ini"
                 >
                   <Icon name="lucide:truck" class="w-3.5 h-3.5" />
