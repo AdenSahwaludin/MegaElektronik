@@ -7,7 +7,7 @@ import RevenueTrendChart from '../components/charts/RevenueTrendChart.vue'
 import TopProductsChart from '../components/charts/TopProductsChart.vue'
 import PriceDistributionChart from '../components/charts/PriceDistributionChart.vue'
 import MarginBarChart from '../components/charts/MarginBarChart.vue'
-import { matchesCategory } from '../utils/categoryJenis'
+import { matchesCategory, matchesJenis } from '../utils/categoryJenis'
 
 definePageMeta({
   layout: "default",
@@ -30,8 +30,6 @@ const formatModel = (model?: string | null) => {
   return trimmed
 }
 
-const EXCLUDED_CATEGORIES = ['AC', 'Kulkas', 'Mesin cuci', 'Speaker', 'TV']
-
 const lowStockProducts = computed(() => {
   return (dataCacheStore.products || []).filter((p: any) => {
     const isActive =
@@ -40,13 +38,88 @@ const lowStockProducts = computed(() => {
       p.isActive !== 'false' &&
       p.isActive !== '0'
     if (!isActive) return false
+    if (p.stock === null || p.stock === undefined) return false
 
-    // Kecualikan AC, Kulkas, Mesin cuci, Speaker, TV
-    const isExcluded = EXCLUDED_CATEGORIES.some((cat) => matchesCategory(p, cat))
-    if (isExcluded) return false
+    const stock = Number(p.stock)
 
-    // Stok dibawah sama dengan 3 (<= 3)
-    return p.stock !== null && p.stock !== undefined && p.stock <= 3
+    // 1. AC
+    // - AC 0.5 PK: minimal < 3 (stock > 0 && stock < 3)
+    // - AC 1 PK: minimal 1 atau = 0 (stock === 1 || stock === 0)
+    if (matchesCategory(p, 'AC')) {
+      if (matchesJenis(p, 'AC', '0,5 PK')) {
+        return stock > 0 && stock < 3
+      }
+      if (matchesJenis(p, 'AC', '1 PK')) {
+        return stock === 1 || stock === 0
+      }
+      return false
+    }
+
+    // Untuk produk selain AC 1 PK, abaikan yang stoknya 0 / habis
+    if (stock <= 0) return false
+
+    // 2. Kipas: minimal < 3
+    if (matchesCategory(p, 'Kipas')) {
+      return stock < 3
+    }
+
+    // 3. Blender: minimal < 2
+    if (matchesCategory(p, 'Blender')) {
+      return stock < 2
+    }
+
+    // 4. Dispenser: minimal < 2
+    if (matchesCategory(p, 'Dispenser')) {
+      return stock < 2
+    }
+
+    // 5. Exhaust: minimal < 3
+    if (matchesCategory(p, 'Exhaust')) {
+      return stock < 3
+    }
+
+    // 6. Kompor: minimal 2 (stok <= 2)
+    if (matchesCategory(p, 'Kompor')) {
+      return stock <= 2
+    }
+
+    // 7. Mesin cuci: minimal 1 (stok <= 1)
+    if (matchesCategory(p, 'Mesin cuci')) {
+      return stock <= 1
+    }
+
+    // 8. Kulkas: minimal 1 (stok <= 1)
+    if (matchesCategory(p, 'Kulkas')) {
+      return stock <= 1
+    }
+
+    // 9. Rice cooker: minimal 2 (stok <= 2)
+    if (matchesCategory(p, 'Rice cooker') || matchesCategory(p, 'magic')) {
+      return stock <= 2
+    }
+
+    // 10. Setrika: minimal 2 (stok <= 2)
+    if (matchesCategory(p, 'Setrika')) {
+      return stock <= 2
+    }
+
+    // 11. Speaker: minimal 1 (stok <= 1)
+    if (matchesCategory(p, 'Speaker')) {
+      return stock <= 1
+    }
+
+    // 12. Teko: minimal 2 (stok <= 2)
+    if (matchesCategory(p, 'Teko')) {
+      return stock <= 2
+    }
+
+    // 13. TV: minimal 1 (stok <= 1)
+    if (matchesCategory(p, 'TV')) {
+      return stock <= 1
+    }
+
+    // Kategori lain di luar aturan di atas tidak dimasukkan
+    return false
   })
 })
 
@@ -191,13 +264,13 @@ watch([dateRange, startDate, endDate, startMonth, endMonth], () => {
           >
             <div class="flex items-center gap-2 font-bold text-amber-900">
               <Icon name="lucide:alert-triangle" class="w-5 h-5 text-amber-600 shrink-0" />
-              <span>Ada {{ lowStockProducts.length }} produk stok menipis (stok ≤ 3)!</span>
+              <span>Ada {{ lowStockProducts.length }} produk stok menipis!</span>
             </div>
             <div class="text-xs text-amber-700 font-medium pb-0.5">
               Produk menipis: {{ lowStockProducts.map((p: any) => {
                 let str = p.name || '';
-                if (p.brand && p.brand.trim() !== '' && p.brand !== 'No Brand') str += ' ' + p.brand;
-                if (p.model && p.model.trim() !== '' && p.model !== '-' && p.model.toLowerCase() !== 'standar' && p.model.toLowerCase() !== 'standard') str += ' ' + p.model;
+                if (p.brand && p.brand.trim() !== '' && p.brand !== 'No Brand' && !str.toLowerCase().includes(p.brand.toLowerCase())) str += ' ' + p.brand;
+                if (p.model && p.model.trim() !== '' && p.model !== '-' && p.model.toLowerCase() !== 'standar' && p.model.toLowerCase() !== 'standard' && !str.toLowerCase().includes(p.model.toLowerCase())) str += ' ' + p.model;
                 str += ` (sisa ${p.stock ?? 0})`;
                 return str;
               }).join(', ') }}
